@@ -17,6 +17,7 @@ class DailyActivityController extends Controller
             'score' => 'required|integer',
             'confidence_level' => 'required|integer|min:1|max:5',
             'audio_file' => 'nullable|file|mimes:mp3,wav,webm|max:2048',
+            'journal' => 'nullable|string',
         ]);
 
         $user = $request->user();
@@ -32,6 +33,7 @@ class DailyActivityController extends Controller
             'score' => $validated['score'],
             'confidence_level' => $validated['confidence_level'],
             'audio_path' => $audioPath,
+            'journal' => $validated['journal'] ?? null,
         ]);
 
         // Cek apakah siswa naik level setelah aktivitas ini

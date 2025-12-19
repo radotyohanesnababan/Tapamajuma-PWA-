@@ -13,7 +13,8 @@ class DailyActivity extends Model
         'type',
         'score',
         'audio_path',
-        'confidence_level'
+        'confidence_level',
+        'journal'
     ];
 
     public function user(): BelongsTo

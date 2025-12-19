@@ -15,12 +15,17 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Aksi Siswa TAPAMAJUMA',
-        short_name: 'TAPAMA',
+        short_name: 'TAPAMAJUMA',
         display: 'standalone',
         // ... sisa konfigurasi PWA Anda
       }
     })
   ],
+  server: {
+    host: '127.0.0.1', // atau '0.0.0.0' agar bisa diakses IP apa saja
+    port: 5173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
