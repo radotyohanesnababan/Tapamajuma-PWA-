@@ -8,7 +8,7 @@ const api = axios.create({
   },
 });
 
-// HANYA SATU INTERCEPTOR: Tempel Token dari LocalStorage
+// HANYA SATU INTERCEPTOR: Auth Bearer Token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("auth_token");
@@ -20,16 +20,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// OPSIONAL: Interceptor Response (Untuk handle error 401 otomatis)
+// OPSIONAL: Auto Logout jika 401 Unauthorized
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Jika server membalas 401 (Unauthorized), paksa logout di frontend
     if (error.response && error.response.status === 401) {
+      // Token ditolak server -> Hapus lokal
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
-      // Jangan redirect window.location di sini biar tidak loop, 
-      // biarkan UI yang bereaksi terhadap hilangnya token
+      // Opsional: Redirect
+      // window.location.href = "/login"; 
     }
     return Promise.reject(error);
   }

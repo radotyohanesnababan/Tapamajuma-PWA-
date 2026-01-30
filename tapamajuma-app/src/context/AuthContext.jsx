@@ -5,8 +5,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    // Default true agar tidak "flash" konten sebelum cek selesai
-    const [isLoading, setIsLoading] = useState(true); 
+    const [isLoading, setIsLoading] = useState(true);
 
     // 1. CEK USER (Auto Login)
     useEffect(() => {
@@ -22,7 +21,8 @@ export const AuthProvider = ({ children }) => {
                 const { data } = await api.get("/api/user");
                 setUser(data);
             } catch (error) {
-                console.error("Token invalid:", error);
+                // Token expired/salah
+                console.error("Session invalid:", error);
                 localStorage.removeItem("auth_token");
                 localStorage.removeItem("user_data");
                 setUser(null);
@@ -36,7 +36,8 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (formData) => {
         const response = await api.post("/login", formData);
-        // Simpan token SEGERA setelah dapat dari server
+        
+        // Simpan token & user
         localStorage.setItem("auth_token", response.data.access_token);
         localStorage.setItem("user_data", JSON.stringify(response.data.user));
         
@@ -44,23 +45,20 @@ export const AuthProvider = ({ children }) => {
         return response.data; 
     };
 
-    const logout = async () => {
-        // Set loading true agar UI bisa menampilkan spinner/disable tombol
-        setIsLoading(true); 
-        try {
-            await api.post("/logout");
-        } catch (error) {
-            console.error("Logout server error (abaikan):", error);
-        } finally {
-            // HAPUS SECARA BRUTAL (Wajib)
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("user_data");
-            setUser(null);
-            setIsLoading(false);
-            
-            // Redirect Paksa
-            window.location.href = "/login";
-        }
+    const logout = () => {
+        // --- 1. HAPUS DULUAN (OPTIMISTIC) ---
+        // Jangan pakai 'await'. Langsung hapus biar UI responsif & bersih.
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_data");
+        setUser(null);
+        
+        // --- 2. KABARI SERVER (BACKGROUND) ---
+        // Biarkan dia jalan di background, kita tidak peduli hasilnya sukses/gagal
+        // yang penting di HP user sudah bersih.
+        api.post("/logout").catch((err) => console.error("Logout server error:", err));
+
+        // --- 3. LEMPAR KE LOGIN ---
+        window.location.href = "/login";
     };
 
     return (
