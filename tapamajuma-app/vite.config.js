@@ -9,15 +9,33 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default defineConfig({
-  plugins: [
-    react(), 
+ plugins: [
+    react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'iconapp.ico', 'robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Aksi Siswa TAPAMAJUMA',
-        short_name: 'TAPAMAJUMA',
-        display: 'standalone',
-        // ... sisa konfigurasi PWA Anda
+        name: 'Tapamajuma App',
+        short_name: 'Tapamajuma',
+        description: 'Aplikasi Pembelajaran Digital Tapamajuma',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone', // <--- INI PENTING! Biar address bar browser HILANG
+        scope: '/',
+        start_url: '/login',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: 'pwa-192x192.png', // Anda harus siapkan gambar ini nanti
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png', // Dan ini
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
       }
     })
   ],
