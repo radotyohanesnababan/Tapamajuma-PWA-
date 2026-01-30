@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.tapamajuma_pwa.twa",
+        "sha256_cert_fingerprints": ["64:D5:74:3D:1D:D9:CA:CE:ED:94:69:30:F6:46:99:4E:97:0F:C0:46:A8:8E:B8:D9:12:66:7B:FA:08:D5:62:62"]
+      }
+    }]
