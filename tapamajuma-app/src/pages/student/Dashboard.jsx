@@ -9,43 +9,69 @@ import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function StudentDashboard() {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const { user: isLoading } = useAuth();
+// 1. Ambil data dari Context (Global)
+  // user: data user yang login
+  // isAuthLoading: status loading dari proses cek token di AuthContext
+  const { user, isLoading: isAuthLoading } = useAuth(); 
+  
   const navigate = useNavigate();
 
+  // 2. State Lokal (Khusus data dashboard)
+  const [activities, setActivities] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
+  // 3. useEffect 1: Cek Role & Redirect
+  // Taruh di paling atas, jangan di bawah return
   useEffect(() => {
-    // Tunggu sampai loading selesai, baru cek
-    if (!isLoading && user) {
-      if (user.role === "superadmin") {
+    // Jalankan hanya jika AuthContext sudah selesai loading
+    if (!isAuthLoading) {
+      if (!user) {
+        // Kalau tidak ada user, lempar ke login
+        navigate("/login");
+      } else if (user.role === "superadmin") {
         navigate("/superadmin", { replace: true });
       } else if (user.role === "teacher") {
         navigate("/teacher", { replace: true });
       }
-      // Jika role == 'student' atau lainnya, biarkan tetap di sini
+      // Jika role student, biarkan lanjut
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
-  if (isLoading) {
-    return <div>Loading...</div>; // Atau Spinner component Anda
+  // 4. useEffect 2: Ambil Data Activities
+  // Kita tidak perlu fetch /api/user lagi karena sudah ada dari useAuth
+  useEffect(() => {
+    // Pastikan user ada dulu baru fetch data
+    if (user) {
+        api.get("/api/activities")
+        .then((res) => {
+            setActivities(res.data);
+        })
+        .catch((err) => {
+            console.error("Gagal ambil activities", err);
+        })
+        .finally(() => {
+            // Loading data dashboard selesai (entah sukses atau gagal)
+            setIsDataLoading(false);
+        });
+    }
+  }, [user]);
+
+  // 5. RENDER LOGIC (Baru boleh return di sini)
+  
+  // Tampilkan loading jika Auth sedang bekerja ATAU Data Dashboard sedang ditarik
+  if (isAuthLoading || isDataLoading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            Loading Dashboard...
+        </div>
+    ); 
   }
-// eslint-disable-next-line react-hooks/rules-of-hooks
-useEffect(() => {
-    Promise.all([
-      api.get("/api/user"),
-      api.get("/api/activities")
-    ])
-    .then(([userRes, actRes]) => {
-      setUser(userRes.data);
-      setActivities(actRes.data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Gagal ambil data", err);
-      setLoading(false);
-    });
-  }, []);
+
+  // Jika user null (tapi lolos loading), return null dulu biar gak error saat render nama
+  if (!user) return null;
+
+  // Cek loading menggunakan state loading, bukan variabel 'data'
+  const loading = isDataLoading;
 
   // Format data untuk grafik
   const chartData = activities.map((act, index) => ({

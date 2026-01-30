@@ -1,43 +1,54 @@
-import { Outlet, NavLink } from "react-router-dom";
-import { Home, BookOpen, MessageCircle, LayoutGrid, LogOut, CircleUser} from "lucide-react";
+import { Outlet, Link, useLocation } from "react-router-dom"; // Tambah useLocation
+import { Home, BookOpen, MessageCircle, LayoutGrid, CircleUser } from "lucide-react";
 
 export default function StudentLayout() {
+  const location = useLocation(); // Hook untuk tahu kita sedang di halaman mana
+
   const navItems = [
     { to: "/", icon: <Home size={20} />, label: "Beranda" },
     { to: "/tantangan", icon: <BookOpen size={20} />, label: "Aksi" },
     { to: "/refleksi", icon: <MessageCircle size={20} />, label: "Refleksi" },
     { to: "/galeri", icon: <LayoutGrid size={20} />, label: "Galeri" },
     { to: "/other", icon: <CircleUser size={20} />, label: "Lainnya" },
-
   ];
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <main className="flex-1 pb-20 p-4 max-w-md mx-auto w-full">
+      <main className="flex-1 pb-24 p-4 max-w-md mx-auto w-full">
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white pb-safe">
-        <div className="flex h-16 max-w-md mx-auto items-center justify-around px-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
-                }`
-              }
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl px-6 py-3 flex justify-between items-center z-50">
+        {navItems.map((item) => {
+          // Logic cek aktif: 
+          // 1. Jika path tepat sama (misal "/")
+          // 2. Atau jika bukan home, cek apakah pathname diawali dengan item.to (agar submenu tetap nyala)
+          const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+
+          return (
+            <Link
+              key={item.to} // PERBAIKAN 1: Gunakan item.to sebagai key
+              to={item.to}  // PERBAIKAN 2: Gunakan item.to untuk link
+              className={`flex flex-col items-center gap-1 transition-all duration-300 relative ${
+                isActive
+                  ? "text-slate-900 -translate-y-1" // Ganti text-primary jadi slate-900 biar aman (atau sesuaikan tema)
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
             >
               {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </NavLink>
-          ))}
-
-          {/* HANYA GUNAKAN SATU STRUKTUR ALERT DIALOG DI SINI */}
-         
-          
-        </div>
+              <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>
+                {item.label}
+              </span>
+              
+              {/* Pemanis: Titik indikator aktif */}
+              <span 
+                className={`absolute -bottom-2 w-1 h-1 bg-slate-900 rounded-full transition-all duration-300 ${
+                  isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
+                }`} 
+              />
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );
