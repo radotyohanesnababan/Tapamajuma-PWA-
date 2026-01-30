@@ -12,7 +12,21 @@ export default defineConfig({
  plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Strategi 'generateSW' adalah yang paling simpel (Minimum)
+      strategies: 'generateSW', 
+      
+      // Auto update: SW langsung aktif saat ada versi baru
+      registerType: 'autoUpdate', 
+
+      // File apa saja yang mau dicache (Offline support)
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
+      },
+
+      // Konfigurasi PWA
       includeAssets: ['favicon.ico', 'iconapp.ico', 'robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Tapamajuma App',
@@ -20,7 +34,7 @@ export default defineConfig({
         description: 'Aplikasi Pembelajaran Digital Tapamajuma',
         theme_color: '#ffffff',
         background_color: '#ffffff',
-        display: 'standalone', // <--- INI PENTING! Biar address bar browser HILANG
+        display: 'standalone', 
         scope: '/',
         start_url: '/login',
         orientation: 'portrait',

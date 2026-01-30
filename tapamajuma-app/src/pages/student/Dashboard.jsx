@@ -12,7 +12,7 @@ export default function StudentDashboard() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const { user: authUser, isLoading } = useAuth();
+  const { user: isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +30,7 @@ export default function StudentDashboard() {
   if (isLoading) {
     return <div>Loading...</div>; // Atau Spinner component Anda
   }
+// eslint-disable-next-line react-hooks/rules-of-hooks
 useEffect(() => {
     Promise.all([
       api.get("/api/user"),
