@@ -103,7 +103,9 @@ const handleSave = async (e) => {
               onChange={handleFileChange} 
             />
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ketuk kamera untuk ganti foto</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-through">Ketuk kamera untuk ganti foto</p>
+          <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest text-center">Fitur Foto tidak bisa digunakan sementara</p>
+
         </div>
 
         {/* Form Input */}

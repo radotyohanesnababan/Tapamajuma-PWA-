@@ -15,6 +15,7 @@ import TeacherReflection from "./pages/teacher/TeacherReflection";
 import { Toaster } from "@/components/ui/sonner";
 import GalleryStudent from "./pages/student/GalleryStudent";
 import OtherMenu from "./pages/student/OtherMenu";
+import OtherMenuTc from "./pages/teacher/OtherMenuTc";
 import EditProfile from "./pages/student/EditProfile";
 import PresentationPage from "./pages/student/PresentationPage";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
@@ -80,7 +81,7 @@ function App() {
             {/* GRUP 2.2: Bank Soal */}
           <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
           {/* GRUP 2.3: Pengaturan */}
-            <Route path="profile" element={<div className="p-4 font-bold">Pengaturan Akun Guru</div>} />
+            <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
 
             
           </Route>
