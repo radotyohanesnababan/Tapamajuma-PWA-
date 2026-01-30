@@ -116,7 +116,7 @@ export default function GalleryStudent() {
 
   // (Fungsi renderPreview tetap sama seperti sebelumnya)
   const renderPreview = (item) => {
-    const backendUrl = "https://tapamajuma-pwa.domcloud.dev/";
+    const backendUrl = "https://tapamajuma-api.my.id/";
     const fileUrl = `${backendUrl}/storage/${item.file_path}`;
     
     if (item.file_type === 'image') {
@@ -249,7 +249,7 @@ export default function GalleryStudent() {
         <div className="w-full bg-slate-100 flex items-center justify-center min-h-[300px]">
           {selectedItem.file_type === 'image' && (
             <img 
-              src={`https://tapamajuma-pwa.domcloud.dev/storage/${selectedItem.file_path}`} 
+              src={`https://tapamajuma-api.my.id/storage/${selectedItem.file_path}`} 
               className="w-full h-auto max-h-[70vh] object-contain"
               alt={selectedItem.title}
             />
@@ -259,7 +259,7 @@ export default function GalleryStudent() {
             <div className="flex flex-col items-center p-10 w-full bg-indigo-50">
               <Music size={80} className="text-indigo-500 mb-4 animate-bounce" />
               <audio controls autoPlay className="w-full">
-                <source src={`https://tapamajuma-pwa.domcloud.dev/storage/${selectedItem.file_path}`} type="audio/mpeg" />
+                <source src={`https://tapamajuma-api.my.id/storage/${selectedItem.file_path}`} type="audio/mpeg" />
               </audio>
             </div>
           )}
@@ -268,7 +268,7 @@ export default function GalleryStudent() {
             <div className="flex flex-col items-center p-10 w-full bg-rose-50">
               <FileText size={80} className="text-rose-500 mb-4" />
               <Button 
-                onClick={() => window.open(`https://tapamajuma-pwa.domcloud.dev/storage/${selectedItem.file_path}`, '_blank')}
+                onClick={() => window.open(`https://tapamajuma-api.my.id/storage/${selectedItem.file_path}`, '_blank')}
                 className="bg-rose-600 hover:bg-rose-700 rounded-full"
               >
                 Buka Dokumen Lengkap
