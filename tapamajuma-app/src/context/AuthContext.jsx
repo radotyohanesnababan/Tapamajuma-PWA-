@@ -67,7 +67,9 @@ export const AuthProvider = ({ children }) => {
         } finally {
             // Hapus data di Frontend (Wajib)
             localStorage.removeItem("auth_token");
+            console.log("Removed auth_token from localStorage");
             localStorage.removeItem("user_data");
+            console.log("Removed user_data from localStorage");
             setUser(null);
             // Redirect manual atau biarkan Login.jsx yang handle
             window.location.href = "/login";
