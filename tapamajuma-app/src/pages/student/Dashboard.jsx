@@ -10,9 +10,24 @@ export default function StudentDashboard() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const { user: authUser, isLoading } = useAuth();
+  const navigate = useNavigate();
   
-  
+  useEffect(() => {
+    // Tunggu sampai loading selesai, baru cek
+    if (!isLoading && user) {
+      if (user.role === "superadmin") {
+        navigate("/superadmin", { replace: true });
+      } else if (user.role === "teacher") {
+        navigate("/teacher", { replace: true });
+      }
+      // Jika role == 'student' atau lainnya, biarkan tetap di sini
+    }
+  }, [user, isLoading, navigate]);
 
+  if (isLoading) {
+    return <div>Loading...</div>; // Atau Spinner component Anda
+  }
 useEffect(() => {
     Promise.all([
       api.get("/api/user"),
