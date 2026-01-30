@@ -13,14 +13,34 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): Response
-    {
-        $request->authenticate();
+    public function store(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
 
-        $request->session()->regenerate();
+    if (Auth::attempt($credentials)) {
+        $user = Auth::user();
+        
+        // Hapus token lama (opsional, biar bersih)
+        $user->tokens()->delete();
+        
+        // BUAT TOKEN BARU (Ini kuncinya)
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->noContent();
+        return response()->json([
+            'message' => 'Login success',
+            'user' => $user,
+            'access_token' => $token, // Kirim token ke React
+            'token_type' => 'Bearer',
+        ]);
     }
+
+    return response()->json([
+        'message' => 'Email atau password salah',
+    ], 401);
+}
 
     /**
      * Destroy an authenticated session.

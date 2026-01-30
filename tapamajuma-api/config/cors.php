@@ -15,16 +15,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'reflections','sanctum/csrf-cookie', 'login', 'register', 'logout'], // Fokuskan pathnya
+    'paths' => ['api/*', 'reflections','sanctum/csrf-cookie', 'login', 'register', 'logout','user'], // Fokuskan pathnya
 
 'allowed_methods' => ['*'],
 
-'allowed_origins' => [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://10.105.47.78:5173',
-    'http://127.0.0.1:5173',
-],
+'allowed_origins' => [ '*' , 'http://localhost:3000','https://tapamajuma-pwa.vercel.app'],
 
 'allowed_origins_patterns' => [],
 

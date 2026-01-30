@@ -23,7 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->redirectUsersTo(fn () => response()->json(['message' => 'Success'], 200));
     $middleware->redirectGuestsTo(fn () => response()->json(['message' => 'Unauthorized'], 401));
 
-    $middleware->validateCsrfTokens(except: []);
+    $middleware->validateCsrfTokens(except: [
+        'register', 
+        'login',
+        'api/*',      // Matikan CSRF untuk semua route API
+        'sanctum/*'
+    ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

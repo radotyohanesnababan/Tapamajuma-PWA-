@@ -20,28 +20,50 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const userData = await login({ email, password });
+      // 1. Panggil API Login
+      // Pastikan response dari backend mengandung 'access_token' dan 'user'
+      const responseData = await login({ email, password });
       
+      // ---------------------------------------------------------
+      // BAGIAN BARU (PENTING!): SIMPAN TOKEN
+      // ---------------------------------------------------------
+      // Kita cek apakah server mengirim token?
+      if (responseData?.access_token) {
+          // Simpan Token ke LocalStorage (Agar axios.js bisa membacanya nanti)
+          localStorage.setItem("auth_token", responseData.access_token);
+          
+          // Simpan data user juga (opsional, biar gampang ambil nama/role)
+          localStorage.setItem("user_data", JSON.stringify(responseData.user));
+      } else {
+          // Jaga-jaga kalau backend lupa kirim token
+          console.warn("Peringatan: Server tidak mengirim access_token");
+      }
+      // ---------------------------------------------------------
+
+      const user = responseData?.user;
+
       toast.success("Login berhasil!", {
-        description: `Selamat datang kembali, ${userData?.name || 'User'}`
+        description: `Selamat datang kembali, ${user?.name || 'User'}`
       });
 
-      if (userData?.role === "teacher") {
+      // Redirect sesuai Role
+      if (user?.role === "teacher") {
         navigate("/teacher");
-      } else if (userData?.role === "superadmin") {
+      } else if (user?.role === "superadmin") {
         navigate("/superadmin");
       } else {
-        navigate("/");
+        navigate("/"); // Siswa
       }
 
     } catch (err) {
       console.error("Login Error:", err);
-      const errMsg = err.response?.data?.message || "Cek email dan password Anda.";
+      // Ambil pesan error, jaga-jaga kalau struktur errornya beda
+      const errMsg = err.response?.data?.message || err.message || "Cek email dan password Anda.";
       toast.error("Login Gagal", { description: errMsg });
     } finally {
       setIsLoading(false);
     }
-  };
+};
 
   return (
     <div className="min-h-screen w-full flex bg-slate-50 lg:bg-none">
