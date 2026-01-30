@@ -11,7 +11,10 @@ class DailyActivity extends Model
     protected $fillable = [
         'user_id',
         'type',
+        'subject',
         'score',
+        'subject',
+        'reading_content',
         'audio_path',
         'confidence_level',
         'journal'

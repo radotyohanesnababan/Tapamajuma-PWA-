@@ -25,7 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'class_name',
+        'level',
+        'accessible_classes',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'accessible_classes' => 'array',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -93,4 +95,17 @@ public function updateLevel() {
     }
     $this->save();
 }
+
+public function canAccessClass($targetClassId)
+    {
+        if ($this->role === 'superadmin') return true;
+        
+        // Cek apakah ID kelas ada di array JSON guru
+        return in_array($targetClassId, $this->accessible_classes ?? []);
+    }
+
+public function studentClass()
+    {
+        return $this->belongsTo(ClassName::class, 'class_id');
+    }
 }

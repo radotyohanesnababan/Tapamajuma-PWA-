@@ -7,11 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Reflection extends Model
 {
     protected $fillable = [
-        'user_id',
-        'activity_id',
-        'category',
-        'content',
-        'feedback_teacher'
+        'user_id', 
+    'activity_id', 
+    'category', 
+    'content', 
+    'improvements', 
+    'targets', 
+    'feedback_teacher'
+    ];
+
+    protected $casts = [
+    'peer_feedback' => 'array',
     ];
 
     public function user()

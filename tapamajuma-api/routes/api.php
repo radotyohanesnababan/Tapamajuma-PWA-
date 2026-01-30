@@ -1,10 +1,32 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ClassMgmtController;
+use App\Http\Controllers\Admin\QuestionMgmtController;
+use App\Http\Controllers\Admin\StudentMgmtController;
+use App\Http\Controllers\Admin\SubjectMgmtController;
+use App\Http\Controllers\Admin\TeacherMgmtController as AdminTeacherMgmtController;
+use App\Http\Controllers\Api\AIController as ApiAIController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\ReflectionController;
+use App\Http\Controllers\Api\ProfileController; // Tambahkan ini
+use App\Http\Controllers\Api\PublicDataController;
+use App\Http\Controllers\Api\StudentQuizController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
+use App\Http\Controllers\Teacher\MandiriSessionController;
+use App\Http\Controllers\Teacher\QuestionBankController;
+use App\Http\Controllers\Teacher\TeacherMgmtController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (Tanpa Login)
+|--------------------------------------------------------------------------
+*/
+Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
 
 /*
 |--------------------------------------------------------------------------
@@ -12,22 +34,84 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Rute untuk mendapatkan data user yang sedang login (Bawaan Breeze)
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/test-connection-auth', function () {
+    return response()->json(['status' => 'connected', 'message' => 'Pintu gerbang Laravel terbuka!']);
 });
 
-// Rute yang butuh Login (Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
-    // Siswa
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // --- KHUSUS SISWA ---
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/activities', [DailyActivityController::class, 'index']);
     Route::post('/activities', [DailyActivityController::class, 'store']);
-    
-    // Guru (Sekarang aman di dalam middleware)
-    Route::get('/teacher/dashboard', [TeacherDashboardController::class, 'index']);
-    Route::get('/teacher/stats', [TeacherDashboardController::class, 'getTeacherStats']);
-});
+    Route::post('/generate-content', [ApiAIController::class, 'generate']);
 
-// Pastikan baris ini ADA di paling bawah untuk memuat rute login/register Breeze
-require __DIR__.'/auth.php';
+    //Fitur Quiz Numerasi & Literasi
+    // GET: Ambil daftar Mapel
+        Route::get('/quiz/subjects', [StudentQuizController::class, 'getSubjects']);
+        
+        // GET: Ambil Soal (Ini yang error "Not Found" tadi)
+        Route::get('/quiz/questions', [StudentQuizController::class, 'getQuestions']);
+        
+        // POST: Submit Jawaban
+        Route::post('/quiz/submit', [StudentQuizController::class, 'submit']);
+    
+    // Fitur Refleksi & Sosial (Aksi Mingguan)
+    Route::post('/reflections', [ReflectionController::class, 'store']);
+    Route::get('/peer-feed', [ReflectionController::class, 'getPeerFeed']);
+    Route::post('/reflections/{id}/peer-feedback', [ReflectionController::class, 'storePeerFeedback']);
+
+    // Fitur Galeri Karya (Aksi C.1)
+    Route::get('/galleries', [GalleryController::class, 'index']);
+    Route::post('/galleries', [GalleryController::class, 'store']);
+
+    // --- OTHER MENU & PROFILE (Aksi C.2) ---
+    // Route ini digunakan siswa untuk edit mandiri dan melihat ringkasan presentasi
+    Route::get('/summary', [ProfileController::class, 'getSummary']);
+    Route::post('/user/profile-update', [ProfileController::class, 'update']);
+
+    // --- KHUSUS GURU  ---
+    Route::prefix('teacher')->group(function () {
+        Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
+        Route::get('/stats', [TeacherDashboardController::class, 'getTeacherStats']);
+        Route::get('/my-classes', [MandiriSessionController::class, 'getMyClasses']);
+        
+        // Route khusus guru untuk memberi feedback (Aksi B.2)
+        Route::get('/reflections', [ReflectionController::class, 'getAllStudentReflections']);
+        Route::post('/reflections/{id}/feedback', [ReflectionController::class, 'giveFeedback']);
+
+        // Fleksibilitas: Guru/Admin bisa mengedit profil siswa jika diperlukan
+        Route::put('/user-update/{id}', [ProfileController::class, 'update']);
+        Route::get('/student-summary/{id}', [ProfileController::class, 'getSummary']);
+
+        // Route Guru Bank Soal
+        Route::get('/bank-soal', [QuestionBankController::class, 'index']);
+    Route::post('/bank-soal', [QuestionBankController::class, 'store']);
+    Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
+    Route::delete('/bank-soal/{id}', [QuestionBankController::class, 'destroy']);
+    });
+    // [BARU] 2. Ambil Siswa (Sesuai React: /api/students?class=7A)
+    Route::get('/students', [MandiriSessionController::class, 'getStudents']);
+
+    // [BARU] 3. Simpan Presensi (Sesuai React: /api/self-study/store)
+    Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
+
+
+
+
+    // --- KHUSUS ADMIN  ---
+    Route::prefix('admin')->group(function () {
+        Route::get('/student-summary', [AdminController::class, 'getStudentSummary']);
+        Route::apiResource('teachers', AdminTeacherMgmtController::class);
+        Route::apiResource('classes', ClassMgmtController::class);
+        Route::apiResource('students', StudentMgmtController::class);
+        Route::apiResource('subjects', SubjectMgmtController::class);
+        Route::get('/questions', [QuestionMgmtController::class, 'index']);
+        Route::delete('/questions/{id}', [QuestionMgmtController::class, 'destroy']);
+    });
+
+});

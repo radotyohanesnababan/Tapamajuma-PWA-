@@ -18,7 +18,8 @@ return [
     'localhost:5173', 
     '127.0.0.1:5173', 
     'localhost', 
-    '127.0.0.1'
+    '127.0.0.1',
+    '10.105.47.78:5173'
 ],
 
     // 'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(

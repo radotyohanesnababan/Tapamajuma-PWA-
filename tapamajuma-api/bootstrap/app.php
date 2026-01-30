@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,22 +13,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+    // 1. Cukup gunakan satu baris ini (Otomatis menangani Sanctum)
+    $middleware->statefulApi();
 
-        $middleware->alias([
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-        ]);
+    // 2. Paksa JSON (Wajib agar tidak Redirect)
+    $middleware->append(\App\Http\Middleware\ForceJsonResponse::class);
 
-        $middleware->statefulApi();
-        $middleware->validateCsrfTokens(except: [
-        'api/register',
-        'api/login',
-        'api/logout',
-        'sanctum/csrf-cookie'
-    ]);
-    })
+    // 3. Matikan Redirect Fisik (Penyebab utama Network Error)
+    $middleware->redirectUsersTo(fn () => response()->json(['message' => 'Success'], 200));
+    $middleware->redirectGuestsTo(fn () => response()->json(['message' => 'Unauthorized'], 401));
+
+    $middleware->validateCsrfTokens(except: []);
+})
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

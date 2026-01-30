@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 1. Backend Laravel
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tapamajuma-backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    depends_on:
+      - db
+
+  # 2. Frontend React Builder
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tapamajuma-frontend
+    volumes:
+      - react_build:/app # Simpan hasil build di volume
+
+  # 3. Web Server (Nginx) - Pintu Masuk
+  webserver:
+    image: nginx:alpine
+    container_name: tapamajuma-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80" # Akses via http://ip-server-kamu
+    volumes:
+      - ./backend:/var/www/backend
+      - react_build:/var/www/frontend # Ambil file React dari volume
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+      - frontend
+
+  # 4. Database MySQL
+  db:
+    image: mysql:8.0
+    container_name: tapamajuma-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tapamajuma
+      MYSQL_ROOT_PASSWORD: rootpassword # Ganti nanti
+      MYSQL_PASSWORD: userpassword      # Ganti nanti
+      MYSQL_USER: tapamajuma_user
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:
+  react_build:

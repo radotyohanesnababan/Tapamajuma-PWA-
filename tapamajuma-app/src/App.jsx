@@ -5,11 +5,30 @@ import StudentDashboard from "./pages/student/Dashboard";
 import ChallengeForm from "./pages/student/ChallengeForm";
 import MathGame from "./components/games/MathGame";
 import TeacherDashboard from "./pages/teacher/Dashboard"; // Import dashboard guru
-import { Toaster } from "@/components/ui/toaster";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import AuthGuard from "./components/AuthGuard";
 import AnalysisTab from "./pages/teacher/AnalysisTab";
+import WeeklyReflection from "./pages/student/WeeklyReflection";
+import PeerFeed from "./pages/student/PeerFeed";
+import TeacherReflection from "./pages/teacher/TeacherReflection";
+import { Toaster } from "@/components/ui/sonner";
+import GalleryStudent from "./pages/student/GalleryStudent";
+import OtherMenu from "./pages/student/OtherMenu";
+import EditProfile from "./pages/student/EditProfile";
+import PresentationPage from "./pages/student/PresentationPage";
+import SuperadminDashboard from "./pages/superadmin/Dashboard";
+import SuperadminLayout from "./layouts/SuperadminLayout";
+import SesiMandiri from "./pages/teacher/SesiMandiri";
+import TeacherManagement from "./pages/superadmin/TeacherManagement";
+import StudentManagement from "./pages/superadmin/StudentManagement";
+import ClassManagement from "./pages/superadmin/ClassManagement";
+import ClassImprovement from "./pages/teacher/ClassImprovement";
+import BankSoal from "./pages/teacher/BankSoal";
+import SubjectManagement from "./pages/superadmin/SubjectManagement";
+import QuestionBankManagement from "./pages/superadmin/QuestionBankManagement";
+
+
 
 function App() {
   return (
@@ -30,8 +49,17 @@ function App() {
           >
             <Route path="/" element={<StudentDashboard />} />
             <Route path="/tantangan" element={<ChallengeForm />} />
-            <Route path="/refleksi" element={<div className="p-4">Halaman Refleksi</div>} />
-            <Route path="/galeri" element={<div className="p-4">Halaman Galeri</div>} />
+            <Route path="/refleksi" element={
+            <div className="space-y-8">
+              <WeeklyReflection /> {/* Form Input 3 Box */}
+              <hr />
+              <PeerFeed /> {/* Kabar Baik Teman Sekelas */}
+            </div>
+          } />
+            <Route path="/galeri" element={<GalleryStudent />} />
+            <Route path="/other" element={<OtherMenu />} />
+            <Route path="/edit-profile" element={<EditProfile/>}/>
+            <Route path="/presentation" element={<PresentationPage />} />
           </Route>
 
           {/* GRUP 2: HALAMAN GURU (Dibungkus AuthGuard dengan Role Required) */}
@@ -44,8 +72,17 @@ function App() {
             }
           >
             <Route index element={<TeacherDashboard />} />
-            <Route path="analysis" element={<AnalysisTab />} />
+            <Route path="mandiri-session" element={<div className="p-4 font-bold"><SesiMandiri /></div>} />
+            {/* GRUP 2.1: Peningkatan Kelas */}
+            <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
+            <Route path="/teacher/class-improvement/analysis" element={<AnalysisTab />} />
+        <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
+            {/* GRUP 2.2: Bank Soal */}
+          <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
+          {/* GRUP 2.3: Pengaturan */}
             <Route path="profile" element={<div className="p-4 font-bold">Pengaturan Akun Guru</div>} />
+
+            
           </Route>
 
           {/* GRUP 3: GAME (Bisa tambahkan AuthGuard juga agar siswa harus login dulu) */}
@@ -57,10 +94,29 @@ function App() {
               </AuthGuard>
             } 
           />
+          {/* SUPERADMIN */}
+          <Route 
+            path="/superadmin" 
+            element={
+              <AuthGuard roleRequired="superadmin">
+                <SuperadminLayout />
+              </AuthGuard>
+            }
+          >
+            <Route index element={<SuperadminDashboard />} />
+            <Route path="teacher-mgmt" element={<div className="p-4 font-bold"><TeacherManagement /></div>} />
+            <Route path="student-mgmt" element={<div className="p-4 font-bold"><StudentManagement /></div>} />
+            <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
+            <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
+            <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
+
+            {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
+            <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}
+          </Route>
 
         </Routes>
       </BrowserRouter>
-      <Toaster />
+      <Toaster position="top-center" richColors closeButton />
     </>
   );
 }

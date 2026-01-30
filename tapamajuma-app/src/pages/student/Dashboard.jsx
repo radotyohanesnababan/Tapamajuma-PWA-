@@ -3,6 +3,7 @@ import api from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 // Tambahkan import grafik ini
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function StudentDashboard() {
@@ -10,11 +11,12 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   
+  
 
 useEffect(() => {
     Promise.all([
-      api.get("/user"),
-      api.get("/activities")
+      api.get("/api/user"),
+      api.get("/api/activities")
     ])
     .then(([userRes, actRes]) => {
       setUser(userRes.data);
@@ -94,12 +96,7 @@ useEffect(() => {
                   Yakin: {act.confidence_level}/5
                 </div>
                         </div>
-                        {act.journal && (
-            <div className="mt-3 pt-3 border-t border-dashed">
-                <p className="text-[10px] font-semibold text-primary uppercase">Strategiku:</p>
-                <p className="text-xs italic text-muted-foreground mt-1">"{act.journal}"</p>
-            </div>
-            )}
+                        
             </CardContent>
           </Card>
         ))}

@@ -10,7 +10,7 @@ export default function AnalysisTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    api.get("/teacher/dashboard")
+    api.get("/api/teacher/dashboard")
       .then((res) => {
         setAnalysisList(res.data);
         setLoading(false);

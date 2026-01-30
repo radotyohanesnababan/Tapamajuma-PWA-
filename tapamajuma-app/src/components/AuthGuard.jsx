@@ -7,29 +7,39 @@ export default function AuthGuard({ children, roleRequired }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Cek siapa yang login
-        const res = await api.get("/user");
+useEffect(() => {
+  const checkAuth = async () => {
+    try {
+      // 1. Ambil data user dari backend Laravel
+      const res = await api.get("/api/user");
+      const userRole = res.data.role; // Role dari database (student, teacher, atau superadmin)
+      
+      // 2. Jika rute ini butuh role spesifik dan user tidak memilikinya
+      if (roleRequired && userRole !== roleRequired) {
+        // Tentukan rute pulang berdasarkan role asli user
+        let dashboardTujuan = "/"; // Default untuk student
         
-        // Jika butuh role spesifik (misal: guru)
-        if (roleRequired && res.data.role !== roleRequired) {
-          navigate(res.data.role === "teacher" ? "/teacher" : "/"); 
-          return;
+        if (userRole === "superadmin") {
+          dashboardTujuan = "/superadmin"; // Rute WebView Superadmin
+        } else if (userRole === "teacher") {
+          dashboardTujuan = "/teacher";
         }
 
-        setAuthorized(true);
-      } catch  {
-        // Jika 401 (belum login), tendang ke login
-        navigate("/login", { replace: true });
-      } finally {
-        setLoading(false);
+        navigate(dashboardTujuan, { replace: true });
+        return;
       }
-    };
 
-    checkAuth();
-  }, [navigate, roleRequired]);
+      setAuthorized(true);
+    } catch {
+      // Jika belum login (401), arahkan ke login
+      navigate("/login", { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  checkAuth();
+}, [navigate, roleRequired]);
 
   if (loading) {
     return (

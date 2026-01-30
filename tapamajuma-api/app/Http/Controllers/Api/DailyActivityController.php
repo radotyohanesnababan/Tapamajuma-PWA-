@@ -3,55 +3,101 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\DailyActivity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class DailyActivityController extends Controller
 {
-    // Simpan Aksi Harian
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'type' => 'required|in:berhitung,membaca,bercerita',
-            'score' => 'required|integer',
-            'confidence_level' => 'required|integer|min:1|max:5',
-            'audio_file' => 'nullable|file|mimes:mp3,wav,webm|max:2048',
-            'journal' => 'nullable|string',
-        ]);
-
         $user = $request->user();
 
-        // Handle upload audio jika ada (untuk aksi bercerita)
-        $audioPath = null;
-        if ($request->hasFile('audio_file')) {
-            $audioPath = $request->file('audio_file')->store('activities/audio', 'public');
+        // 1. VALIDASI DINAMIS (Tergantung Tipe)
+        $rules = [
+            'type' => 'required|in:literacy,numeracy',
+            'confidence_level' => 'required|numeric|min:1|max:5',
+            'journal' => 'required|string',
+        ];
+
+        // Aturan Khusus Numerasi
+        if ($request->type === 'numeracy') {
+            $rules['subject'] = 'required|string';
+            $rules['score'] = 'required|numeric';
+        } 
+        // Aturan Khusus Literasi
+        else {
+            $rules['reading_content'] = 'nullable|string';
+            $rules['audio_file'] = 'nullable|file|mimes:mp3,wav,webm,m4a|max:5120'; // Max 5MB
+            $rules['subject'] = 'nullable|string'; // Literasi bisa null subjectnya
+            $rules['score'] = 'nullable|numeric';
         }
 
-        $activity = $user->dailyActivities()->create([
-            'type' => $validated['type'],
-            'score' => $validated['score'],
-            'confidence_level' => $validated['confidence_level'],
-            'audio_path' => $audioPath,
-            'journal' => $validated['journal'] ?? null,
-        ]);
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => 'Validasi Gagal', 'detail' => $e->errors()], 422);
+        }
 
-        // Cek apakah siswa naik level setelah aktivitas ini
-        $user->updateLevel();
+        // 2. PROSES SIMPAN
+        try {
+            // Handle Upload Audio (Khusus Literasi)
+            $audioPath = null;
+            if ($request->hasFile('audio_file')) {
+                $audioPath = $request->file('audio_file')->store('activities/audio', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Aktivitas berhasil dicatat!',
-            'data' => $activity,
-            'current_level' => $user->level
-        ]);
+            // Persiapkan Data
+            $dataToSave = [
+                'type' => $validated['type'],
+                'confidence_level' => $validated['confidence_level'],
+                'journal' => $validated['journal'],
+                'subject' => $request->subject ?? 'Umum', // Default jika kosong
+                'score' => $request->score ?? 0,          // Default 0 jika literasi
+                'reading_content' => $request->reading_content ?? null,
+                'audio_path' => $audioPath,
+            ];
+
+            // Simpan ke DB
+            $activity = $user->dailyActivities()->create($dataToSave);
+
+            // 3. UPDATE LEVEL (Gamification)
+            try {
+                // Contoh Logic: Level naik setiap kelipatan 100 XP
+                $totalXp = $user->dailyActivities()->sum('score');
+                // Tambahan XP untuk Literasi (karena literasi score-nya mungkin 0/manual, kita kasih bonus fixed)
+                $literacyBonus = $user->dailyActivities()->where('type', 'literacy')->count() * 10; 
+                
+                $finalXp = $totalXp + $literacyBonus;
+                $newLevel = floor($finalXp / 100) + 1;
+
+                if ($user->level != $newLevel) {
+                    $user->level = $newLevel;
+                    $user->save();
+                }
+            } catch (\Exception $e) {
+                Log::error("Gagal update level user {$user->id}: " . $e->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Aktivitas berhasil disimpan!',
+                'data' => $activity,
+                'new_level' => $user->level
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error("Database Error: " . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan sistem', 'msg' => $e->getMessage()], 500);
+        }
     }
 
-    // Ambil Riwayat Aktivitas untuk Grafik di React
+    // Ambil Riwayat (Untuk Grafik)
     public function index(Request $request)
     {
         $activities = $request->user()->dailyActivities()
             ->latest()
-            ->take(7) // Ambil 7 aksi terakhir untuk grafik mingguan
+            ->take(7) 
             ->get();
 
         return response()->json($activities);

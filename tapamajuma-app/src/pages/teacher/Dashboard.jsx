@@ -3,9 +3,12 @@ import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, BluetoothConnected } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("All");
@@ -19,13 +22,13 @@ export default function TeacherDashboard() {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    api.get("/teacher/dashboard").then((res) => setData(res.data));
+    api.get("/api/teacher/dashboard").then((res) => setData(res.data));
   }, []);
 
 
 
   useEffect(() => {
-    api.get(`/teacher/stats?class=${selectedClass}`)
+    api.get(`/api/teacher/stats?class=${selectedClass}`)
       .then(res => setSummary(res.data))
       .catch(err => console.error(err));
   }, [selectedClass]);
@@ -36,7 +39,7 @@ export default function TeacherDashboard() {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchSearch = (item.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
-      const matchClass = selectedClass === "All" || item.user?.class_name === selectedClass;
+      const matchClass = selectedClass === "All" || item.user?.class_id === selectedClass;
       return matchSearch && matchClass;
     });
   }, [data, searchTerm, selectedClass]);
@@ -76,7 +79,7 @@ export default function TeacherDashboard() {
     <div className="bg-slate-50 min-h-screen pb-24 p-4 space-y-4 text-left">
       {/* Header & Summary Cards tetap sama ... */}
       <div className="space-y-1">
-        <h1 className="text-xl font-bold text-left">Analisis Kelas</h1>
+        <h1 className="text-xl font-bold text-left">Beranda Kelas</h1>
         <p className="text-xs text-muted-foreground italic text-left">Update: {new Date().toLocaleDateString()}</p>
       </div>
 
@@ -94,34 +97,46 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
+      {/* Mandiri Area */}
+      <div>
+        <button
+            onClick={() => navigate("/teacher/mandiri-session")}
+            disabled={currentPage === totalPages}
+            className="p-2 text-slate-800 bg-blue-300 border rounded-md disabled:opacity-30 active:scale-90 transition-transform w-full font-bold "
+          >
+            Catat Sesi Mandiri!
+          </button>
+      </div>
 
       {/* Filter Area */}
       <div className="grid grid-cols-2 gap-2">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <Input 
-            placeholder="Cari siswa..." 
-            className="pl-7 h-9 text-xs" 
-            value={searchTerm}
-            onChange={(e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset halaman langsung di sini
-  }}
+                    <Input 
+                      placeholder="Cari siswa..." 
+                      className="pl-7 h-9 text-xs" 
+                      value={searchTerm}
+                      onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset halaman langsung di sini
+            }}
           />
         </div>
         <select 
-          className="h-9 border rounded-md px-2 text-xs bg-white outline-none"
-          value={selectedClass}
-          onChange={(e) => {
-    setSelectedClass(e.target.value);
-    setCurrentPage(1); // Reset halaman langsung di sini
-  }}
+                  className="h-9 border rounded-md px-2 text-xs bg-white outline-none"
+                  value={selectedClass}
+                  onChange={(e) => {
+            setSelectedClass(e.target.value);
+            setCurrentPage(1); // Reset halaman langsung di sini
+          }}
         >
           <option value="All">Semua Kelas</option>
           <option value="VII-A">VII-A</option>
           <option value="VII-B">VII-B</option>
+          <option value="VII-C">VII-C</option>
         </select>
       </div>
+      
 
       {/* Daftar Kartu Siswa */}
       <div className="space-y-3">
@@ -134,7 +149,7 @@ export default function TeacherDashboard() {
                   <div className="text-left">
                     <h3 className="font-bold text-sm text-left">{item.user?.name}</h3>
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase text-left">
-                      {item.user?.class_name || "Tanpa Kelas"}
+                      {item.user?.class_id || "Tanpa Kelas"}
                     </p>
                   </div>
                   <Badge className={`${status.color} text-[10px] px-2 py-0 border-none text-white`}>
@@ -168,13 +183,13 @@ export default function TeacherDashboard() {
       {/* Navigasi Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-6">
-          <button
+          <Button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
             className="p-2 bg-white border rounded-full disabled:opacity-30 active:scale-90 transition-transform"
           >
             <ChevronLeft size={16} />
-          </button>
+          </Button>
           
           <span className="text-xs font-bold">
             {currentPage} / {totalPages}
