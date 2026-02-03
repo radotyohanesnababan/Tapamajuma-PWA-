@@ -12,9 +12,6 @@ export default function SesiMandiri() {
   // STATE MANAGEMENT
   const [availableClasses, setAvailableClasses] = useState([]); 
   const [students, setStudents] = useState([]); 
-  
-  // PENTING: selectedClass sekarang menyimpan ID (Integer), misal: 1
-  // Karena backend butuh ID untuk foreign key saat simpan data
   const [selectedClass, setSelectedClass] = useState(null); 
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,7 +19,7 @@ export default function SesiMandiri() {
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 1. FETCH DAFTAR KELAS (Load Objects {id, name})
+  // 1. FETCH DAFTAR KELAS
   useEffect(() => {
     const fetchClasses = async () => {
       try {
@@ -30,9 +27,8 @@ export default function SesiMandiri() {
         const classesData = response.data;
         setAvailableClasses(classesData);
 
-        // Otomatis pilih kelas pertama jika ada
         if (classesData.length > 0) {
-          setSelectedClass(classesData[0].id); // Set ID-nya
+          setSelectedClass(classesData[0].id);
         }
       } catch (error) {
         console.error("Gagal memuat kelas:", error);
@@ -44,7 +40,7 @@ export default function SesiMandiri() {
     fetchClasses();
   }, []);
 
-  // 2. FETCH SISWA (Setiap kali ID kelas dipilih)
+  // 2. FETCH SISWA
   useEffect(() => {
     if (!selectedClass) return;
 
@@ -53,7 +49,6 @@ export default function SesiMandiri() {
       setStudents([]); 
       
       try {
-        // Kirim class_id (ID) ke backend
         const response = await api.get(`/api/students?class_id=${selectedClass}`);
         setStudents(response.data);
       } catch (error) {
@@ -88,7 +83,6 @@ export default function SesiMandiri() {
   const totalStudents = students.length;
   const percentage = totalStudents > 0 ? Math.round((activeCount / totalStudents) * 100) : 0;
 
-  // Helper untuk mendapatkan Nama Kelas (untuk Display di UI)
   const getSelectedClassName = () => {
     const cls = availableClasses.find(c => c.id === selectedClass);
     return cls ? cls.name : '-';
@@ -100,7 +94,7 @@ export default function SesiMandiri() {
     setIsSaving(true);
     try {
       const payload = {
-        class_id: selectedClass, // Kirim ID
+        class_id: selectedClass,
         students: students.map(s => ({ id: s.id, active: !!s.active }))
       };
 
@@ -129,7 +123,7 @@ export default function SesiMandiri() {
             </CardDescription>
           </div>
 
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center">
+          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center transition-all">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white rounded-full text-indigo-600 shadow-sm">
                 <UserCheck size={20} />
@@ -137,36 +131,49 @@ export default function SesiMandiri() {
               <div>
                 <p className="text-xs font-bold text-indigo-400 uppercase">Kehadiran</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-indigo-700">{activeCount}</span>
-                  <span className="text-sm font-medium text-indigo-400">/ {totalStudents}</span>
+                  {/* Tampilkan Loading kecil atau angka */}
+                  {isLoadingStudents ? (
+                    <div className="h-6 w-16 bg-indigo-200 rounded animate-pulse mt-1"></div>
+                  ) : (
+                    <>
+                        <span className="text-2xl font-black text-indigo-700">{activeCount}</span>
+                        <span className="text-sm font-medium text-indigo-400">/ {totalStudents}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-lg font-black text-indigo-600">{percentage}%</span>
+               {isLoadingStudents ? (
+                    <div className="h-6 w-10 bg-indigo-200 rounded animate-pulse ml-auto"></div>
+               ) : (
+                    <span className="text-lg font-black text-indigo-600">{percentage}%</span>
+               )}
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
           
-          {/* PILIH KELAS (Loop Object: key=ID, label=NAME) */}
+          {/* PILIH KELAS (Loading Skeleton) */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Filter size={12} /> Pilih Kelas
             </label>
             
             {isLoadingClasses ? (
-              <div className="flex gap-2 animate-pulse">
-                <div className="h-9 w-24 bg-slate-100 rounded-full"></div>
-                <div className="h-9 w-24 bg-slate-100 rounded-full"></div>
+              // SKELETON LOAD KELAS
+              <div className="flex gap-2 overflow-hidden">
+                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
+                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
+                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
               </div>
             ) : availableClasses.length > 0 ? (
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {availableClasses.map((cls) => (
                   <button
-                    key={cls.id} // Key ID
-                    onClick={() => setSelectedClass(cls.id)} // Set State ID
+                    key={cls.id}
+                    onClick={() => setSelectedClass(cls.id)}
                     className={`
                       px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap
                       ${selectedClass === cls.id 
@@ -175,7 +182,7 @@ export default function SesiMandiri() {
                       }
                     `}
                   >
-                    Kelas {cls.name} {/* Display Name */}
+                    Kelas {cls.name}
                   </button>
                 ))}
               </div>
@@ -189,7 +196,7 @@ export default function SesiMandiri() {
           {/* AREA SISWA */}
           {selectedClass && (
             <>
-              {/* SEARCH BAR */}
+              {/* TOOLBAR */}
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -198,19 +205,45 @@ export default function SesiMandiri() {
                     className="pl-9 bg-white border-slate-200 text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    disabled={isLoadingStudents} // Disable saat loading
                   />
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => toggleAll(true)} className="flex-1 bg-white">Hadir Semua</Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleAll(false)} className="flex-1 text-red-500 hover:bg-red-50">Reset</Button>
+                  <Button 
+                    variant="outline" size="sm" onClick={() => toggleAll(true)} 
+                    className="flex-1 bg-white"
+                    disabled={isLoadingStudents || students.length === 0}
+                   >
+                    Hadir Semua
+                   </Button>
+                  <Button 
+                    variant="ghost" size="sm" onClick={() => toggleAll(false)} 
+                    className="flex-1 text-red-500 hover:bg-red-50"
+                    disabled={isLoadingStudents || students.length === 0}
+                   >
+                    Reset
+                   </Button>
                 </div>
               </div>
 
-              {/* LIST SISWA */}
+              {/* LIST SISWA (Dengan Skeleton Loading) */}
               <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
                 {isLoadingStudents ? (
-                   <div className="text-center py-8 text-slate-400">Loading siswa...</div>
+                  // --- SKELETON LOADING SISWA ---
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-50 bg-white animate-pulse">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="h-10 w-10 bg-slate-200 rounded-full" /> {/* Avatar Skeleton */}
+                        <div className="space-y-2 flex-1">
+                          <div className="h-4 w-32 bg-slate-200 rounded" /> {/* Nama Skeleton */}
+                          <div className="h-3 w-20 bg-slate-100 rounded" /> {/* Info Skeleton */}
+                        </div>
+                      </div>
+                      <div className="h-8 w-8 bg-slate-200 rounded-full" /> {/* Checkbox Skeleton */}
+                    </div>
+                  ))
                 ) : filteredStudents.length > 0 ? (
+                  // --- DATA ASLI ---
                   filteredStudents.map((student) => (
                     <div 
                       key={student.id}
@@ -255,6 +288,7 @@ export default function SesiMandiri() {
                     </div>
                   ))
                 ) : (
+                  // --- KOSONG ---
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                     <Search className="h-8 w-8 mb-2 opacity-50" />
                     <p className="text-sm font-medium">Siswa tidak ditemukan.</p>
@@ -266,7 +300,7 @@ export default function SesiMandiri() {
               <Button 
                 className="w-full h-12 text-sm font-bold bg-slate-900 hover:bg-indigo-600 transition-all shadow-lg"
                 onClick={handleSave}
-                disabled={isSaving || students.length === 0}
+                disabled={isSaving || students.length === 0 || isLoadingStudents} // Disable jika loading
               >
                 {isSaving ? (
                   <>
