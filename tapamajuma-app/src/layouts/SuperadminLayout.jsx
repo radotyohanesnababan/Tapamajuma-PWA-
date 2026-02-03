@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { getStorageUrl } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   Users, 
