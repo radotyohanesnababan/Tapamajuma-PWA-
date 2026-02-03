@@ -43,6 +43,8 @@ export default function BankSoal() {
     option_a: "",
     option_b: "",
     option_c: "",
+    option_d: "",
+    option_e: "",
     correct_key: "A"
   });
 
@@ -89,7 +91,10 @@ export default function BankSoal() {
         options: {
           A: formData.option_a,
           B: formData.option_b,
-          C: formData.option_c
+          C: formData.option_c,
+          D: formData.option_d,
+          E: formData.option_e
+          
         },
         correct_key: formData.correct_key
       };
@@ -99,7 +104,7 @@ export default function BankSoal() {
       
       setFormData({
         subject_id: "", class_id: "", question_text: "", 
-        option_a: "", option_b: "", option_c: "", correct_key: "A"
+        option_a: "", option_b: "", option_c: "", option_d: "", option_e: "", correct_key: "A"
       });
       fetchData(); 
       setView('list');
@@ -311,7 +316,7 @@ export default function BankSoal() {
 
             <div className="bg-slate-50 p-4 rounded-lg border space-y-3">
               <p className="text-sm font-bold">Pilihan Jawaban</p>
-              {['A','B','C'].map((opt) => (
+              {['A','B','C','D','E'].map((opt) => (
                 <div key={opt} className="flex gap-2 items-center">
                   <span className="font-bold w-6 text-center">{opt}</span>
                   <Input required placeholder={`Pilihan ${opt}`} value={formData[`option_${opt.toLowerCase()}`]} onChange={e => setFormData({...formData, [`option_${opt.toLowerCase()}`]: e.target.value})} className="bg-white"/>
@@ -322,7 +327,7 @@ export default function BankSoal() {
             <div className="space-y-2">
               <label className="text-sm font-semibold">Kunci Jawaban</label>
               <select className="w-full h-10 px-3 rounded-md border text-sm bg-white" value={formData.correct_key} onChange={e => setFormData({...formData, correct_key: e.target.value})}>
-                <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option>
               </select>
             </div>
 
@@ -341,9 +346,6 @@ export default function BankSoal() {
         <div className="max-w-xl mx-auto bg-white p-8 rounded-xl border shadow-sm text-center animate-in fade-in zoom-in-95">
           <FileSpreadsheet className="h-16 w-16 text-blue-600 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Import CSV</h2>
-          <p className="text-slate-500 text-sm mb-6 bg-slate-50 p-2 rounded">
-            Format: <code>NamaMapel, NamaKelas, Soal, PilA, PilB, PilC, Kunci</code>
-          </p>
           <div className="mb-6 space-y-3">
         <p className="text-slate-500 text-sm">
            Unduh template Excel di bawah ini untuk memastikan format data sesuai.

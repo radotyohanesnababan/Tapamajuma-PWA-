@@ -50,7 +50,9 @@ class QuestionInputSheet implements WithHeadings, WithTitle, WithEvents
             'Pilihan A',       // D
             'Pilihan B',       // E
             'Pilihan C',       // F
-            'Kunci'    // G
+            'Pilihan D',       // G
+            'Pilihan E',       // H
+            'Kunci'    // I
         ];
     }
 
@@ -99,18 +101,18 @@ class QuestionInputSheet implements WithHeadings, WithTitle, WithEvents
                 $validationKunci->setErrorStyle(DataValidation::STYLE_STOP);
                 $validationKunci->setAllowBlank(false);
                 $validationKunci->setShowDropDown(true);
-                $validationKunci->setFormula1('"A,B,C"');
+                $validationKunci->setFormula1('"A,B,C,D,E"');
 
                 // F. LOOP PENERAPAN VALIDASI & STYLE BARIS
                 for ($i = 2; $i <= $rowCount; $i++) {
                     $sheet->getCell("A$i")->setDataValidation(clone $validationMapel);
                     $sheet->getCell("B$i")->setDataValidation(clone $validationKelas);
-                    $sheet->getCell("G$i")->setDataValidation(clone $validationKunci);
+                    $sheet->getCell("I$i")->setDataValidation(clone $validationKunci);
                     
                     // Wrap text untuk kolom Soal agar tidak memanjang ke samping
                     $sheet->getStyle("C$i")->getAlignment()->setWrapText(true);
                     // Align Top semua cell
-                    $sheet->getStyle("A$i:G$i")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+                    $sheet->getStyle("A$i:I$i")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
                 }
             },
         ];

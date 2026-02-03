@@ -43,7 +43,7 @@ class QuestionBankController extends Controller
             'class_id' => 'required|exists:class_names,id', // <--- Validasi ID Kelas
             'question_text' => 'required|string',
             'options' => 'required|array|min:3',
-            'correct_key' => 'required|in:A,B,C',
+            'correct_key' => 'required|in:A,B,C,D,E',
         ]);
 
         $q = QuestionBank::create([

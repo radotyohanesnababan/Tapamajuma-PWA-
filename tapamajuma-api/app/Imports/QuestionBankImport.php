@@ -59,6 +59,8 @@ public function sheets(): array
                 'A' => $row['pilihan_a'],
                 'B' => $row['pilihan_b'],
                 'C' => $row['pilihan_c'],
+                'D' => $row['pilihan_d'],
+                'E' => $row['pilihan_e'],
             ],
             'correct_key'   => strtoupper($row['kunci']),
         ]);
