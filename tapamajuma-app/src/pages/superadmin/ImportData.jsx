@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, FileSpreadsheet, Download, GraduationCap, Briefcase } from "lucide-react"; // Icon Guru & Siswa
+import { UploadCloud, FileSpreadsheet, Download, GraduationCap, Briefcase, Loader2 } from "lucide-react"; // Icon Guru & Siswa
 import api from '@/lib/axios';
 import { toast } from "sonner"; 
+
 
 export default function ImportData() {
   const [activeTab, setActiveTab] = useState('student'); // 'student' or 'teacher'

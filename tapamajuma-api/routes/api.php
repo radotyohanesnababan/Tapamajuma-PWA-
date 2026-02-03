@@ -95,12 +95,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bank-soal', [QuestionBankController::class, 'store']);
     Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
     Route::delete('/bank-soal/{id}', [QuestionBankController::class, 'destroy']);
+    Route::get('/bank-soal/template', [QuestionBankController::class, 'downloadTemplate']);
+    // Route Import
+    Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
     });
     // [BARU] 2. Ambil Siswa (Sesuai React: /api/students?class=7A)
     Route::get('/students', [MandiriSessionController::class, 'getStudents']);
 
     // [BARU] 3. Simpan Presensi (Sesuai React: /api/self-study/store)
     Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
+
+    
 
 
 

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Exports\TemplateQuestionBankExport;
 use App\Http\Controllers\Controller;
+use App\Imports\QuestionBankImport;
 use App\Models\QuestionBank;
 use App\Models\Subject;
 use App\Models\ClassName; // <--- Import Model Kelas
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QuestionBankController extends Controller
 {
@@ -56,44 +59,32 @@ class QuestionBankController extends Controller
     }
 
     public function import(Request $request)
-    {
-        $request->validate(['file' => 'required|mimes:csv,txt']);
-        $file = $request->file('file');
-        $csvData = array_map('str_getcsv', file($file->getRealPath()));
-        array_shift($csvData); // Skip Header
+{
+    // Validasi file
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
 
-        DB::beginTransaction();
-        try {
-            foreach ($csvData as $row) {
-                if (count($row) < 7) continue;
+    try {
+        // Panggil Excel::import
+        // Parameter 1: Instance Import Class (kita kirim User ID ke sana)
+        // Parameter 2: Filenya
+        Excel::import(new QuestionBankImport($request->user()->id), $request->file('file'));
 
-                // 1. Cari Subject ID by Name
-                $subjectName = trim($row[0]);
-                $subject = Subject::where('name', $subjectName)->first();
+        return response()->json([
+            'message' => 'Import CSV Berhasil! Data dengan Mapel/Kelas yang tidak sesuai akan dilewati otomatis.'
+        ]);
 
-                // 2. Cari Class ID by Name
-                $className = trim($row[1]);
-                $classObj = ClassName::where('name', $className)->first();
-
-                // Jika Mapel atau Kelas tidak ditemukan di Master Data, skip baris ini
-                if (!$subject || !$classObj) continue; 
-
-                QuestionBank::create([
-                    'creator_id' => $request->user()->id,
-                    'subject_id' => $subject->id, 
-                    'class_id'   => $classObj->id, // <--- Simpan ID Kelas
-                    'question_text' => $row[2],
-                    'options'       => ['A' => $row[3], 'B' => $row[4], 'C' => $row[5]],
-                    'correct_key'   => strtoupper($row[6])
-                ]);
-            }
-            DB::commit();
-            return response()->json(['message' => 'Import sukses. Data dengan Mapel/Kelas tidak dikenal dilewati.']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+         return response()->json(['error' => 'Format data tidak valid.'], 422);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Gagal import: ' . $e->getMessage()], 500);
     }
+}
+public function downloadTemplate()
+{
+    return Excel::download(new TemplateQuestionBankExport, 'template_bank_soal.xlsx');
+}
 
     public function destroy(Request $request, $id)
     {

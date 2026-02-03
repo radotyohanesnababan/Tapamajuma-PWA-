@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import { 
   BookOpen, 
   Plus, 
@@ -16,13 +17,14 @@ import {
   Loader2,
   ListChecks,
   ArrowLeft,
-  LayoutGrid
+  LayoutGrid,Download
 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BankSoal() {
   // --- STATE ---
-  const [view, setView] = useState('menu'); 
+  const [view, setView] = useState('menu');
+  const [isDownloading, setIsDownloading] = useState(false); 
   const [questions, setQuestions] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]); // <--- STATE BARU UNTUK KELAS
@@ -44,7 +46,7 @@ export default function BankSoal() {
     correct_key: "A"
   });
 
-  const [csvFile, setCsvFile] = useState(null);
+  const [xlsxFile, setXlsxFile] = useState(null);
 
   // --- FETCH DATA ---
   const fetchData = async () => {
@@ -110,18 +112,17 @@ export default function BankSoal() {
 
   const handleImportSubmit = async (e) => {
     e.preventDefault();
-    if (!csvFile) return toast.warning("Pilih file CSV dulu");
+    if (!xlsxFile) return toast.warning("Pilih file XLSXdulu");
     
     setIsSubmitting(true);
     const data = new FormData();
-    data.append('file', csvFile);
-
+    data.append('file', xlsxFile);
     try {
       await api.post('/api/teacher/bank-soal/import', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      toast.success("Import CSV Berhasil!");
-      setCsvFile(null);
+      toast.success("Import XLSX Berhasil!");
+      setXlsxFile(null);
       fetchData();
       setView('list');
     } catch (error) {
@@ -130,6 +131,36 @@ export default function BankSoal() {
       setIsSubmitting(false);
     }
   };
+  const downloadTemplate = async () => {
+    setIsDownloading(true);
+    try {
+        // Ganti URL sesuai route Laravel kamu
+        // Pastikan endpoint ini mengarah ke function downloadTemplate() di Controller
+        const response = await api.get('/api/teacher/bank-soal/template', {
+            responseType: 'blob', // WAJIB: Agar respon dibaca sebagai file binary
+        });
+
+        // Buat link download virtual di browser
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Nama file saat tersimpan di komputer user
+        link.setAttribute('download', 'template_bank_soal.xlsx'); 
+        
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        
+        // Opsional: Toast sukses
+        // toast.success("Template berhasil diunduh");
+    } catch (error) {
+        console.error("Download error:", error);
+        toast.error("Gagal mendownload template. Coba lagi nanti.");
+    } finally {
+        setIsDownloading(false);
+    }
+};
 
   const handleDelete = async (id) => {
     if (!window.confirm("Hapus soal ini?")) return;
@@ -183,7 +214,7 @@ export default function BankSoal() {
 
           <div onClick={() => setView('import')} className="group cursor-pointer bg-white p-6 rounded-2xl border hover:shadow-xl hover:border-blue-300 transition-all relative overflow-hidden">
             <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><Upload size={24} /></div>
-            <h3 className="text-xl font-bold mb-1">Import CSV</h3>
+            <h3 className="text-xl font-bold mb-1">Import XLSX</h3>
             <p className="text-sm text-slate-500">Upload masal.</p>
           </div>
         </div>
@@ -313,16 +344,37 @@ export default function BankSoal() {
           <p className="text-slate-500 text-sm mb-6 bg-slate-50 p-2 rounded">
             Format: <code>NamaMapel, NamaKelas, Soal, PilA, PilB, PilC, Kunci</code>
           </p>
+          <div className="mb-6 space-y-3">
+        <p className="text-slate-500 text-sm">
+           Unduh template Excel di bawah ini untuk memastikan format data sesuai.
+        </p>
+
+        {/* --- TOMBOL DOWNLOAD TEMPLATE --- */}
+        <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={downloadTemplate} 
+            disabled={isDownloading}
+            className="gap-2 text-xs border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+        >
+            {isDownloading ? (
+                <Loader2 size={14} className="animate-spin"/> 
+            ) : (
+                <Download size={14}/> 
+            )}
+            {isDownloading ? 'Sedang Mengunduh...' : 'Download Template Excel'}
+        </Button>
+    </div>
           <form onSubmit={handleImportSubmit} className="space-y-6">
             <div className="border-2 border-dashed border-slate-300 rounded-xl p-10 relative cursor-pointer hover:bg-blue-50">
-              <Input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
+              <Input type="file" accept=".xlsx" onChange={e => setXlsxFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
               <div className="pointer-events-none text-slate-400">
-                {csvFile ? <span className="text-blue-600 font-bold">{csvFile.name}</span> : "Klik untuk upload CSV"}
+                {xlsxFile ? <span className="text-blue-600 font-bold">{xlsxFile.name}</span> : "Klik untuk upload file"}
               </div>
             </div>
             <div className="flex gap-3 justify-center">
                <Button type="button" variant="outline" onClick={() => setView('menu')}>Batal</Button>
-               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={!csvFile || isSubmitting}>Proses Import</Button>
+               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={!xlsxFile || isSubmitting}>Proses Import</Button>
             </div>
           </form>
         </div>
