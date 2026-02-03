@@ -1,66 +1,65 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import api from "@/lib/axios"; // Pastikan path axios Anda benar
+import api from "@/lib/axios"; 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Search, UserCheck, Save, Users, Filter, Loader2 } from "lucide-react";
-import {toast} from "sonner";
+import { toast } from "sonner"; 
 
 export default function SesiMandiri() {
   
   // STATE MANAGEMENT
-  const [availableClasses, setAvailableClasses] = useState([]); // List kelas dari API
-  const [students, setStudents] = useState([]); // List siswa dari API
-  const [selectedClass, setSelectedClass] = useState(""); 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [availableClasses, setAvailableClasses] = useState([]); 
+  const [students, setStudents] = useState([]); 
   
-  // LOADING STATES
+  // PENTING: selectedClass sekarang menyimpan ID (Integer), misal: 1
+  // Karena backend butuh ID untuk foreign key saat simpan data
+  const [selectedClass, setSelectedClass] = useState(null); 
+  
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingClasses, setIsLoadingClasses] = useState(true);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 1. FETCH DAFTAR KELAS (Saat halaman dimuat)
+  // 1. FETCH DAFTAR KELAS (Load Objects {id, name})
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         const response = await api.get('/api/teacher/my-classes');
-        const classes = response.data;
-        setAvailableClasses(classes);
+        const classesData = response.data;
+        setAvailableClasses(classesData);
 
         // Otomatis pilih kelas pertama jika ada
-        if (classes.length > 0) {
-          setSelectedClass(classes[0]);
+        if (classesData.length > 0) {
+          setSelectedClass(classesData[0].id); // Set ID-nya
         }
       } catch (error) {
         console.error("Gagal memuat kelas:", error);
-        toast.error("Gagal mengambil daftar kelas. Silakan coba lagi.");
+        toast.error("Gagal mengambil daftar kelas.");
       } finally {
         setIsLoadingClasses(false);
       }
     };
-
     fetchClasses();
   }, []);
 
-  // 2. FETCH SISWA (Setiap kali kelas dipilih)
+  // 2. FETCH SISWA (Setiap kali ID kelas dipilih)
   useEffect(() => {
     if (!selectedClass) return;
 
     const fetchStudents = async () => {
       setIsLoadingStudents(true);
-      setStudents([]); // Kosongkan dulu biar tidak flicker data lama
+      setStudents([]); 
       
       try {
-        const response = await api.get(`/api/students?class=${selectedClass}`);
+        // Kirim class_id (ID) ke backend
+        const response = await api.get(`/api/students?class_id=${selectedClass}`);
         setStudents(response.data);
       } catch (error) {
         console.error("Gagal memuat siswa:", error);
-        if (error.response?.status === 403) {
-          toast.error("Akses Ditolak", "Anda tidak memiliki akses ke kelas ini.");
-        } else {
-          toast.error("Error", "Gagal mengambil data siswa.");
-        }
+        const msg = error.response?.data?.error || "Gagal mengambil data siswa.";
+        toast.error("Error", msg);
       } finally {
         setIsLoadingStudents(false);
       }
@@ -69,66 +68,56 @@ export default function SesiMandiri() {
     fetchStudents();
   }, [selectedClass]);
 
-  // LOGIC: Toggle status aktif siswa
+  // LOGIC ACTIONS
   const toggleActive = (id) => {
-    setStudents(prev => prev.map(student => 
-      student.id === id ? { ...student, active: !student.active } : student
-    ));
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
 
-  // LOGIC: Toggle semua siswa (Bulk Action)
   const toggleAll = (status) => {
-    setStudents(prev => prev.map(student => ({ ...student, active: status })));
+    setStudents(prev => prev.map(s => ({ ...s, active: status })));
   };
 
-  // LOGIC: Filter Pencarian (Client Side)
-  // Note: Kita tidak perlu filter by class lagi di sini karena API sudah mengirim data spesifik per kelas
   const filteredStudents = useMemo(() => {
-    return students.filter(student => 
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      student.nis?.includes(searchQuery)
+    return students.filter(s => 
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (s.nis && s.nis.includes(searchQuery))
     );
   }, [students, searchQuery]);
 
-  // LOGIC: Statistik
-  const activeCount = students.filter(s => s.active).length; // Hitung dari total data, bukan yang difilter
+  const activeCount = students.filter(s => s.active).length;
   const totalStudents = students.length;
   const percentage = totalStudents > 0 ? Math.round((activeCount / totalStudents) * 100) : 0;
+
+  // Helper untuk mendapatkan Nama Kelas (untuk Display di UI)
+  const getSelectedClassName = () => {
+    const cls = availableClasses.find(c => c.id === selectedClass);
+    return cls ? cls.name : '-';
+  };
 
   // 3. SIMPAN KE SERVER
   const handleSave = async () => {
     if (totalStudents === 0) return;
-    
     setIsSaving(true);
     try {
-        const cleanStudents = students.map(s => ({
-        id: s.id,
-        // Pakai operator !! agar pasti jadi true/false (bukan null/undefined)
-        active: !!s.active 
-      }));
       const payload = {
-        class_id: selectedClass,
-        students: cleanStudents // Mengirim array siswa beserta status active-nya
+        class_id: selectedClass, // Kirim ID
+        students: students.map(s => ({ id: s.id, active: !!s.active }))
       };
 
       await api.post('/api/self-study/store', payload);
-
-        toast.success("Aktifitas berhasil disimpan!");
+      toast.success("Presensi berhasil disimpan!");
     } catch (error) {
-      console.error("Gagal simpan:", error);
-      const errorMsg = error.response?.data?.message || "Terjadi kesalahan";
-      const errorDetail = JSON.stringify(error.response?.data?.errors || {});
-      toast.error("Gagal menyimpan Aktifitas", `${errorMsg}\n${errorDetail}`);
+      console.error(error);
+      toast.error("Gagal menyimpan presensi.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="space-y-6 p-4 max-w-3xl mx-auto">
+    <div className="space-y-6 p-4 max-w-3xl mx-auto pb-24">
       <Card className="border-none shadow-md bg-white overflow-hidden">
         
-        {/* BAGIAN HEADER */}
         <CardHeader className="pb-4 space-y-4">
           <div>
             <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -136,37 +125,32 @@ export default function SesiMandiri() {
               Presensi Sesi Mandiri
             </CardTitle>
             <CardDescription className="mt-1">
-              Kelola kehadiran siswa dalam sesi belajar hari ini.
+              Sesi untuk Kelas: <span className="font-bold text-indigo-600">{getSelectedClassName()}</span>
             </CardDescription>
           </div>
 
-          {/* DASHBOARD STATISTIK */}
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center transition-all">
+          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white rounded-full text-indigo-600 shadow-sm">
                 <UserCheck size={20} />
               </div>
               <div>
-                <p className="text-xs font-bold text-indigo-400 uppercase tracking-wide">
-                  Kehadiran {selectedClass ? `Kelas ${selectedClass}` : '-'}
-                </p>
+                <p className="text-xs font-bold text-indigo-400 uppercase">Kehadiran</p>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-black text-indigo-700">{activeCount}</span>
-                  <span className="text-sm font-medium text-indigo-400">/ {totalStudents} Siswa</span>
+                  <span className="text-sm font-medium text-indigo-400">/ {totalStudents}</span>
                 </div>
               </div>
             </div>
-            
             <div className="text-right">
               <span className="text-lg font-black text-indigo-600">{percentage}%</span>
-              <p className="text-[10px] text-indigo-400 font-bold uppercase">Partisipasi</p>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
           
-          {/* PILIH KELAS (Horizontal Scroll) */}
+          {/* PILIH KELAS (Loop Object: key=ID, label=NAME) */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Filter size={12} /> Pilih Kelas
@@ -181,79 +165,51 @@ export default function SesiMandiri() {
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {availableClasses.map((cls) => (
                   <button
-                    key={cls}
-                    onClick={() => setSelectedClass(cls)}
+                    key={cls.id} // Key ID
+                    onClick={() => setSelectedClass(cls.id)} // Set State ID
                     className={`
                       px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap
-                      ${selectedClass === cls 
+                      ${selectedClass === cls.id 
                         ? "bg-slate-900 text-white shadow-lg transform scale-105" 
                         : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                       }
                     `}
                   >
-                    Kelas {cls}
+                    Kelas {cls.name} {/* Display Name */}
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="p-4 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100">
-                Anda belum ditugaskan ke kelas manapun. Hubungi admin.
+              <div className="p-4 bg-red-50 text-red-600 text-xs rounded-lg">
+                Anda belum memiliki kelas.
               </div>
             )}
           </div>
 
-          {/* JIKA KELAS DIPILIH, TAMPILKAN KONTEN */}
+          {/* AREA SISWA */}
           {selectedClass && (
             <>
-              {/* TOOLBAR: SEARCH & ACTIONS */}
+              {/* SEARCH BAR */}
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                   <Input 
-                    placeholder={`Cari siswa di ${selectedClass}...`}
+                    placeholder="Cari nama atau NIS..."
                     className="pl-9 bg-white border-slate-200 text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    disabled={isLoadingStudents}
                   />
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 text-xs bg-white"
-                    onClick={() => toggleAll(true)}
-                    disabled={isLoadingStudents || students.length === 0}
-                  >
-                    Semua Hadir
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="flex-1 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => toggleAll(false)}
-                    disabled={isLoadingStudents || students.length === 0}
-                  >
-                    Reset
-                  </Button>
+                <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => toggleAll(true)} className="flex-1 bg-white">Hadir Semua</Button>
+                  <Button variant="ghost" size="sm" onClick={() => toggleAll(false)} className="flex-1 text-red-500 hover:bg-red-50">Reset</Button>
                 </div>
               </div>
 
               {/* LIST SISWA */}
               <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
                 {isLoadingStudents ? (
-                  // Loading Skeleton
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-50 bg-white">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-slate-100 rounded-full animate-pulse" />
-                        <div className="space-y-2">
-                          <div className="h-3 w-32 bg-slate-100 rounded animate-pulse" />
-                          <div className="h-2 w-20 bg-slate-100 rounded animate-pulse" />
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                   <div className="text-center py-8 text-slate-400">Loading siswa...</div>
                 ) : filteredStudents.length > 0 ? (
                   filteredStudents.map((student) => (
                     <div 
@@ -280,7 +236,7 @@ export default function SesiMandiri() {
                           </h4>
                           <p className="text-xs text-slate-400 flex items-center gap-1">
                             <span className="bg-slate-100 px-1.5 rounded text-[10px] font-bold text-slate-500">
-                              {student.class}
+                              {student.class_name}
                             </span>
                             <span>• NIS: {student.nis || '-'}</span>
                           </p>
@@ -302,7 +258,6 @@ export default function SesiMandiri() {
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                     <Search className="h-8 w-8 mb-2 opacity-50" />
                     <p className="text-sm font-medium">Siswa tidak ditemukan.</p>
-                    <p className="text-xs">Pastikan data siswa untuk kelas ini sudah diinput.</p>
                   </div>
                 )}
               </div>
@@ -321,7 +276,7 @@ export default function SesiMandiri() {
                 ) : (
                   <>
                     <Save className="mr-2 h-5 w-4" />
-                    Simpan Presensi {selectedClass}
+                    Simpan Presensi Kelas {getSelectedClassName()}
                   </>
                 )}
               </Button>

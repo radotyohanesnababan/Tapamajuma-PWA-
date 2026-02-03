@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom"; // Tambah useLocation
 import { Home, BookOpen, MessageCircle, LayoutGrid, CircleUser } from "lucide-react";
+import ChangelogModal from '@/components/ChangelogModal';
 
 export default function StudentLayout() {
   const location = useLocation(); // Hook untuk tahu kita sedang di halaman mana
@@ -17,6 +18,7 @@ export default function StudentLayout() {
       <main className="flex-1 pb-24 p-4 max-w-md mx-auto w-full">
         <Outlet />
       </main>
+      <ChangelogModal />
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl px-6 py-3 flex justify-between items-center z-50">
         {navItems.map((item) => {

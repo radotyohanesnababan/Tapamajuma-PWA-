@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ChangelogController;
 use App\Http\Controllers\Admin\ClassMgmtController;
 use App\Http\Controllers\Admin\QuestionMgmtController;
 use App\Http\Controllers\Admin\StudentMgmtController;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
+Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 
 /*
 |--------------------------------------------------------------------------
@@ -112,6 +114,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('subjects', SubjectMgmtController::class);
         Route::get('/questions', [QuestionMgmtController::class, 'index']);
         Route::delete('/questions/{id}', [QuestionMgmtController::class, 'destroy']);
+        Route::post('/stimport', [StudentMgmtController::class, 'import']);
+        Route::post('/tcimport', [AdminTeacherMgmtController::class, 'import']);
+        Route::get('/templates/download-template-student', [StudentMgmtController::class, 'downloadTemplateStudent']);
+        Route::get('/templates/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
+        Route::post('/changelog', [ChangelogController::class, 'store']);
+        Route::get('/changelog/all', [ChangelogController::class, 'index']);
     });
 
 });

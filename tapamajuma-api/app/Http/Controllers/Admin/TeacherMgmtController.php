@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TemplateTeacherExport;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\ClassName;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TeacherMgmtController extends Controller
 {
@@ -30,6 +32,34 @@ class TeacherMgmtController extends Controller
         'all_classes' => $classes // Kirim master data juga
     ]);
     }
+    public function import(Request $request) 
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+        'type' => 'required|in:student,teacher' // Validasi tipe
+    ]);
+
+    try {
+        $file = $request->file('file');
+        
+        if ($request->type === 'student') {
+            Excel::import(new \App\Imports\StudentsImport, $file);
+        } else {
+            Excel::import(new \App\Imports\TeachersImport, $file);
+        }
+        
+        return response()->json(['message' => 'Import berhasil!']);
+
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        // ... (Logika handle error sama seperti sebelumnya)
+         $failures = $e->failures();
+         $messages = [];
+         foreach ($failures as $failure) {
+             $messages[] = "Baris " . $failure->row() . ": " . implode(', ', $failure->errors());
+         }
+         return response()->json(['message' => 'Validasi Excel Gagal', 'errors' => $messages], 422);
+    }
+}
 
     /**
      * (Tidak Dipakai untuk API/React)
@@ -131,4 +161,9 @@ class TeacherMgmtController extends Controller
 
         return response()->json(['message' => 'Teacher deleted successfully']);
     }
+
+    public function downloadTemplateTeacher()
+{
+    return Excel::download(new TemplateTeacherExport, 'template_guru_pro.xlsx');
+}
 }

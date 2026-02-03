@@ -14,7 +14,7 @@ class SelfStudySession extends Model
      */
     protected $fillable = [
         'teacher_id',    // ID Guru pemandu
-        'class_id',     // Nama Kelas (misal: "7A")
+        'class_name',     // Nama Kelas (misal: "7A")
         'started_at',    // Waktu mulai
         'total_present', // Cache jumlah kehadiran
         'topic',         // (Opsional) Topik sesi

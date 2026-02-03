@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 
 export default function SuperadminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const menuItems = [
     { name: "Dashboard", path: "/superadmin", icon: <LayoutDashboard size={20} /> },
@@ -29,8 +31,7 @@ export default function SuperadminLayout() {
     { name: "Manajemen Kelas", path: "/superadmin/class-mgmt", icon: <Book size={20} /> },
     { name: "Manajemen Mata Pelajaran", path: "/superadmin/subject-mgmt", icon: <BookAIcon size={20} /> },
     { name: "Manajemen Bank Soal", path: "/superadmin/question-bank-mgmt", icon: <BookOpen size={20} /> },
-
-    { name: "Pengaturan dan Profil", path: "/superadmin/settings", icon: <Settings size={20} /> },
+    { name: "Pengaturan dan Profil", path: "/superadmin/other", icon: <Settings size={20} /> },
     
   ];
 
@@ -89,7 +90,15 @@ export default function SuperadminLayout() {
               <Bell size={20} />
             </Button>
             <div className="h-8 w-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 font-bold text-xs">
-              SA
+              {user?.avatar ? (
+              <img 
+                src={user.avatar ? `http://127.0.0.1:8000/storage/${user.avatar}` : null}
+                className="w-full h-full object-cover rounded-full"
+                alt="Avatar"
+              />
+            ) : (
+              <span className="text-2xl">{user?.name?.charAt(0)}</span>
+            )}
             </div>
           </div>
         </header>

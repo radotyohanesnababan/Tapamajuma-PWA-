@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import GalleryStudent from "./pages/student/GalleryStudent";
 import OtherMenu from "./pages/student/OtherMenu";
 import OtherMenuTc from "./pages/teacher/OtherMenuTc";
+import OtherMenuSa from "./pages/superadmin/OtherMenuSa";
 import EditProfile from "./pages/student/EditProfile";
 import PresentationPage from "./pages/student/PresentationPage";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
@@ -28,6 +29,8 @@ import ClassImprovement from "./pages/teacher/ClassImprovement";
 import BankSoal from "./pages/teacher/BankSoal";
 import SubjectManagement from "./pages/superadmin/SubjectManagement";
 import QuestionBankManagement from "./pages/superadmin/QuestionBankManagement";
+import ImportData from "./pages/superadmin/ImportData";
+import Changelog from "./pages/superadmin/Changelog"; 
 
 
 
@@ -39,6 +42,7 @@ function App() {
           {/* Rute Publik */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/edit-profile" element={<EditProfile/>}/>
 
           {/* GRUP 1: HALAMAN SISWA (Dibungkus AuthGuard & StudentLayout) */}
           <Route 
@@ -59,7 +63,6 @@ function App() {
           } />
             <Route path="/galeri" element={<GalleryStudent />} />
             <Route path="/other" element={<OtherMenu />} />
-            <Route path="/edit-profile" element={<EditProfile/>}/>
             <Route path="/presentation" element={<PresentationPage />} />
           </Route>
 
@@ -110,6 +113,9 @@ function App() {
             <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
             <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
             <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
+            <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
+            <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
+            <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
 
             {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
             <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}

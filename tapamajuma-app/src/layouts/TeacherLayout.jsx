@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, PieChart, UserCircle, LogOut, BookCheck, School2Icon, FileQuestion, CircleQuestionMark } from "lucide-react";
 import ClassImprovement from "@/pages/teacher/ClassImprovement";
+import ChangelogModal from '@/components/ChangelogModal';
 // import api from "@/lib/axios";
 
 export default function TeacherLayout() {
@@ -41,6 +42,7 @@ export default function TeacherLayout() {
       <div className="pb-20"> 
         <Outlet />
       </div>
+      <ChangelogModal />
 
       {/* Bottom Navigation Khusus Guru */}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl px-6 py-3 flex justify-between items-center z-50">

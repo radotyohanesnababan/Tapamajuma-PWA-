@@ -65,6 +65,10 @@ class User extends Authenticatable
 {
     return $this->hasMany(DailyActivity::class);
 }
+    public function classes()
+    {
+        return $this->belongsToMany(ClassName::class, 'class_name_user');
+    }
 
 
     /**

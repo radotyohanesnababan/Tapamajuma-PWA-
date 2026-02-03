@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TemplateStudentExport;
 use App\Http\Controllers\Controller;
+use App\Imports\StudentsImport;
+use App\Imports\TeachersImport;
 use App\Models\User;
 use App\Models\ClassName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class StudentMgmtController extends Controller
 {
@@ -32,6 +37,34 @@ class StudentMgmtController extends Controller
             'classes' => $classes
         ]);
     }
+                public function import(Request $request) 
+        {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls,csv',
+                'type' => 'required|in:student,teacher' // Validasi tipe
+            ]);
+
+            try {
+                $file = $request->file('file');
+                
+                if ($request->type === 'student') {
+                    Excel::import(new StudentsImport, $file);
+                } else {
+                    Excel::import(new TeachersImport, $file);
+                }
+                
+                return response()->json(['message' => 'Import berhasil!']);
+
+            } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+                // ... (Logika handle error sama seperti sebelumnya)
+                $failures = $e->failures();
+                $messages = [];
+                foreach ($failures as $failure) {
+                    $messages[] = "Baris " . $failure->row() . ": " . implode(', ', $failure->errors());
+                }
+                return response()->json(['message' => 'Validasi Excel Gagal', 'errors' => $messages], 422);
+            }
+        }
 
     /**
      * POST /api/admin/students
@@ -104,4 +137,9 @@ class StudentMgmtController extends Controller
 
         return response()->json(['message' => 'Siswa berhasil dihapus']);
     }
+
+    public function downloadTemplateStudent()
+{
+    return Excel::download(new TemplateStudentExport, 'template_siswa_pro.xlsx');
+}
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react"; // Tambahkan useMemo
+import React, { useEffect, useState, useMemo } from "react"; // Tambahkan useMemo
 import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight, BluetoothConnected } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '@/context/AuthContext'; // Sesuaikan path-nya
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("All");
@@ -20,10 +22,48 @@ export default function TeacherDashboard() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  // State untuk menampung Master Data semua kelas (Kamus ID -> Nama)
+    const [masterClasses, setMasterClasses] = useState([]);
 
+    // 1. Fetch Data Master Kelas (Sekali saja saat halaman dimuat)
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                // Ganti URL ini sesuai endpoint yang return daftar semua kelas
+                // Response harus array object: [{id: 1, name: 'VII-A'}, {id: 2, name: 'VII-B'}]
+                const response = await api.get('/api/public/classes'); 
+                setMasterClasses(response.data);
+            } catch (error) {
+                console.error("Gagal ambil data kelas", error);
+            }
+        };
+        fetchClasses();
+    }, []);
+
+    // 2. CONST: Filter Kelas Milik Guru (Logic Penerjemah ID ke Nama)
+    const teacherClasses = useMemo(() => {
+        // Ambil ID kelas dari user (misal: [1, 2])
+        const userClassIds = user?.accessible_classes || [];
+
+        // Jika user adalah Superadmin, tampilkan semua kelas
+        if (user?.role === 'superadmin') {
+            return masterClasses;
+        }
+
+        // Jika Guru, filter masterClasses yang ID-nya ada di userClassIds
+        return masterClasses.filter(cls => {
+            // Pakai String() biar aman (bandingkan "1" dengan 1 tetap true)
+            return userClassIds.some(myId => String(myId) === String(cls.id));
+        });
+    }, [user, masterClasses]);
+
+// Fetch Data Feed/Activity
   useEffect(() => {
-    api.get("/api/teacher/dashboard").then((res) => setData(res.data));
-  }, []);
+    // Kirim parameter class_id ke backend agar Controller memfilter datanya
+    api.get(`/api/teacher/dashboard?class_id=${selectedClass}`)
+       .then((res) => setData(res.data))
+       .catch((err) => console.error(err));
+  }, [selectedClass]); // <--- Tambahkan selectedClass di sini
 
 
 
@@ -38,11 +78,15 @@ export default function TeacherDashboard() {
   // --- PERBAIKAN: Definisikan filteredData dulu ---
   const filteredData = useMemo(() => {
     return data.filter((item) => {
+      // Filter SEARCH (Tetap di Client)
       const matchSearch = (item.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
-      const matchClass = selectedClass === "All" || item.user?.class_id === selectedClass;
-      return matchSearch && matchClass;
+      
+      // Filter KELAS (Hapus logic ini, karena sudah ditangani Server)
+      // Server sudah mengembalikan data yang sesuai kelasnya.
+      return matchSearch; 
     });
-  }, [data, searchTerm, selectedClass]);
+  }, [data, searchTerm]);
+  
 
   // --- LOGIKA PAGINATION ---
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -123,17 +167,21 @@ export default function TeacherDashboard() {
           />
         </div>
         <select 
-                  className="h-9 border rounded-md px-2 text-xs bg-white outline-none"
-                  value={selectedClass}
-                  onChange={(e) => {
-            setSelectedClass(e.target.value);
-            setCurrentPage(1); // Reset halaman langsung di sini
-          }}
+            className="h-9 border rounded-md px-2 text-xs bg-white outline-none"
+            value={selectedClass} // Pastikan state selectedClass sudah ada
+            onChange={(e) => {
+                setSelectedClass(e.target.value);
+                setCurrentPage(1); 
+            }}
         >
-          <option value="All">Semua Kelas</option>
-          <option value="VII-A">VII-A</option>
-          <option value="VII-B">VII-B</option>
-          <option value="VII-C">VII-C</option>
+            <option value="All">Semua Kelas</option>
+            
+            {/* Map dari const teacherClasses yang sudah kita filter di atas */}
+            {teacherClasses.map((cls) => (
+                <option key={cls.id} value={cls.name}>
+                    {cls.name}
+                </option>
+            ))}
         </select>
       </div>
       
@@ -149,8 +197,8 @@ export default function TeacherDashboard() {
                   <div className="text-left">
                     <h3 className="font-bold text-sm text-left">{item.user?.name}</h3>
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase text-left">
-                      {item.user?.class_id || "Tanpa Kelas"}
-                    </p>
+  {item.user?.student_class?.name || "Tanpa Kelas"}
+</p>
                   </div>
                   <Badge className={`${status.color} text-[10px] px-2 py-0 border-none text-white`}>
                     {status.label}
