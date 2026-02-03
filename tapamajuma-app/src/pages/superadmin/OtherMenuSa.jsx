@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getStorageUrl } from '@/utils';
 import { 
   User, 
   Presentation, 
@@ -76,9 +77,9 @@ export default function OtherMenuSa() {
           <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl md:text-4xl font-bold shadow-lg shadow-indigo-200">
             {user?.avatar ? (
               <img 
-                src={user.avatar ? `http://127.0.0.1:8000/storage/${user.avatar}` : null}
+                src={getStorageUrl(user.avatar)} 
+                alt="User Avatar" 
                 className="w-full h-full object-cover rounded-full"
-                alt="Avatar"
               />
             ) : (
               <span className="text-2xl">{user?.name?.charAt(0)}</span>

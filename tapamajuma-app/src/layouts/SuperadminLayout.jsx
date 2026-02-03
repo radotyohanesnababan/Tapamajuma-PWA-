@@ -92,9 +92,9 @@ export default function SuperadminLayout() {
             <div className="h-8 w-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 font-bold text-xs">
               {user?.avatar ? (
               <img 
-                src={user.avatar ? `http://127.0.0.1:8000/storage/${user.avatar}` : null}
+                src={getStorageUrl(user.avatar)} 
+                alt="User Avatar" 
                 className="w-full h-full object-cover rounded-full"
-                alt="Avatar"
               />
             ) : (
               <span className="text-2xl">{user?.name?.charAt(0)}</span>

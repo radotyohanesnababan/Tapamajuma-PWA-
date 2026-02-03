@@ -42,7 +42,7 @@ export default function EditProfileStandalone() {
         password: '',
         password_confirmation: ''
       });
-      setPreviewUrl(user.avatar ? `http://127.0.0.1:8000/storage/${user.avatar}` : null);
+      setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
     }
   }, [user]);
 
