@@ -80,7 +80,7 @@ export default function AddChangelog() {
         try {
             await api.post('/api/admin/changelog', payload);
             toast.success("Update berhasil dirilis!");
-            navigate('/dashboard'); 
+            navigate('/superadmin/changelog'); 
         } catch (err) {
             console.error(err);
             toast.error("Gagal menyimpan changelog. Cek inputan.");
