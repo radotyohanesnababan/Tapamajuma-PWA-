@@ -55,13 +55,13 @@ export default function OtherMenu() {
       color: "bg-indigo-50",
       badge: "C.2"
     },
-    {
-      title: "Sertifikat",
-      subtitle: "Koleksi apresiasi belajar",
-      icon: <Award className="text-amber-500" size={22} />,
-      path: "/certificates",
-      color: "bg-amber-50"
-    }
+    // {
+    //   title: "Sertifikat",
+    //   subtitle: "Koleksi apresiasi belajar",
+    //   icon: <Award className="text-amber-500" size={22} />,
+    //   path: "/certificates",
+    //   color: "bg-amber-50"
+    // }
   ];
 
   return (
@@ -150,7 +150,7 @@ export default function OtherMenu() {
       </div>
 
       <p className="text-center text-[10px] text-slate-300 mt-10 font-bold tracking-widest uppercase">
-        Tapamajuma PWA v1.0
+        Tapamajuma PWA  | All Rights Reserved 2026
       </p>
     </div>
   );

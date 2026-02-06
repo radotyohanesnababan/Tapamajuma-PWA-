@@ -18,7 +18,7 @@ const HeaderSection = ({ activity }) => {
     },
     numeracy: { 
       title: "Rabu Numerasi", 
-      desc: "Pembiasaan berhitung & logika (MTK & IPA)", 
+      desc: "Pembiasaan berhitung & logika", 
       color: "bg-amber-500", 
       icon: <Calculator size={28} /> 
     },

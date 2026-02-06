@@ -1,0 +1,117 @@
+/* Style untuk Card List (Tampilan Web Biasa) */
+.certificate-container {
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+.certificate-list {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.certificate-card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    width: 250px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* ========================================= */
+/* STYLE KHUSUS UNTUK CETAK (PRINT TEMPLATE) */
+/* ========================================= */
+
+.print-area {
+    /* Pastikan ukuran A4 Landscape */
+    width: 297mm; 
+    height: 210mm;
+    padding: 10mm;
+    box-sizing: border-box;
+    background-color: white;
+    color: #333;
+    font-family: 'Georgia', serif; /* Font agak klasik biar resmi */
+}
+
+.certificate-border {
+    border: 10px double #1a4f7c; /* Bingkai ganda */
+    height: 100%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.cert-title {
+    font-size: 48px;
+    color: #1a4f7c;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.cert-subtitle {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.cert-recipient {
+    font-size: 36px;
+    margin: 10px 0;
+    border-bottom: 2px solid #333;
+    padding-bottom: 5px;
+    display: inline-block;
+    min-width: 400px;
+}
+
+.cert-course {
+    font-size: 28px;
+    font-weight: bold;
+    color: #cc8e35; /* Warna emas/bronze */
+    margin: 20px 0;
+}
+
+.cert-footer {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin-top: 50px;
+}
+
+.cert-date, .cert-signature {
+    text-align: center;
+}
+
+.cert-date p, .cert-signature p {
+    margin: 5px 0;
+}
+
+/* PENTING: Mengatur halaman saat di-print browser */
+@media print {
+    @page {
+        size: landscape; /* Memaksa print dialog ke landscape */
+        margin: 0;       /* Menghilangkan margin browser default */
+    }
+    
+    body {
+        -webkit-print-color-adjust: exact; /* Agar warna background/border ikut terprint */
+        print-color-adjust: exact;
+    }
+}

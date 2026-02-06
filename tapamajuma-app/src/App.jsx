@@ -31,6 +31,7 @@ import SubjectManagement from "./pages/superadmin/SubjectManagement";
 import QuestionBankManagement from "./pages/superadmin/QuestionBankManagement";
 import ImportData from "./pages/superadmin/ImportData";
 import Changelog from "./pages/superadmin/Changelog"; 
+import Certificate from "./pages/student/Certificate";
 
 
 
@@ -64,6 +65,7 @@ function App() {
             <Route path="/galeri" element={<GalleryStudent />} />
             <Route path="/other" element={<OtherMenu />} />
             <Route path="/presentation" element={<PresentationPage />} />
+            {/* <Route path="/certificates" element={<Certificate />} /> */}
           </Route>
 
           {/* GRUP 2: HALAMAN GURU (Dibungkus AuthGuard dengan Role Required) */}
