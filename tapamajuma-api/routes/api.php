@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ChangelogController;
 use App\Http\Controllers\Admin\ClassMgmtController;
 use App\Http\Controllers\Admin\QuestionMgmtController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StudentMgmtController;
 use App\Http\Controllers\Admin\SubjectMgmtController;
 use App\Http\Controllers\Admin\TeacherMgmtController as AdminTeacherMgmtController;
@@ -105,11 +106,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // [BARU] 3. Simpan Presensi (Sesuai React: /api/self-study/store)
     Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
 
-    
-
-
-
-
     // --- KHUSUS ADMIN  ---
     Route::prefix('admin')->group(function () {
         Route::get('/student-summary', [AdminController::class, 'getStudentSummary']);
@@ -125,6 +121,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/templates/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
         Route::post('/changelog', [ChangelogController::class, 'store']);
         Route::get('/changelog/all', [ChangelogController::class, 'index']);
+        Route::get('/activity-report/executive', [ReportController::class, 'executiveSummary']);
+        Route::get('/activity-report/session', [ReportController::class, 'sessionEffectiveness']);
+        Route::get('/activity-report/student', [ReportController::class, 'studentLog']);
+        Route::get('/activity-report/pdf', [ReportController::class, 'downloadFullReport']);
     });
 
 });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Activity } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getStorageUrl } from '@/lib/utils';
 import { 
@@ -13,7 +13,8 @@ import {
   UserSquare,
   CircleSlash,
   Book,
-  BookAIcon
+  BookAIcon,
+  ActivityIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
@@ -32,6 +33,7 @@ export default function SuperadminLayout() {
     { name: "Manajemen Kelas", path: "/superadmin/class-mgmt", icon: <Book size={20} /> },
     { name: "Manajemen Mata Pelajaran", path: "/superadmin/subject-mgmt", icon: <BookAIcon size={20} /> },
     { name: "Manajemen Bank Soal", path: "/superadmin/question-bank-mgmt", icon: <BookOpen size={20} /> },
+    { name: "Laporan Keaktifan Siswa", path: "/superadmin/activity-report", icon: <ActivityIcon size={20} /> },
     { name: "Pengaturan dan Profil", path: "/superadmin/other", icon: <Settings size={20} /> },
     
   ];

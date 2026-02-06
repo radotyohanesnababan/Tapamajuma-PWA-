@@ -32,6 +32,10 @@ import QuestionBankManagement from "./pages/superadmin/QuestionBankManagement";
 import ImportData from "./pages/superadmin/ImportData";
 import Changelog from "./pages/superadmin/Changelog"; 
 import Certificate from "./pages/student/Certificate";
+import ActivityReport from "./pages/superadmin/ActivityReport";
+import ExecutiveReport from "./pages/superadmin/ExcecutiveReport";
+import StudentLog from "./pages/superadmin/StudentLog";
+import SessionReport from "./pages/superadmin/SessionReport";
 
 
 
@@ -117,7 +121,13 @@ function App() {
             <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
             <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
             <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
+            <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
             <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
+            
+            {/* GRUP 3.1: Laporan */}
+            <Route path="activity-report/executive" element={<ExecutiveReport />} />
+            <Route path="activity-report/students" element={<StudentLog />} />
+            <Route path="activity-report/sessions" element={<SessionReport />} />
 
             {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
             <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}
