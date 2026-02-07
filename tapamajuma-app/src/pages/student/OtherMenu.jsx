@@ -33,8 +33,10 @@ export default function OtherMenu() {
     // HAPUS if(confirm), biarkan AlertDialog yang menangani konfirmasi
     try {
       await api.post("/logout");
+      localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_data");
       window.location.href = "/login";
-    } catch {
+    } catch (err) {
       window.location.href = "/login";
     }
   };

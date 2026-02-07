@@ -40,7 +40,9 @@ export default function SuperadminLayout() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/login");
+    localStorage.removeItem("auth_token");
+  localStorage.removeItem("user_data");
+    window.location.href = "/login";
   };
 
   return (

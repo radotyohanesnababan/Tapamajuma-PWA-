@@ -178,7 +178,7 @@ export default function Login() {
           {/* Footer Card */}
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-400">
-              Butuh bantuan akses? <a href="#" className="text-indigo-600 font-bold hover:underline">Hubungi Admin</a>
+              Butuh bantuan akses? <a href="https://wa.me/082272118326" className="text-indigo-600 font-bold hover:underline">Hubungi Admin</a>
             </p>
           </div>
 
