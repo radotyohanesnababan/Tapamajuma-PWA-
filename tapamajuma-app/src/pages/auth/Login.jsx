@@ -143,7 +143,7 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-xs font-medium text-indigo-600 hover:text-indigo-500">Lupa?</a>
+                <a href="/forgot-password" className="text-xs font-medium text-indigo-600 hover:text-indigo-500">Lupa?</a>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
@@ -179,6 +179,11 @@ export default function Login() {
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-400">
               Butuh bantuan akses? <a href="https://wa.me/082272118326" className="text-indigo-600 font-bold hover:underline">Hubungi Admin</a>
+            </p>
+          </div>
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-400">
+              Baru Bergabung? <a href="/register" className="text-indigo-600 font-bold hover:underline">Buat Akun Disini!</a>
             </p>
           </div>
 
