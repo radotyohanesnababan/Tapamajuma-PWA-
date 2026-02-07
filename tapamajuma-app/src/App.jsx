@@ -36,6 +36,8 @@ import ActivityReport from "./pages/superadmin/ActivityReport";
 import ExecutiveReport from "./pages/superadmin/ExcecutiveReport";
 import StudentLog from "./pages/superadmin/StudentLog";
 import SessionReport from "./pages/superadmin/SessionReport";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 
 
@@ -47,6 +49,8 @@ function App() {
           {/* Rute Publik */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword/>}/>
+          <Route path="/password-reset/:token" element={<ResetPassword/>}/>
           <Route path="/edit-profile" element={<EditProfile/>}/>
 
           {/* GRUP 1: HALAMAN SISWA (Dibungkus AuthGuard & StudentLayout) */}

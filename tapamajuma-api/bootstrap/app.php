@@ -27,7 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         'register', 
         'login',
         'api/*',      // Matikan CSRF untuk semua route API
-        'sanctum/*'
+        'sanctum/*',
+        'forgot-password',
+        'reset-password'
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

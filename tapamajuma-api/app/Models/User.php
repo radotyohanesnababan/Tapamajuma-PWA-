@@ -7,12 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\DailyActivity;
+use App\Notifications\ResetPasswordNotification;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
+
+    /**
+     * Override method bawaan Laravel untuk kirim reset password
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        // 2. Panggil class notifikasi kita
+        $this->notify(new ResetPasswordNotification($token));
+    }
 
 
     /**

@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'reflections','sanctum/csrf-cookie', 'login', 'register', 'logout','user'], // Fokuskan pathnya
+    'paths' => ['api/*', 'reflections','sanctum/csrf-cookie', 'login', 'register', 'logout','user', 'forgot-password', 'reset-password'], // Fokuskan pathnya
 
 'allowed_methods' => ['*'],
 
