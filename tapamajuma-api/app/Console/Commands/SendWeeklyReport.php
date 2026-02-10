@@ -47,11 +47,24 @@ class SendWeeklyReport extends Command
             
             // Cek Mapel Favorit (Literasi/Numerasi)
             // Mengambil tipe terbanyak yang dikerjakan
-            $topSubject = $totalMandiri > 0 
-                ? $mandiriActivities->groupBy('type')->sortDesc()->keys()->first() 
-                : '-';
-
-
+            if ($totalMandiri > 0) {
+                // 1. Grouping berdasarkan kolom 'subject'
+                $topSubject = $mandiriActivities
+                    ->whereNotNull('subject') // Pastikan subject tidak null
+                    ->where('subject', '!=', '') // Pastikan subject tidak string kosong
+                    ->groupBy('subject')      // Kelompokkan per nama mapel
+                    ->map->count()            // Hitung jumlah aktivitas per mapel
+                    ->sortDesc()              // Urutkan dari yang paling sering
+                    ->keys()                  // Ambil nama-nama mapelnya
+                    ->first();                // Ambil urutan pertama (Juara 1)
+                
+                // Fallback: Jika ternyata kolom subject kosong semua, baru ambil dari 'type'
+                if (!$topSubject) {
+                     $topSubject = $mandiriActivities->groupBy('type')->map->count()->sortDesc()->keys()->first();
+                }
+            } else {
+                $topSubject = '-';
+            }
             // --- B. HITUNG KEGIATAN SEKOLAH (PAGI) ---
             // Sumber: Tabel Pivot (session_students / nama tabelmu)
             // Pastikan ganti 'session_students' dengan NAMA TABEL PIVOT ASLIMU
@@ -67,13 +80,13 @@ class SendWeeklyReport extends Command
 
             if ($totalAktivitas == 0) {
                 $status = "Tidak Aktif 😴";
-                $pesanSemangat = "Yuk, mulai belajar lagi minggu depan!";
-            } elseif ($avgScore >= 85) {
+                $pesanSemangat = "Mohon bimbingan lebih intensif di rumah.";
+            } elseif ($avgScore >= 80) {
                 $status = "Sangat Membanggakan 🌟";
                 $pesanSemangat = "Nilai yang luar biasa! Pertahankan.";
             } elseif ($totalAktivitas >= 5) {
                 $status = "Rajin & Konsisten ✅";
-                $pesanSemangat = "Terima kasih sudah aktif belajar.";
+                $pesanSemangat = "Terima kasih sudah aktif belajar. Lanjutkan!";
             } else {
                 $status = "Perlu Ditingkatkan ⚠️";
                 $pesanSemangat = "Mohon bimbingan lebih intensif di rumah.";
@@ -84,13 +97,13 @@ class SendWeeklyReport extends Command
                         "Laporan Belajar Minggu Ini:\n" .
                         "📅 " . $startOfWeek->format('d M') . " - " . $endOfWeek->format('d M Y') . "\n\n" .
                         "📊 *Ringkasan Aktivitas:*\n" .
-                        "🏫 Sekolah (Pagi): {$totalSekolah} Sesi\n" .
-                        "🏠 Mandiri (Rumah): {$totalMandiri} Sessi\n" .
+                        "🏫 Sekolah (Pagi): {$totalSekolah}x Aktif Di Kelas\n" .
+                        "🏠 Mandiri (Rumah): {$totalMandiri} Sesi\n" .
                         "----------------------------\n" .
                         "∑  *TOTAL: {$totalAktivitas} Aktivitas*\n\n" .
-                        "📝 *Detail Prestasi:*\n" .
+                        "📝 *Detail Prestasi Tugas Mandiri:*\n" .
                         "- Rata-rata Nilai: *{$avgScore}*\n" .
-                        "- Fokus Mapel: " . ucfirst($topSubject) . "\n\n" .
+                        "- Fokus Mapel: " . ucwords($topSubject) . "\n\n" .
                         "💡 Status: {$status}\n" .
                         "💬 _{$pesanSemangat}_\n\n" .
                         

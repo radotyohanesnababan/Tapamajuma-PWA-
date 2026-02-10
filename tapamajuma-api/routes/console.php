@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('report:weekly')
         ->weeklyOn(5, '17:00')
         ->timezone('Asia/Jakarta');
+
+//Schedule::command('report:weekly')->everyMinute();
