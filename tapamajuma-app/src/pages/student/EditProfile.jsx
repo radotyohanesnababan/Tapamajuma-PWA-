@@ -30,6 +30,7 @@ export default function EditProfileStandalone() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone_number: '',
     password: '',
     password_confirmation: '',
   });
@@ -40,6 +41,7 @@ export default function EditProfileStandalone() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
+        phone_number: user.phone_number || '',
         password: '',
         password_confirmation: ''
       });
@@ -169,6 +171,17 @@ export default function EditProfileStandalone() {
                             <Input 
                                 value={formData.name}
                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Nomor HP Orangtua</Label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-3 text-slate-400" size={18} />
+                            <Input 
+                                value={formData.phone_number}
+                                onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
                                 className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                             />
                         </div>
