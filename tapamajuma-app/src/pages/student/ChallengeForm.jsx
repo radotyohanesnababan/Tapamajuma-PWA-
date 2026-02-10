@@ -79,7 +79,7 @@ export default function ChallengeForm() {
     await api.post("/api/activities", { ...formData, type: todayActivity });
     toast.success("Aktivitas berhasil dicatat!");
     // Reset form setelah sukses
-    setFormData({ subject: "", journal: "", confidence_level: 3, score: 10, reading_content: "" });
+    setFormData({ subject: "", journal: "", confidence_level: 3, score: "", reading_content: "" });
   } catch (err) {
     console.error(err);
     toast.error("Gagal menyimpan. Periksa kembali isian Anda.");

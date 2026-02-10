@@ -29,7 +29,7 @@ class AIController extends Controller
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
         $prompt = ($type === 'literacy') 
-            ? "Buatkan teks literasi pendek (maks 150 kata) untuk siswa SMP tentang salah satu teori di mata pelajaran $subject. Sesuaikan dengan mata pelajaran dan teknis yang sederhana. Berikan satu pertanyaan refleksi tentang bacaan tersebut. Jangan buat juga ada huruf tebal, semua huruf biasa saja. Khusus untuk Pelajaran Bahasa Inggris, buat saja teks dalam bahasa Inggris."
+            ? "Buatkan teks literasi pendek (maks 100 kata) untuk siswa SMP tentang salah satu teori di mata pelajaran $subject. Sesuaikan dengan mata pelajaran dan teknis yang sederhana. Berikan satu pertanyaan refleksi tentang bacaan tersebut. Jangan buat juga ada huruf tebal, semua huruf biasa saja. Khusus untuk Pelajaran Bahasa Inggris, buat saja teks dalam bahasa Inggris."
             : "Buatkan satu soal numerasi kontekstual tentang $subject untuk siswa SMP di Tapanuli Utara. Berikan petunjuk langkah berpikirnya.";
         $response = Http::withHeaders(['Content-Type' => 'application/json'])
             ->post($url, [

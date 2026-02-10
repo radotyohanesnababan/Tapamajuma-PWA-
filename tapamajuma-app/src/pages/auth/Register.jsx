@@ -17,6 +17,7 @@ export default function Register() {
     name: "", 
     email: "", 
     password: "", 
+    phone_number: "",
     password_confirmation: "", 
     role: "student", 
     class_id: "" 
@@ -159,6 +160,24 @@ export default function Register() {
                     <Input type="email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="pl-9 bg-slate-50 focus:bg-white"/>
                   </div>
                 </div>
+            {/* Phone Number */}
+            <div className="space-y-1.5">
+              <Label>Nomor WhatsApp <b>Orangtua</b> (Aktif)</Label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  name="phone_number"
+                  value={form.phone_number}
+                  onChange={e => setForm({...form, phone_number: e.target.value})}
+                  placeholder="Contoh: 08123456789/628123456789"
+                  className="pl-3 bg-slate-50 focus:bg-white"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                *Wajib nomor aktif untuk notifikasi laporan mingguan.
+              </p>
+            </div>
 
                 {/* Password & Confirm */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

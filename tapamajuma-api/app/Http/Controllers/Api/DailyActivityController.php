@@ -53,7 +53,7 @@ class DailyActivityController extends Controller
                 'confidence_level' => $validated['confidence_level'],
                 'journal' => $validated['journal'],
                 'subject' => $request->subject ?? 'Umum', // Default jika kosong
-                'score' => $request->score ?? 0,          // Default 0 jika literasi
+                'score' => $request->score ?? 100,          // Default 0 jika literasi
                 'reading_content' => $request->reading_content ?? null,
                 'audio_path' => $audioPath,
             ];

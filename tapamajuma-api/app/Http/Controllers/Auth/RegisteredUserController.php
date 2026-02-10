@@ -24,6 +24,7 @@ class RegisteredUserController extends Controller
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'phone_number' => ['nullable', 'string', 'max:20'],
         'role' => ['required', 'string', 'in:student,teacher'],
         'class_id' => ['nullable'], // Validasi input dari frontend
     ]);
@@ -44,6 +45,7 @@ class RegisteredUserController extends Controller
         'email' => $request->email,
         'password' => Hash::make($request->string('password')),
         'role' => $request->role,
+        'phone_number' => $request->phone_number,
         'accessible_classes' => $accessibleClasses, // <--- Simpan di sini
     ]);
 

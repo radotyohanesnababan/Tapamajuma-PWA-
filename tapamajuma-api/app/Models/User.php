@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\DailyActivity;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -35,6 +36,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'phone_number',
         'class_id',
         'nis',
         'level',
@@ -124,4 +126,28 @@ public function studentClass()
     {
         return $this->belongsTo(ClassName::class, 'class_id');
     }
+
+    // Mutator: Otomatis mengubah format nomor HP saat disimpan
+protected function phoneNumber(): Attribute
+{
+    return Attribute::make(
+        set: fn (string $value) => $this->formatPhoneNumber($value),
+    );
 }
+
+// Helper function untuk ubah 08 jadi 628
+private function formatPhoneNumber($number)
+{
+    // Hapus spasi, strip, atau tanda plus (+)
+    $number = preg_replace('/[^0-9]/', '', $number);
+
+    // Kalau diawali 08, ganti jadi 628
+    if (substr($number, 0, 2) === '08') {
+        return '62' . substr($number, 1);
+    }
+
+    return $number;
+}
+}
+
+
