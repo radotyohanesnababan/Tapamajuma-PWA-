@@ -13,11 +13,6 @@ class SendWeeklyReport extends Command
     protected $signature = 'report:weekly';
     protected $description = 'Kirim laporan mingguan siswa ke orang tua via WhatsApp Fonnte';
 
-    // IMPORT WAJIB DI ATAS:
-    // use Illuminate\Support\Facades\DB;
-    // use Illuminate\Support\Facades\Http;
-    // use App\Models\User;
-    // use App\Models\DailyActivity;
 
     public function handle()
     {
@@ -129,7 +124,7 @@ class SendWeeklyReport extends Command
                 }
                 
                 // Jeda 2 detik agar tidak dianggap SPAM oleh WA
-                sleep(2);
+                sleep(10);
 
             } catch (\Exception $e) {
                 $this->error("❌ Error Koneksi: " . $e->getMessage());
