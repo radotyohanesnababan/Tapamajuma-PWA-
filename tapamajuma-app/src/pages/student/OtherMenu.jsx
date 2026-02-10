@@ -36,7 +36,7 @@ export default function OtherMenu() {
       localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
       window.location.href = "/login";
-    } catch (err) {
+    } catch {
       window.location.href = "/login";
     }
   };
