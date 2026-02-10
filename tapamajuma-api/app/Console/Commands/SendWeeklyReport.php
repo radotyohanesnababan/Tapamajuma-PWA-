@@ -85,7 +85,7 @@ class SendWeeklyReport extends Command
                         "📅 " . $startOfWeek->format('d M') . " - " . $endOfWeek->format('d M Y') . "\n\n" .
                         "📊 *Ringkasan Aktivitas:*\n" .
                         "🏫 Sekolah (Pagi): {$totalSekolah} Sesi\n" .
-                        "🏠 Mandiri (Rumah): {$totalMandiri} Sesi\n" .
+                        "🏠 Mandiri (Rumah): {$totalMandiri} Sessi\n" .
                         "----------------------------\n" .
                         "∑  *TOTAL: {$totalAktivitas} Aktivitas*\n\n" .
                         "📝 *Detail Prestasi:*\n" .
