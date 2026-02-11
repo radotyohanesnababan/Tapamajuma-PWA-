@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, MessageSquareQuote, ArrowRight } from "lucide-react";
+import { LayoutDashboard, BarChart3, MessageSquareQuote, ArrowRight, GalleryHorizontal } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"; // Sesuaikan path UI Anda
 
 export default function ClassImprovement() {
@@ -73,6 +73,33 @@ export default function ClassImprovement() {
             <CardContent>
               <div className="flex items-center text-sm font-bold text-pink-600 mt-4 group-hover:translate-x-2 transition-transform">
                 Buka Forum <ArrowRight className="ml-2 h-4 w-4" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* CARD 3 : Galeri Siswa */}
+        <div 
+          onClick={() => navigate('/teacher/class-improvement/gallery')} 
+          className="group cursor-pointer"
+        >
+          <Card className="h-full border-slate-200 hover:border-yellow-300 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <GalleryHorizontal size={100} className="text-yellow-600 transform group-hover:scale-110 transition-transform duration-500" />
+            </div>
+
+            <CardHeader>
+              <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-600 transition-colors duration-300">
+                <GalleryHorizontal className="text-yellow-600 group-hover:text-white transition-colors" />
+              </div>
+              <CardTitle className="text-xl">Galeri Siswa</CardTitle>
+              <CardDescription>
+                Lihat karya kreatif dan hasil belajar siswa dalam bentuk visual.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-sm font-bold text-yellow-600 mt-4 group-hover:translate-x-2 transition-transform">
+                Buka Galeri <ArrowRight className="ml-2 h-4 w-4" />
               </div>
             </CardContent>
           </Card>

@@ -90,15 +90,39 @@ class ReflectionController extends Controller
 
     public function getStudentReflections(Request $request)
 {
-    // Pastikan hanya user dengan role 'teacher' yang bisa akses (opsional tergantung sistemmu)
-    $className = Auth::user()->class_id;
+    /** @var \App\Models\User $user */
+    $user = Auth::user(); // Ambil data Guru/Superadmin
 
-    $reflections = Reflection::with('user:id,name,level')
-        ->whereHas('user', function($query) use ($className) {
-            $query->where('class_id', $className);
-        })
-        ->latest()
-        ->get();
+    // 1. Ambil daftar ID Kelas yang boleh diakses (Array [1, 2, 3])
+    $allowedClassIds = $user->accessible_classes ?? [];
+
+    $query = Reflection::query();
+
+    // 2. Security Check: Filter berdasarkan hak akses Guru
+    if ($user->role !== 'superadmin') {
+        $query->whereHas('user', function($q) use ($allowedClassIds) {
+            $q->whereIn('class_id', $allowedClassIds);
+        });
+    }
+
+    // 3. Filter Dropdown (Jika Guru memilih kelas spesifik di UI)
+    $filterClassId = $request->query('class_id'); 
+    if ($filterClassId && $filterClassId !== 'all') {
+        $query->whereHas('user', function($q) use ($filterClassId) {
+            $q->where('class_id', $filterClassId);
+        });
+    }
+
+    // 4. Load Relasi & Ambil Data
+    $reflections = $query->with([
+        'user' => function($q) {
+            $q->select('id', 'name', 'class_id', 'level') // Ambil level juga untuk badge
+              ->with('studentClass:id,name'); // Agar di JSX bisa panggil .student_class.name
+        }
+    ])
+    ->whereIn('category', ['harian', 'mingguan']) // Pastikan mengambil semua kategori
+    ->latest()
+    ->get();
 
     return response()->json($reflections);
 }

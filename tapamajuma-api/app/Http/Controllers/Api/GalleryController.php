@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
@@ -17,6 +20,56 @@ class GalleryController extends Controller
             ->get();
 
         return response()->json($galleries);
+    }
+
+    public function indexfortc(Request $request)
+{
+    $user = $request->user(); // Atau Auth::user()
+    
+    // 1. Ambil "Kunci Inggris" (Daftar ID Kelas Guru)
+    $allowedClassIds = $user->accessible_classes ?? [];
+    
+    $query = Gallery::query();
+    
+    // 2. Security Check (Mencocokkan ID)
+    if ($user->role !== 'superadmin') {
+        $query->whereHas('user', function($q) use ($allowedClassIds) {
+            $q->whereIn('class_id', $allowedClassIds);
+        });
+    }
+    
+    // 3. (Opsional) Filter Dropdown per Kelas
+    $filterName = $request->query('class_id'); 
+    if ($filterName && $filterName !== 'All' && $filterName !== 'all') {
+        $query->whereHas('user.studentClass', function($q) use ($filterName) {
+            $q->where('name', $filterName);
+        });
+    }
+    
+    // 4. Load relasi & get data
+    $galleries = $query->with([
+        'user' => function($q) {
+            $q->select('id', 'name', 'class_id')
+              ->with('studentClass:id,name');
+        }
+    ])
+    ->latest()
+    ->get();
+    
+    return response()->json($galleries);
+}
+    public function destroy($id)
+    {
+        $gallery = Gallery::findOrFail($id);
+
+        // Hapus file fisik jika bukan link
+        if ($gallery->type === 'file' && $gallery->file_path) {
+            Storage::disk('public')->delete($gallery->file_path);
+        }
+
+        $gallery->delete();
+
+        return response()->json(['message' => 'Karya berhasil dihapus']);
     }
 
     public function store(Request $request)
@@ -87,5 +140,7 @@ class GalleryController extends Controller
             'message' => 'Karya berhasil dipublikasikan!',
             'data'    => $gallery
         ], 201);
+
+
     }
 }

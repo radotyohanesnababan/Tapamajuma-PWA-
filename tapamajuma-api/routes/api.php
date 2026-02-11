@@ -79,13 +79,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- KHUSUS GURU  ---
     Route::prefix('teacher')->group(function () {
+
         Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
         Route::get('/stats', [TeacherDashboardController::class, 'getTeacherStats']);
         Route::get('/my-classes', [MandiriSessionController::class, 'getMyClasses']);
         
+
+        //Route Galeri Siswa Dilihat oleh Guru (Aksi C.1)
+        Route::get('/galleries', [GalleryController::class, 'indexfortc']);
+        Route::delete('/galleries/{id}', [GalleryController::class, 'destroy']);
+
         // Route khusus guru untuk memberi feedback (Aksi B.2)
-        Route::get('/reflections', [ReflectionController::class, 'getAllStudentReflections']);
+        Route::get('/reflections', [ReflectionController::class, 'getStudentReflections']);
         Route::post('/reflections/{id}/feedback', [ReflectionController::class, 'giveFeedback']);
+
+
+        
 
         // Fleksibilitas: Guru/Admin bisa mengedit profil siswa jika diperlukan
         Route::put('/user-update/{id}', [ProfileController::class, 'update']);

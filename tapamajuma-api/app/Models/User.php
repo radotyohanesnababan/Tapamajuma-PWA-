@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\DailyActivity;
+use App\Models\ClassName;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Sanctum\HasApiTokens;
@@ -77,10 +78,15 @@ class User extends Authenticatable
 {
     return $this->hasMany(DailyActivity::class);
 }
-    public function classes()
-    {
-        return $this->belongsToMany(ClassName::class, 'class_name_user');
-    }
+public function classes()
+{
+    return $this->belongsToMany(
+        ClassName::class,           // Model
+        'class_name_user',          // Tabel pivot
+        'user_id',                  // Foreign key user di pivot
+        'class_name_id'             // Foreign key class di pivot
+    )->withTimestamps();            // Opsional
+}
 
 
     /**

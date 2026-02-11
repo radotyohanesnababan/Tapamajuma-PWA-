@@ -38,6 +38,7 @@ import StudentLog from "./pages/superadmin/StudentLog";
 import SessionReport from "./pages/superadmin/SessionReport";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import GalleryTeacher from "./pages/teacher/GalleryTeacher";
 
 
 
@@ -91,6 +92,7 @@ function App() {
             <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
             <Route path="/teacher/class-improvement/analysis" element={<AnalysisTab />} />
         <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
+        <Route path="/teacher/class-improvement/gallery" element={<GalleryTeacher />} />
             {/* GRUP 2.2: Bank Soal */}
           <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
           {/* GRUP 2.3: Pengaturan */}
