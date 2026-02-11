@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,DialogD
 import { PlayCircle, FileText, Image as ImageIcon, Plus, Music, FileUp, Loader2, Mic, Square, Trash2 } from "lucide-react"; // Tambahkan ikon Mic & Square
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
-// ... import lainnya
 import ReactPlayer from 'react-player';
 import { InstagramEmbed, FacebookEmbed } from 'react-social-media-embed';
 
@@ -83,9 +82,54 @@ export default function GalleryStudent() {
     setIsRecording(false);
     mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
   };
-  // -----------------------------
+
+const getYoutubeId = (url) => {
+  if (!url) return null;
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&\n?#]+)/,
+    /(?:youtu\.be\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/embed\/)([^&\n?#]+)/
+  ];
+  
+  for (let pattern of patterns) {
+    const match = url.match(pattern); // Tetap pakai URL asli untuk matching
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return null;
+};
+const normalizeYoutubeUrl = (url) => {
+  if (!url) return null;
+  
+  // Ekstrak video ID dulu
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&\n?#]+)/,
+    /(?:youtu\.be\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/ // Jika langsung video ID
+  ];
+  
+  for (let pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      // Kembalikan format standar YouTube TANPA parameter playlist
+      return `https://www.youtube.com/watch?v=${match[1]}`;
+    }
+  }
+  
+  // Fallback
+  return url.startsWith('http') ? url : `https://${url}`;
+};
 
   const handleOpenPreview = (item) => {
+  console.log("ITEM DIKLIK:", item); 
+  
+  // Cek spesifik property (pastikan ejaannya sama persis dengan di Network Tab)
+  console.log("URL:", item.file_path); 
+  console.log("TYPE:", item.file_type);
   setSelectedItem(item);
   setPreviewOpen(true);
 };
@@ -138,12 +182,7 @@ export default function GalleryStudent() {
     }
   };
 
-  const getYoutubeId = (url) => {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
+
 
   // (Fungsi renderPreview tetap sama seperti sebelumnya)
   const renderPreview = (item) => {
@@ -171,6 +210,45 @@ export default function GalleryStudent() {
           </div>
         );
       }
+      // B. Instagram - Gradient dengan Icon
+    if (item.file_path.includes('instagram.com')) {
+      return (
+        <div className="relative w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+            {/* Icon Instagram */}
+            <svg className="w-12 h-12 mb-2" fill="white" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <PlayCircle size={32} className="opacity-90" />
+            <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">Instagram</span>
+          </div>
+        </div>
+      );
+    }
+
+     if (item.file_path.includes('facebook.com') || item.file_path.includes('fb.watch')) {
+      return (
+        <div className="relative w-full h-full bg-blue-600">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+            {/* Icon Facebook */}
+            <svg className="w-12 h-12 mb-2" fill="white" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            <PlayCircle size={32} className="opacity-90" />
+            <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">Facebook</span>
+          </div>
+        </div>
+      );
+    }
+      // C. Fallback untuk link lain (misal: Vimeo, Dailymotion, dll)
+      return (
+        <div className="relative w-full h-full bg-gray-800">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+            <PlayCircle size={40} className="opacity-90" />
+            <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">Video Link</span>
+          </div>
+        </div>
+      );
     }
     
     // 1. Cek Tipe LINK (Prioritas Utama)
@@ -365,35 +443,100 @@ export default function GalleryStudent() {
           {/* === C. LOGIKA LINK VIDEO (Youtube/IG/FB) === */}
           {/* PENTING: Wajib dibungkus pengecekan tipe 'link' */}
           {selectedItem.file_type === 'link' && (
-            <div className="w-full flex justify-center bg-black min-h-[300px] items-center relative overflow-hidden">
-                
-                {/* 1. Cek Instagram */}
-                {selectedItem.file_path.includes('instagram.com') ? (
-                  <InstagramEmbed url={selectedItem.file_path} width={328} />
-                ) 
-                
-                /* 2. Cek Facebook */
-                : selectedItem.file_path.includes('facebook.com') || selectedItem.file_path.includes('fb.watch') ? (
-                  <FacebookEmbed url={selectedItem.file_path} width="100%" />
-                ) 
-                
-                /* 3. Default: YOUTUBE & Lainnya */
-                : (
-                  <ReactPlayer 
-                    url={selectedItem.file_path} 
-                    width="100%" 
-                    height="300px" // Tinggi fix biar rapi
-                    controls={true} 
-                    playing={false} // Matikan autoplay biar aman dari blokir browser
-                    config={{
-    youtube: {
-      playerVars: { showinfo: 1 }
-    }
-  }}
-                  />
-                )}
-            </div>
-          )}
+  <div className="w-full flex justify-center bg-black min-h-[300px] items-center relative overflow-hidden">
+      
+      {/* 1. Instagram - Iframe Manual */}
+      {selectedItem.file_path.includes('instagram.com') ? (
+        <div className="flex flex-col items-center justify-center p-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 w-full">
+          {/* Icon Instagram */}
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4">
+            <svg className="w-12 h-12" fill="url(#instagram-gradient)" viewBox="0 0 24 24">
+              <defs>
+                <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor: '#f09433'}} />
+                  <stop offset="25%" style={{stopColor: '#e6683c'}} />
+                  <stop offset="50%" style={{stopColor: '#dc2743'}} />
+                  <stop offset="75%" style={{stopColor: '#cc2366'}} />
+                  <stop offset="100%" style={{stopColor: '#bc1888'}} />
+                </linearGradient>
+              </defs>
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </div>
+          
+          {/* Judul */}
+          <p className="text-sm font-bold text-white mb-2">Instagram Reel/Post</p>
+          
+          {/* Penjelasan */}
+          <p className="text-xs text-white/80 mb-4 text-center px-6">
+            Konten Instagram tidak bisa ditampilkan di sini
+          </p>
+          
+          {/* Tombol Buka */}
+          <a 
+            href={selectedItem.file_path} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="px-6 py-3 bg-white text-pink-500 rounded-full font-bold text-sm hover:bg-pink-50 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Buka di Instagram
+          </a>
+        </div>
+      ) 
+      
+      /* 2. Facebook - Iframe Manual */
+      : selectedItem.file_path.includes('facebook.com') || selectedItem.file_path.includes('fb.watch') ? (
+        <div className="w-full bg-slate-100 min-h-[300px]">
+          <iframe
+            src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(selectedItem.file_path)}&show_text=false&width=500`}
+            width="100%"
+            height="300"
+            style={{ border: 'none', overflow: 'hidden' }}
+            scrolling="no"
+            frameBorder="0"
+            allowFullScreen={true}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+          />
+        </div>
+      ) 
+      
+      /* 3. YouTube - Iframe Manual */
+      : (
+         (() => {
+           const cleanUrl = selectedItem.file_path ? selectedItem.file_path.trim() : "";
+           const videoId = getYoutubeId(cleanUrl);
+           
+           if (videoId) {
+             return (
+               <iframe
+                 width="100%"
+                 height="300"
+                 src={`https://www.youtube.com/embed/${videoId}`}
+                 title="YouTube video player"
+                 frameBorder="0"
+                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                 allowFullScreen
+                 className="w-full"
+               />
+             );
+           }
+           
+           // Fallback untuk link lain
+           return (
+             <ReactPlayer 
+               url={normalizeYoutubeUrl(cleanUrl)}
+               width="100%" 
+               height="300px" 
+               controls={true}
+             />
+           );
+         })()
+      )}
+  </div>
+)}
 
         </div>
 
