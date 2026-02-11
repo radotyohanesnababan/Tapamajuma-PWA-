@@ -1,5 +1,5 @@
 import React, { Activity } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getStorageUrl } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -22,7 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 
 
 export default function SuperadminLayout() {
-  const navigate = useNavigate();
+
   const location = useLocation();
   const { user } = useAuth();
 

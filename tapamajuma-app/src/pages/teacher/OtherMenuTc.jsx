@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
   User, 
-  Presentation, 
   LogOut, 
   ChevronRight, 
   Settings, 
-  Award,
-  LayoutGrid
+  ShieldCheck,
+  Info,
+  LayoutGrid,
+  Sparkles
 } from "lucide-react";
 import {
   AlertDialog,
@@ -30,7 +30,6 @@ export default function OtherMenu() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    // HAPUS if(confirm), biarkan AlertDialog yang menangani konfirmasi
     try {
       await api.post("/logout");
       window.location.href = "/login";
@@ -42,7 +41,7 @@ export default function OtherMenu() {
   const menuItems = [
     {
       title: "Profil Saya",
-      subtitle: "Lihat dan ubah data diri anda",
+      subtitle: "Kelola data diri dan identitas",
       icon: <User className="text-blue-500" size={22} />,
       path: "/edit-profile",
       color: "bg-blue-50"
@@ -50,93 +49,109 @@ export default function OtherMenu() {
   ];
 
   return (
-    <div className="p-4 pb-24 max-w-md mx-auto bg-slate-50 min-h-screen">
-      {/* Profil Header Singkat */}
-      <div className="flex items-center gap-4 mb-8  bg-white rounded-3xl p-4 shadow-sm">
-        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-inner">
+    <div className="p-4 pb-24 max-w-md mx-auto bg-[#F8FAFC] min-h-screen space-y-6">
+      
+      {/* PROFIL HEADER - Dibuat Lebih "Pop" */}
+      <div className="flex items-center gap-5 bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+            <Settings size={100} />
+        </div>
+        
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-100 relative z-10">
           {user?.name?.charAt(0)}
         </div>
-        <div>
-          <h2 className="text-lg font-bold text-slate-800">{user?.name}</h2>
-          <p className="text-[10px] text-slate-500  tracking-widest font-semibold">Guru Mata Pelajaran</p>
+        
+        <div className="relative z-10">
+          <h2 className="text-xl font-black text-slate-800 leading-tight">{user?.name}</h2>
+          <div className="flex items-center gap-1.5 mt-1">
+          </div>
         </div>
       </div>
 
+      {/* MENU SECTION */}
       <div className="space-y-3">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-4">Pengaturan Akun</p>
+        
         {menuItems.map((item, index) => (
           <Card 
             key={index} 
-            className="border-none shadow-sm rounded-2xl cursor-pointer active:scale-[0.98] transition-all bg-white"
+            className="border-none shadow-sm rounded-[1.8rem] cursor-pointer active:scale-95 transition-all bg-white group hover:shadow-md"
             onClick={() => navigate(item.path)}
           >
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${item.color}`}>
+                <div className={`p-3.5 rounded-2xl ${item.color} transition-transform group-hover:scale-110`}>
                   {item.icon}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-slate-800">{item.title}</p>
-                    {item.badge && (
-                      <span className="text-[8px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-md font-bold">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-slate-400">{item.subtitle}</p>
+                  <p className="text-sm font-black text-slate-800 tracking-tight">{item.title}</p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-0.5">{item.subtitle}</p>
                 </div>
               </div>
-              <ChevronRight size={16} className="text-slate-300" />
+              <div className="bg-slate-50 p-2 rounded-xl text-slate-300">
+                <ChevronRight size={14} />
+              </div>
             </CardContent>
           </Card>
         ))}
 
-        {/* --- INTEGRASI ALERT DIALOG KAMU DI SINI --- */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Card className="border-none shadow-sm rounded-2xl cursor-pointer active:scale-[0.98] transition-all bg-white group">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
-                    <LogOut className="text-red-500" size={22} />
+        <div className="pt-4">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-4">Sesi</p>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Card className="border-none shadow-sm rounded-[1.8rem] cursor-pointer active:scale-95 transition-all bg-white group hover:shadow-md border-l-4 border-l-rose-500">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3.5 rounded-2xl bg-rose-50 text-rose-500 transition-transform group-hover:scale-110">
+                        <LogOut size={22} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-rose-500 tracking-tight">Keluar Akun</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">Selesaikan sesi pengajaran</p>
+                      </div>
+                    </div>
+                    <div className="bg-rose-50 p-2 rounded-xl text-rose-300">
+                        <ChevronRight size={14} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </AlertDialogTrigger>
+              
+              <AlertDialogContent className="w-[90%] rounded-[2.5rem] border-none p-8 shadow-2xl">
+                <AlertDialogHeader className="items-center">
+                  <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mb-4">
+                    <LogOut size={32} />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-red-500">Keluar</p>
-                    <p className="text-[10px] text-slate-400"></p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-slate-300" />
-              </CardContent>
-            </Card>
-          </AlertDialogTrigger>
-          
-          <AlertDialogContent className="w-[90%] rounded-3xl border-none p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-center text-lg font-bold">Keluar Game?</AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-sm text-slate-500">
-                Yakin ingin keluar sekarang?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex flex-row gap-3 mt-6">
-              <AlertDialogCancel className="flex-1 rounded-2xl h-12 mt-0 border-slate-100 text-slate-500 font-bold">
-                Batal
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleLogout}
-                className="flex-1 bg-red-500 hover:bg-red-600 rounded-2xl h-12 font-bold shadow-lg shadow-red-200"
-              >
-                Ya, Keluar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        {/* --- AKHIR INTEGRASI --- */}
-
+                  <AlertDialogTitle className="text-xl font-black text-slate-800">Selesaikan Sesi?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-center text-xs font-medium text-slate-500 leading-relaxed">
+                    Pastikan semua data progres siswa sudah tersimpan sebelum kamu keluar dari aplikasi.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex flex-col gap-3 mt-8">
+                  <AlertDialogAction
+                    onClick={handleLogout}
+                    className="w-full bg-rose-600 hover:bg-rose-700 rounded-2xl h-14 font-black shadow-lg shadow-rose-100 text-white order-1"
+                  >
+                    YA, KELUAR SEKARANG
+                  </AlertDialogAction>
+                  <AlertDialogCancel className="w-full rounded-2xl h-14 border-none bg-slate-100 text-slate-500 font-black text-xs hover:bg-slate-200 order-2">
+                    BATALKAN
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+        </div>
       </div>
 
-      <p className="text-center text-[10px] text-slate-300 mt-10 font-bold tracking-widest uppercase">
-        Tapamajuma PWA v1.0
-      </p>
+      <div className="text-center pt-10 pb-4">
+         <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+            <LayoutGrid size={12} className="text-indigo-500" />
+            <p className="text-[9px] text-slate-400 font-black tracking-[0.2em] uppercase">
+                Tapamajuma PWA All Rights Reserved 2026
+            </p>
+         </div>
+      </div>
     </div>
   );
 }
