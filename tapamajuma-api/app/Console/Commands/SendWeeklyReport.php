@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 class SendWeeklyReport extends Command
 {
     protected $signature = 'report:weekly';
-    protected $description = 'Kirim laporan mingguan siswa ke orang tua via WhatsApp Fonnte';
+    protected $description = 'Kirim laporan mingguan siswa ke orang tua via WhatsApp menggunakan Wablas/Fonnte';
 
 
     public function handle()
@@ -104,31 +104,64 @@ class SendWeeklyReport extends Command
                         
                         "_*Tapamajuma* - Pemantauan Aktivitas Siswa_";
 
-            // --- E. KIRIM KE FONNTE ---
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => env('FONNTE_TOKEN'),
-                ])->post('https://api.fonnte.com/send', [
-                    'target' => $user->phone_number,
-                    'message' => $message,
-                    'countryCode' => '62', // Auto ubah 08 jadi 62
-                ]);
+            // // --- E. KIRIM KE WABLAS ---
+            // try {
+            //     $response = Http::withHeaders([
+            //         'Authorization' => env('WABLAS_TOKEN'),
+            //     ])->post(env('WABLAS_DOMAIN') . '/send', [
+            //         'target' => $user->phone_number,
+            //         'message' => $message,
+            //         'countryCode' => '62', // Auto ubah 08 jadi 62
+            //     ]);
 
-                // Casting ke string & decode manual (Anti-Error)
-                $res = json_decode((string)$response, true);
+            //     // Casting ke string & decode manual (Anti-Error)
+            //     $res = json_decode((string)$response, true);
 
-                if (($res['status'] ?? false) == true || ($res['detail'] ?? '') == 'success') {
-                    $this->info("✅ Terkirim ke {$user->name}");
-                } else {
-                    $this->error("⚠️ Gagal ke {$user->name}: " . ($res['reason'] ?? 'Unknown'));
-                }
+            //     if (($res['status'] ?? false) == true || ($res['detail'] ?? '') == 'success') {
+            //         $this->info("✅ Terkirim ke {$user->name}");
+            //     } else {
+            //         $this->error("⚠️ Gagal ke {$user->name}: " . ($res['reason'] ?? 'Unknown'));
+            //     }
                 
-                // Jeda 2 detik agar tidak dianggap SPAM oleh WA
-                sleep(10);
+            //     // Jeda 2 detik agar tidak dianggap SPAM oleh WA
+            //     sleep(10);
 
-            } catch (\Exception $e) {
-                $this->error("❌ Error Koneksi: " . $e->getMessage());
-            }
+            // } catch (\Exception $e) {
+            //     $this->error("❌ Error Koneksi: " . $e->getMessage());
+            // }
+
+            // --- E. KIRIM KE WABLAS ---
+try {
+    $token = env('WABLAS_TOKEN');
+    $secret = env('WABLAS_SECRET_KEY');
+    $apiUrl = rtrim(env('WABLAS_DOMAIN'), '/') . '/api/send-message';
+
+    // Gabungkan Token dan Secret pakai titik sesuai dokumentasi
+    $authHeader = $token . "." . $secret;
+
+    $response = Http::withHeaders([
+        'Authorization' => $authHeader,
+    ])
+    ->asForm() // PENTING: Dokumentasi pakai http_build_query, jadi kita pakai asForm()
+    ->post($apiUrl, [
+        'phone'   => $user->phone_number,
+        'message' => $message,
+        'flag'    => 'instant', // Sesuai dokumentasi kamu
+    ]);
+
+    $res = $response->json();
+
+    if ($response->successful() && ($res['status'] ?? false) == true) {
+        $this->info("✅ Terkirim ke {$user->name}");
+    } else {
+        $this->error("⚠️ Gagal ke {$user->name}: " . json_encode($res));
+    }
+    
+    sleep(2); // Jeda aman
+
+} catch (\Exception $e) {
+    $this->error("❌ Error: " . $e->getMessage());
+}
         }
 
         $this->info("🎉 Selesai! Laporan mingguan terkirim.");

@@ -9,8 +9,9 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-Schedule::command('report:weekly')
-        ->weeklyOn(5, '17:00')
-        ->timezone('Asia/Jakarta');
+// Schedule::command('report:weekly')
+//         ->weeklyOn(5, '17:00')
+//         ->timezone('Asia/Jakarta');
 
-//Schedule::command('report:weekly')->everyMinute();
+Schedule::command('report:weekly')->everyMinute()->withoutOverlapping();;
+//Schedule::command('test:cron')->everyMinute();
