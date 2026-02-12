@@ -59,8 +59,12 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+    // Kita gunakan nama variabel yang konsisten dengan .env
+    PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
+    
+    // Tambahkan ini untuk memastikan sertifikat server benar-benar diverifikasi
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+]) : [],
         ],
 
         'mariadb' => [

@@ -1,56 +1,33 @@
 version: '3.8'
-
 services:
-  # 1. Backend Laravel
+
+  # Backend Laravel (TAPAMAJUMA-API)
   app:
     build:
-      context: ./backend
+      context: ./tapamajuma-api
       dockerfile: Dockerfile
-    container_name: tapamajuma-backend
+    image: tapamajuma-backend
+    container_name: tapamajuma-api
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - ./backend:/var/www
-    depends_on:
-      - db
+      - ./tapamajuma-api:/var/www
+    networks:
+      - tapamajuma-network
 
-  # 2. Frontend React Builder
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: tapamajuma-frontend
-    volumes:
-      - react_build:/app # Simpan hasil build di volume
-
-  # 3. Web Server (Nginx) - Pintu Masuk
-  webserver:
+  # Web Server (Nginx)
+  nginx:
     image: nginx:alpine
     container_name: tapamajuma-nginx
     restart: unless-stopped
     ports:
-      - "80:80" # Akses via http://ip-server-kamu
+      - "8000:80"
     volumes:
-      - ./backend:/var/www/backend
-      - react_build:/var/www/frontend # Ambil file React dari volume
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
-      - frontend
+      - ./tapamajuma-api:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - tapamajuma-network
 
-  # 4. Database MySQL
-  db:
-    image: mysql:8.0
-    container_name: tapamajuma-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: tapamajuma
-      MYSQL_ROOT_PASSWORD: rootpassword # Ganti nanti
-      MYSQL_PASSWORD: userpassword      # Ganti nanti
-      MYSQL_USER: tapamajuma_user
-    volumes:
-      - dbdata:/var/lib/mysql
-
-volumes:
-  dbdata:
-  react_build:
+networks:
+  tapamajuma-network:
+    driver: bridge
