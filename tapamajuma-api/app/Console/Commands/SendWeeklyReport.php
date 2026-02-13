@@ -138,7 +138,8 @@ try {
 
     // Gabungkan Token dan Secret pakai titik sesuai dokumentasi
     $authHeader = $token . "." . $secret;
-
+    
+    /** @var Response $response */
     $response = Http::withHeaders([
         'Authorization' => $authHeader,
     ])

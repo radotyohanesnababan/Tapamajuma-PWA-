@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AIController as ApiAIController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\LiteracyCardController;
 use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\ProfileController; // Tambahkan ini
 use App\Http\Controllers\Api\PublicDataController;
@@ -54,8 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/generate-content', [ApiAIController::class, 'generate']);
 
     //Fitur Quiz Numerasi & Literasi
-    // GET: Ambil daftar Mapel
+    // GET: Ambil daftar Mapel Numerasi
         Route::get('/quiz/subjects', [StudentQuizController::class, 'getSubjects']);
+        Route::get('/quiz/literacy-subjects', [LiteracyCardController::class, 'index']); // Tambahkan route ini untuk mengambil literacy cards
         
         // GET: Ambil Soal (Ini yang error "Not Found" tadi)
         Route::get('/quiz/questions', [StudentQuizController::class, 'getQuestions']);

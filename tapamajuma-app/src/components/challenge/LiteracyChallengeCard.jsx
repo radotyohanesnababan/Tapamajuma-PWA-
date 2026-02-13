@@ -1,10 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const LiteracyChallengeCard = ({ formData, setFormData }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // State baru untuk menampung data mata pelajaran dari database
+  const [subjectList, setSubjectList] = useState([]);
+  const [loadingMapel, setLoadingMapel] = useState(true);
+
+  // Mengambil data mata pelajaran saat komponen pertama kali dimuat
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        // Sesuaikan endpoint ini dengan route Laravel kamu
+        const res = await api.get("/api/quiz/literacy-subjects");
+        setSubjectList(res.data);
+      } catch (error) {
+        console.error("Gagal memuat mata pelajaran:", error);
+        toast.error("Gagal memuat daftar mata pelajaran.");
+      } finally {
+        setLoadingMapel(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   // Fungsi untuk memicu AI membuatkan bacaan sesuai mapel
   const handleGenerateAI = async () => {
@@ -15,7 +37,7 @@ export const LiteracyChallengeCard = ({ formData, setFormData }) => {
 
     setIsGenerating(true);
     try {
-      // Mengirim request ke backend yang terhubung dengan Gemini AI
+      // Mengirim request ke backend yang terhubung dengan Gemini API
       const res = await api.post("/api/generate-content", {
         subject: formData.subject,
         type: "literacy",
@@ -44,28 +66,31 @@ export const LiteracyChallengeCard = ({ formData, setFormData }) => {
       </div>
 
       <div className="space-y-4">
-        {/* PILIHAN MATA PELAJARAN (Bukti Keterlibatan Lintas Guru) */}
+        {/* PILIHAN MATA PELAJARAN DINAMIS DARI DATABASE */}
         <div>
           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
             1. Pilih Mata Pelajaran Hari Ini
           </label>
           <select
-            className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none mt-1 transition-all"
+            className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none mt-1 transition-all disabled:opacity-60"
             value={formData.subject}
             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
             required
+            disabled={loadingMapel}
           >
-            <option value="">-- Pilih Mapel --</option>
-            <option value="Agama">Agama Kristen Protestan</option>
-            <option value="Agama">Agama Kristen Katolik</option>
-            <option value="Agama">Agama Islam</option>
-            <option value="Seni Budaya">Seni Budaya</option>
-            <option value="PJOK">PJOK</option>
-            <option value="Bahasa Indonesia">Bahasa Indonesia</option>
-            <option value="Bahasa Inggris">Bahasa Inggris</option>
-            <option value="Informatika">Informatika</option>
-            <option value="IPS">Ilmu Pengetahuan Sosial</option>
-            <option value="Lainnya">Lainnya</option>
+            <option value="">
+              {loadingMapel ? "Memuat Mata Pelajaran..." : "-- Pilih Mapel --"}
+            </option>
+            
+            {/* Render data dari API */}
+            {!loadingMapel && subjectList.map((item) => (
+              <option key={item.id} value={item.name}>
+                {item.name}
+              </option>
+            ))}
+            
+            {/* Opsi Cadangan */}
+            {!loadingMapel && <option value="Lainnya">Lainnya</option>}
           </select>
         </div>
 
@@ -78,21 +103,25 @@ export const LiteracyChallengeCard = ({ formData, setFormData }) => {
           <button
             type="button"
             onClick={handleGenerateAI}
-            disabled={isGenerating}
-            className="w-full py-4 px-6 rounded-2xl bg-indigo-50 text-indigo-700 font-bold border-2 border-dashed border-indigo-200 hover:bg-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-95"
+            disabled={isGenerating || !formData.subject}
+            className="w-full py-4 px-6 rounded-2xl bg-indigo-50 text-indigo-700 font-bold border-2 border-dashed border-indigo-200 hover:bg-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isGenerating ? (
               <Loader2 className="animate-spin w-5 h-5" />
             ) : (
               <Sparkles className="w-5 h-5" />
             )}
-            {isGenerating ? "AI Sedang Menulis..." : `Dapatkan Bacaan ${formData.subject || ""}`}
+            {isGenerating 
+              ? "AI Sedang Menulis..." 
+              : formData.subject 
+                ? `Dapatkan Bacaan ${formData.subject}` 
+                : "Pilih Mapel Dulu"}
           </button>
 
           {/* MENAMPILKAN TEKS HASIL GENERATE */}
           {formData.reading_content && (
             <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 animate-in fade-in duration-700">
-              <p className="text-sm leading-relaxed text-slate-700 italic">
+              <p className="text-sm leading-relaxed text-slate-700 italic whitespace-pre-line">
                 {formData.reading_content}
               </p>
             </div>

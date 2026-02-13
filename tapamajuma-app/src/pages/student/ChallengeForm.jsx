@@ -11,13 +11,13 @@ import { toast } from "sonner";
 const HeaderSection = ({ activity }) => {
   const content = {
     literacy: { 
-      title: "Selasa Literasi", 
+      title: "Hari Literasi", 
       desc: "Pembiasaan membaca & bercerita (Semua Mapel)", 
       color: "bg-indigo-600", 
       icon: <BookOpen size={28} /> 
     },
     numeracy: { 
-      title: "Rabu Numerasi", 
+      title: "Hari Numerasi", 
       desc: "Pembiasaan berhitung & logika", 
       color: "bg-amber-500", 
       icon: <Calculator size={28} /> 

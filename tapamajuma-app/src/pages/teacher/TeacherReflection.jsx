@@ -1,137 +1,222 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, User, Users } from "lucide-react";
+import { 
+  MessageCircle, 
+  Send, 
+  User, 
+  Quote, 
+  CheckCircle2, 
+  Sparkles,
+  ChevronRight
+} from "lucide-react";
 import { toast } from "sonner";
 
+// --- Sub-Komponen: Kartu Refleksi Individual ---
+// Dipisah agar setiap textarea memiliki state sendiri (Controlled Component)
+const ReflectionCard = ({ data, onUpdate }) => {
+  const [feedback, setFeedback] = useState(data.feedback_teacher || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Cek apakah sudah ada respon sebelumnya dari database
+  const hasResponded = !!data.feedback_teacher;
+
+  const handleSubmit = async () => {
+    if (!feedback.trim()) return toast.error("Masukan tidak boleh kosong");
+
+    setIsSubmitting(true);
+    try {
+      await api.post(`/api/teacher/reflections/${data.id}/feedback`, {
+        feedback_teacher: feedback,
+      });
+      
+      toast.success("Masukan berhasil dikirim!");
+      // Panggil fungsi refresh data di parent jika perlu, 
+      // atau biarkan state lokal yang menangani UI 'sudah terkirim'
+      if (onUpdate) onUpdate(); 
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengirim masukan");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-4">
+      {/* Header Siswa */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+             {/* Avatar inisial */}
+            <span className="text-xs font-bold text-slate-600">
+              {data.user?.name?.substring(0, 2).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 leading-tight">
+              {data.user?.name}
+            </h3>
+            <p className="text-[10px] text-slate-500">
+              Kelas {data.user?.class_id || '-'}
+            </p>
+          </div>
+        </div>
+        {hasResponded && (
+          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 text-[9px] gap-1 px-2 py-0.5">
+            <CheckCircle2 size={10} /> Dijawab
+          </Badge>
+        )}
+      </div>
+
+      {/* Konten Refleksi Siswa (Style Chat Bubble) */}
+      <div className="relative bg-slate-50 rounded-xl p-4 rounded-tl-none border border-slate-100 ml-4">
+        <Quote size={16} className="absolute -top-2 -left-2 text-slate-300 fill-slate-50" />
+        
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              Kendala & Tantangan
+            </p>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              "{data.content}"
+            </p>
+          </div>
+          
+          {data.targets && (
+            <div className="pt-2 border-t border-slate-200/60">
+              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Sparkles size={10} /> Target Perbaikan
+              </p>
+              <p className="text-xs text-indigo-900 font-medium">
+                {data.targets}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Input Respon Guru */}
+      <div className={`transition-all duration-200 ${isFocused ? 'ring-2 ring-indigo-100 rounded-xl' : ''}`}>
+        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block flex items-center justify-between">
+          <span>Respon Pedagogis</span>
+          <span className="text-[9px] font-normal text-slate-400">
+            {feedback.length} karakter
+          </span>
+        </label>
+        
+        <Textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="Berikan apresiasi dan saran konkret..."
+          className="text-xs min-h-[80px] bg-white border-slate-200 focus-visible:ring-indigo-500 rounded-xl resize-none"
+        />
+        
+        <div className="mt-2 flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={isSubmitting || !feedback.trim() || (feedback === data.feedback_teacher)}
+            className={`
+              rounded-xl text-xs h-9 px-4 shadow-sm transition-all
+              ${hasResponded && feedback === data.feedback_teacher 
+                ? "bg-slate-100 text-slate-400 hover:bg-slate-200" 
+                : "bg-indigo-600 hover:bg-indigo-700 text-white"}
+            `}
+          >
+            {isSubmitting ? (
+              <span className="animate-pulse">Mengirim...</span>
+            ) : hasResponded && feedback === data.feedback_teacher ? (
+              "Tersimpan"
+            ) : (
+              <>
+                Kirim Masukan <Send size={12} className="ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Component ---
 export default function TeacherReflection() {
   const [reflections, setReflections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submittingId, setSubmittingId] = useState(null);
 
-  useEffect(() => {
-    fetchReflections();
-  }, []);
-
+  // Fetch Data
   const fetchReflections = async () => {
     try {
-      // Endpoint ini harus mengembalikan semua refleksi siswa di kelas guru tersebut
       const res = await api.get("/api/teacher/reflections");
+      // Asumsikan data diurutkan dari yang terbaru atau yang belum dijawab
       setReflections(res.data);
-    } catch {
-      toast.error("Gagal mengambil data refleksi");
+    } catch (error) {
+      toast.error("Gagal memuat data refleksi.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSendFeedback = async (id, feedbackText) => {
-    if (!feedbackText) return toast.error("Masukan tidak boleh kosong");
+  useEffect(() => {
+    fetchReflections();
+  }, []);
 
-    setSubmittingId(id);
-    try {
-      // TAMBAHKAN prefix /teacher/ di tengah URL sesuai route:list
-      await api.post(`/api/teacher/reflections/${id}/feedback`, {
-        feedback_teacher: feedbackText,
-      });
-      
-      toast.success("Masukan berhasil dikirim ke siswa!");
-      fetchReflections();
-    } catch (error) {
-      console.error("Error Detail:", error.response?.data);
-      toast.error("Gagal mengirim masukan");
-    } finally {
-      setSubmittingId(null);
-    }
-};
-
-  if (loading) return <div className="p-10 text-center text-sm animate-pulse">Memuat refleksi siswa...</div>;
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4 max-w-lg mx-auto pt-20">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white h-48 rounded-2xl animate-pulse shadow-sm" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 space-y-4 pb-24 max-w-2xl mx-auto bg-slate-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-slate-800">Bimbingan Refleksi</h1>
-        <p className="text-xs text-slate-500">Berikan masukan pedagogis untuk proses belajar siswa</p>
+    <div className="min-h-screen bg-slate-50/50 pb-24">
+      {/* Sticky Header Mobile */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4">
+        <div className="max-w-xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-lg font-bold text-slate-800">Bimbingan Refleksi</h1>
+            <p className="text-xs text-slate-500">
+              {reflections.length} siswa menunggu review
+            </p>
+          </div>
+          <div className="bg-indigo-50 p-2 rounded-full">
+            <MessageCircle size={20} className="text-indigo-600" />
+          </div>
+        </div>
       </div>
 
-      {reflections.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
-          <p className="text-sm text-slate-400">Belum ada refleksi masuk dari siswa.</p>
-        </div>
-      ) : (
-        reflections.map((ref) => (
-          <Card key={ref.id} className="border-none shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="bg-white border-b border-slate-50 flex flex-row items-center justify-between p-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xs font-bold">
-                  <User size={14} />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold">{ref.user.name}</CardTitle>
-                  <p className="text-[10px] text-slate-400">Kelas: {ref.user.class_id}</p>
-                </div>
-              </div>
-              <Badge variant="secondary" className="text-[10px] bg-indigo-50 text-indigo-700 hover:bg-indigo-50">
-                {ref.category}
-              </Badge>
-            </CardHeader>
-
-            <CardContent className="p-4 space-y-4">
-              {/* Konten Refleksi Siswa */}
-              <div className="grid grid-cols-1 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Tantangan/Kesulitan:</p>
-                  <p className="text-xs text-slate-700 italic">"{ref.content}"</p>
-                </div>
-                <div className="p-3 bg-indigo-50/30 rounded-xl border border-indigo-100/50">
-                  <p className="text-[10px] font-bold text-indigo-400 uppercase mb-1">Target Perbaikan:</p>
-                  <p className="text-xs text-indigo-900 font-medium">{ref.targets}</p>
-                </div>
-              </div>
-
-              {/* Status Dukungan Teman (Insight untuk Guru) */}
-              <div className="flex items-center gap-2 text-[10px] text-slate-500 bg-white p-2 rounded-lg border border-slate-100">
-                <Users size={12} className="text-indigo-400" />
-                <span>{ref.peer_feedback?.length || 0} dukungan dari teman sekelas</span>
-              </div>
-
-              {/* Input Feedback Guru */}
-              <div className="pt-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2 px-1">
-                  Masukan Pedagogis Guru:
-                </label>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Contoh: Strategi berhitungmu sudah bagus, coba tingkatkan di bagian..."
-                    className="text-xs min-h-[80px] bg-white border-slate-200 focus-visible:ring-indigo-500 rounded-xl"
-                    defaultValue={ref.feedback_teacher}
-                    id={`feedback-${ref.id}`}
-                  />
-                  <Button
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-xs h-9 rounded-xl gap-2"
-                    disabled={submittingId === ref.id}
-                    onClick={() => {
-                      const val = document.getElementById(`feedback-${ref.id}`).value;
-                      handleSendFeedback(ref.id, val);
-                    }}
-                  >
-                    {submittingId === ref.id ? (
-                      "Mengirim..."
-                    ) : (
-                      <>
-                        <Send size={14} /> Simpan Masukan
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      )}
+      {/* Content List */}
+      <div className="px-4 py-4 max-w-xl mx-auto space-y-4">
+        {reflections.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="text-slate-300" size={32} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-700">Semua Bersih!</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-[200px]">
+              Belum ada refleksi baru dari siswa saat ini.
+            </p>
+          </div>
+        ) : (
+          reflections.map((item) => (
+            <ReflectionCard 
+              key={item.id} 
+              data={item} 
+              onUpdate={fetchReflections} // Opsi: Refresh data setelah submit
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }
