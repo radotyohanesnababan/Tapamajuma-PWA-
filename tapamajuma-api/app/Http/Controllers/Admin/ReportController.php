@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -121,6 +122,11 @@ private function imageToBase64($path) {
 
 public function downloadFullReport(Request $request)
 {
+    // === SET LIMIT MEMORY ===
+        ini_set('memory_limit', '512M');       // Menaikkan batas RAM menjadi 512 MB
+        ini_set('max_execution_time', '300');  // Memberi waktu ekstra 5 menit agar tidak Timeout
+        // ==========================================
+
     // 1. TENTUKAN RENTANG TANGGAL
     // Jika user mengirim param ?start_date=... & ?end_date=..., pakai itu.
     // Jika tidak, default ke "Bulan Ini" (Tanggal 1 s/d Hari Ini/Akhir Bulan).
@@ -195,6 +201,15 @@ public function downloadFullReport(Request $request)
     $pdf = Pdf::loadView('pdf.activity-report', compact(
         'summary', 'sessions', 'teacherRecap', 'literasi', 'numerasi', 'allStudents', 'periodText', 'logoKiri', 'logoKanan'
     ));
+
+    // === TAMBAHKAN KODE INI SEBELUM RETURN ===
+    // Mengambil puncak memori dalam satuan Bytes, lalu dikonversi ke MegaBytes (MB)
+    $memoryBytes = memory_get_peak_usage(true);
+    $memoryMB = round($memoryBytes / 1024 / 1024, 2);
+    
+    // Mencatatnya ke log Laravel
+    Log::info("Puncak RAM terpakai untuk Export PDF: " . $memoryMB . " MB");
+    // =========================================
 
     return $pdf->setPaper('a4', 'portrait')->stream('Laporan-Lengkap.pdf');
 }
