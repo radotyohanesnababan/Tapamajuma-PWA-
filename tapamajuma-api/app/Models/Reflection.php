@@ -13,6 +13,7 @@ class Reflection extends Model
     'content', 
     'improvements', 
     'targets', 
+    'peer_feedback',
     'feedback_teacher'
     ];
 

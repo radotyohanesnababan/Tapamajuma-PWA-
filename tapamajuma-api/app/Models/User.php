@@ -54,6 +54,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $with = ['studentClass'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -82,9 +84,7 @@ public function classes()
 {
     return $this->belongsToMany(
         ClassName::class,           // Model
-        'class_name_user',          // Tabel pivot
-        'user_id',                  // Foreign key user di pivot
-        'class_name_id'             // Foreign key class di pivot
+        'class_id',
     )->withTimestamps();            // Opsional
 }
 

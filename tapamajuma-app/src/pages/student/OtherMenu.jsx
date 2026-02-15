@@ -86,7 +86,7 @@ export default function OtherMenu() {
           <h2 className="text-xl font-black text-slate-800 leading-tight">{user?.name?.split(' ')[0]}</h2>
           <div className="flex items-center gap-1.5 mt-1">
              <span className="bg-indigo-50 text-indigo-600 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
-                KELAS {user?.class_id || '-'}
+                KELAS {user?.student_class.name || '-'}
              </span>
              <Sparkles size={10} className="text-amber-400 fill-amber-400" />
           </div>
