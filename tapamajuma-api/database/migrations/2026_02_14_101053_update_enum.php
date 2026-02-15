@@ -2,13 +2,13 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
-     * Jalankan migrasi untuk memperbarui pilihan ENUM.
+     * Run the migrations.
      */
     public function up(): void
     {
@@ -18,11 +18,12 @@ return new class extends Migration
     }
 
     /**
-     * Kembalikan perubahan jika migrasi di-rollback.
+     * Reverse the migrations.
      */
     public function down(): void
     {
-        // Mengembalikan ke pilihan ENUM yang lama
-        DB::statement("ALTER TABLE daily_activities MODIFY COLUMN type ENUM('berhitung', 'membaca', 'bercerita') NOT NULL");
+        Schema::table('daily_activities', function (Blueprint $table) {
+            //
+        });
     }
 };

@@ -116,7 +116,7 @@ export default function SesiMandiri() {
           <div>
             <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Users className="text-indigo-600" />
-              Presensi Sesi Mandiri
+              Pencatatan Sesi Aktif Kelas
             </CardTitle>
             <CardDescription className="mt-1">
               Sesi untuk Kelas: <span className="font-bold text-indigo-600">{getSelectedClassName()}</span>
@@ -310,7 +310,7 @@ export default function SesiMandiri() {
                 ) : (
                   <>
                     <Save className="mr-2 h-5 w-4" />
-                    Simpan Presensi Kelas {getSelectedClassName()}
+                    Simpan Keaktifan Kelas {getSelectedClassName()}
                   </>
                 )}
               </Button>
@@ -319,6 +319,11 @@ export default function SesiMandiri() {
 
         </CardContent>
       </Card>
+
+        {/* FOOTER TIPS */}
+        <div className="text-xs text-slate-800 mt-4 font-bold justify-center flex items-center gap-2">
+          <p>Tips: Pastikan untuk menyimpan data setelah mencatat keaktifan siswa.</p>
+        </div>
     </div>
   );
 }

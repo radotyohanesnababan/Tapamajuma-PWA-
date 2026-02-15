@@ -30,7 +30,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
+ Route::get('/bank-soal/template', [QuestionBankController::class, 'downloadTemplate']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -103,7 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/student-summary/{id}', [ProfileController::class, 'getSummary']);
 
         // Route Guru Bank Soal
-        Route::get('/bank-soal', [QuestionBankController::class, 'index']);
+    Route::get('/bank-soal', [QuestionBankController::class, 'index']);
     Route::post('/bank-soal', [QuestionBankController::class, 'store']);
     Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
     Route::delete('/bank-soal/{id}', [QuestionBankController::class, 'destroy']);

@@ -6,6 +6,7 @@ import api from "@/lib/axios";
 import LiteracyChallengeCard from "@/components/challenge/LiteracyChallengeCard";
 import NumeracyChallengeCard from "@/components/challenge/NumeracyChallengeCard";
 import { toast } from "sonner";
+import TKAChallengeCard from "@/components/challenge/TKAChallengeCard";
 
 // 1. Definisikan HeaderSection di sini agar tidak hilang
 const HeaderSection = ({ activity }) => {
@@ -23,9 +24,9 @@ const HeaderSection = ({ activity }) => {
       icon: <Calculator size={28} /> 
     },
     practice: { 
-      title: "Latihan Mandiri", 
-      desc: "Asah terus kemampuan literasi dan numerasimu", 
-      color: "bg-slate-700", 
+      title: "TKA Mandiri", 
+      desc: "Soal soal HOTS untuk latihan mandiri", 
+      color: "bg-purple-700", 
       icon: <Sparkles size={28} /> 
     }
   };
@@ -36,7 +37,7 @@ const HeaderSection = ({ activity }) => {
     <div className={`${active.color} p-6 rounded-3xl text-white shadow-lg transition-all duration-500`}>
       <div className="flex justify-between items-center">
         <div className="space-y-1">
-          <p className="text-white/70 text-[10px] font-black uppercase tracking-widest">TAPAMAJUMA Digital</p>
+          <p className="text-white/70 text-[10px] font-black tracking-widest">TAPAMAJUMA Learning</p>
           <h1 className="text-2xl font-bold">{active.title}</h1>
           <p className="text-sm text-white/90">{active.desc}</p>
         </div>
@@ -62,7 +63,7 @@ export default function ChallengeForm() {
     const today = new Date().getDay();
     if (today === 5 || today === 4) setTodayActivity("literacy"); 
     else if (today === 2 || today === 3 ) setTodayActivity("numeracy");
-    else setTodayActivity("practice");
+    else setTodayActivity("tka");
   }, []);
 
   const handleSubmit = async (e) => {
@@ -136,6 +137,15 @@ export default function ChallengeForm() {
           </button>
         </div>
       </form>
+    )}
+
+    {/* === BAGIAN 1: NUMERASI (MANDIRI) === */}
+    {/* Kita taruh di LUAR <form> agar tombolnya tidak bentrok */}
+    {todayActivity === "tka" && (
+       <div className="transition-all duration-500">
+          {/* Numeracy menangani submit-nya sendiri di dalam MathGame */}
+          <TKAChallengeCard formData={formData} setFormData={setFormData} />
+       </div>
     )}
   </div>
   );

@@ -15,7 +15,7 @@ class DailyActivityController extends Controller
 
         // 1. VALIDASI DINAMIS (Tergantung Tipe)
         $rules = [
-            'type' => 'required|in:literacy,numeracy',
+            'type' => 'required|in:literacy,numeracy,tka',
             'confidence_level' => 'required|numeric|min:1|max:5',
             'journal' => 'required|string',
         ];
@@ -25,6 +25,11 @@ class DailyActivityController extends Controller
             $rules['subject'] = 'required|string';
             $rules['score'] = 'required|numeric';
         } 
+        //Aturan Khusus TKA
+        else if ($request->type === 'tka') {
+            $rules['subject'] = 'required|string';
+            $rules['score'] = 'required|numeric';
+        }
         // Aturan Khusus Literasi
         else {
             $rules['reading_content'] = 'nullable|string';

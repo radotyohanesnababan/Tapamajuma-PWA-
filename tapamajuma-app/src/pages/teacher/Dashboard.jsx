@@ -143,7 +143,7 @@ export default function TeacherDashboard() {
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-7 rounded-[1.5rem] shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm"
       >
         <BookOpen className="mr-2" size={18} />
-        CATAT SESI MANDIRI SISWA
+        CATAT SESI KELAS SISWA
       </Button>
 
       {/* SEARCH & FILTER AREA */}

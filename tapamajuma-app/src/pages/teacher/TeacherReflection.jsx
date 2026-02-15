@@ -102,7 +102,7 @@ const ReflectionCard = ({ data, onUpdate }) => {
 
       {/* Input Respon Guru */}
       <div className={`transition-all duration-200 ${isFocused ? 'ring-2 ring-indigo-100 rounded-xl' : ''}`}>
-        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block flex items-center justify-between">
+        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block items-center justify-between">
           <span>Respon Pedagogis</span>
           <span className="text-[9px] font-normal text-slate-400">
             {feedback.length} karakter

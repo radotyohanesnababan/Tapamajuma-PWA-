@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -6,25 +7,93 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/axios"; 
 import { toast } from "sonner";
-import { Trophy, Timer, Brain, CheckCircle2, Calculator, Send, Loader2, ArrowRight } from "lucide-react";
+import { 
+  Trophy, Timer, Brain, CheckCircle2, Calculator, 
+  Send, Loader2, ArrowRight, BookOpen, 
+  Calendar
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function MathGame() {
+// ================= THEME CONFIGURATION =================
+const GAME_MODES = {
+  numeracy: {
+    title: "Numerasi",
+    subtitle: "Latihan logika dan hitungan dasar hari ini.",
+    icon: Calculator,
+    timePerQuestion: 20,
+    colors: {
+      text: "text-amber-500",
+      bgMain: "bg-amber-500",
+      bgHover: "hover:bg-amber-50",
+      borderHover: "hover:border-amber-500",
+      textGroupHover: "group-hover:text-amber-600",
+      bgIconHover: "group-hover:bg-amber-200",
+      iconGroupHover: "group-hover:text-amber-700",
+    }
+  },
+  tka: {
+    title: "TKA Mandiri",
+    subtitle: "Uji nalar dan kemampuan akademik tingkat tinggi.",
+    icon: Brain,
+    timePerQuestion: 60,
+    colors: {
+      text: "text-purple-500",
+      bgMain: "bg-purple-500",
+      bgHover: "hover:bg-purple-50",
+      borderHover: "hover:border-purple-500",
+      textGroupHover: "group-hover:text-purple-600",
+      bgIconHover: "group-hover:bg-purple-200",
+      iconGroupHover: "group-hover:text-purple-700",
+    }
+  },
+  literacy: {
+    title: "Literasi",
+    subtitle: "Latihan pemahaman teks dan literatur lintas mapel.",
+    icon: BookOpen,
+    timePerQuestion: 45,
+    colors: {
+      text: "text-blue-500",
+      bgMain: "bg-blue-500",
+      bgHover: "hover:bg-blue-50",
+      borderHover: "hover:border-blue-500",
+      textGroupHover: "group-hover:text-blue-600",
+      bgIconHover: "group-hover:bg-blue-200",
+      iconGroupHover: "group-hover:text-blue-700",
+    }
+  }
+};
+
+// ================= FUNGSI PENJADWALAN HARI =================
+const getTodayMode = () => {
+  const day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+  
+  if (day === 1 || day === 2) return "literacy"; // Senin, Selasa
+  if (day >= 3 && day <= 5) return "numeracy";   // Rabu, Kamis, Jumat
+  return "tka";                                  // Sabtu, Minggu
+};
+
+// ================= MAIN COMPONENT =================
+export default function QuizEngine() {
   const navigate = useNavigate();
+  
+  // Otomatis tentukan mode dari hari ini
+  const [mode] = useState(getTodayMode());
+  const activeTheme = GAME_MODES[mode];
+  
+  // Ambil nama hari untuk ditampilkan di UI
+  const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const currentDayName = dayNames[new Date().getDay()];
+  const ActiveIcon = activeTheme.icon;
 
   // --- STATE ---
-  const [gameState, setGameState] = useState("menu"); // menu | playing | calculating | reflection
+  const [gameState, setGameState] = useState("menu");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
-  
-  // Game Data
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // { 12: 'A', 15: 'C' }
+  const [answers, setAnswers] = useState({}); 
   const [finalScore, setFinalScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(20); // 20 detik per soal
-  
-  // Refleksi Data
+  const [timeLeft, setTimeLeft] = useState(activeTheme.timePerQuestion);
   const [confidence, setConfidence] = useState(3);
   const [journal, setJournal] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,16 +109,16 @@ export default function MathGame() {
   const startGame = async (subject) => {
     setIsSubmitting(true);
     try {
-      const res = await api.get(`/api/quiz/questions?subject_id=${subject.id}`);
+      const res = await api.get(`/api/quiz/questions?subject_id=${subject.id}&type=${mode}`);
       setQuestions(res.data);
       setSelectedSubject(subject);
       setGameState("playing");
       setCurrentIndex(0);
       setAnswers({});
-      setTimeLeft(20);
+      setTimeLeft(activeTheme.timePerQuestion);
     } catch (error) {
       if (error.response?.status === 404) {
-        toast.warning("Belum ada soal untuk kelasmu di mapel ini.");
+        toast.warning(`Belum ada soal ${activeTheme.title} untuk mapel ini.`);
       } else {
         toast.error("Gagal memuat soal.");
       }
@@ -62,46 +131,30 @@ export default function MathGame() {
   const handleAnswer = useCallback((optionKey) => {
     const currentQ = questions[currentIndex];
     
-    // Simpan jawaban
     setAnswers(prev => ({
       ...prev,
-      [currentQ.id]: optionKey // Jika timeout, optionKey dikirim null/undefined
+      [currentQ.id]: optionKey 
     }));
 
-    // Pindah Soal / Selesai
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      setTimeLeft(20); // Reset timer
+      setTimeLeft(activeTheme.timePerQuestion); 
     } else {
-      finishGame();
+      setGameState("calculating");
     }
-  }, [currentIndex, questions]);
+  }, [currentIndex, questions, activeTheme.timePerQuestion]);
 
-  // Timer Countdown
   useEffect(() => {
     let timer;
     if (gameState === "playing" && timeLeft > 0) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (gameState === "playing" && timeLeft === 0) {
-      handleAnswer(null); // Waktu habis = Salah/Kosong
+      handleAnswer(null); 
     }
     return () => clearTimeout(timer);
   }, [timeLeft, gameState, handleAnswer]);
 
-  // --- 4. FINISH & CALCULATE SCORE ---
-  const finishGame = async () => {
-    setGameState("calculating");
-    
-    // Siapkan payload jawaban
-    // Kita ambil state 'answers' yang terbaru langsung dari parameter atau state
-    // Note: Karena setState async, lebih aman kita construct payload saat render calculating atau pakai ref. 
-    // Tapi untuk simplifikasi, kita asumsikan state sudah update terakhir di handleAnswer logic.
-    
-    // Karena handleAnswer memanggil finishGame, state answers mungkin belum ter-update sepenuhnya di siklus ini.
-    // Trik: Kita kirim jawaban terakhir secara manual ke fungsi submit atau gunakan useEffect pada gameState.
-  };
-
-  // Effect khusus untuk submit saat masuk phase 'calculating'
+  // --- 4. CALCULATE SCORE ---
   useEffect(() => {
     if (gameState === "calculating") {
       const submitQuiz = async () => {
@@ -113,11 +166,12 @@ export default function MathGame() {
 
           const res = await api.post('/api/quiz/submit', {
             subject_id: selectedSubject.id,
+            type: mode, 
             answers: payloadAnswer
           });
 
-          setFinalScore(res.data.score); // Simpan skor dari server
-          setGameState("reflection");    // Masuk ke layar refleksi
+          setFinalScore(res.data.score);
+          setGameState("reflection");
         } catch (error) {
           toast.error("Gagal menghitung nilai.");
           setGameState("menu");
@@ -125,13 +179,9 @@ export default function MathGame() {
       };
       submitQuiz();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
-
   // --- 5. FINAL SUBMIT (JURNAL) ---
-  // Karena skor sudah disimpan di tahap sebelumnya (quiz_results), 
-  // di sini kita simpan Jurnal ke daily_activities sebagai pelengkap laporan.
   const submitReflection = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!journal.trim()) return toast.error("Isi jurnal dulu ya!");
@@ -139,12 +189,12 @@ export default function MathGame() {
     setIsSubmitting(true);
     try {
       await api.post("/api/activities", {
-        type: "numeracy",
+        type: mode,
         subject: selectedSubject.name,
         score: finalScore,
         confidence_level: confidence,
         journal: journal,
-        reading_content: `Latihan Soal ${selectedSubject.name}`
+        reading_content: `Latihan Soal ${activeTheme.title} - ${selectedSubject.name}`
       });
 
       toast.success("Latihan selesai! Hebat!");
@@ -164,16 +214,16 @@ export default function MathGame() {
       <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center justify-center">
         <div className="w-full max-w-md space-y-8 animate-in zoom-in duration-300">
           <div className="text-center space-y-2">
-             <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-2">
-               <Calculator size={48} className="text-amber-500" />
+             <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-2 border border-slate-100">
+               <ActiveIcon size={48} className={activeTheme.colors.text} />
              </div>
-             <h1 className="text-3xl font-black text-slate-800">Mulai Numerasi</h1>
-             <p className="text-slate-500">Pilih mata pelajaran untuk tantangan hari ini.</p>
+             <h1 className="text-3xl font-black text-slate-800">Mulai {activeTheme.title}</h1>
+             <p className="text-slate-500">{activeTheme.subtitle}</p>
           </div>
 
           <div className="grid gap-3">
             {isSubmitting ? (
-               <div className="text-center text-slate-400 py-10"><Loader2 className="animate-spin mx-auto h-8 w-8"/> Memuat soal...</div>
+               <div className="text-center text-slate-400 py-10"><Loader2 className="animate-spin mx-auto h-8 w-8"/> Memuat data...</div>
             ) : subjects.length === 0 ? (
                <div className="text-center p-4 border-2 border-dashed rounded-xl text-slate-400">Tidak ada mapel tersedia.</div>
             ) : (
@@ -181,14 +231,14 @@ export default function MathGame() {
                 <button
                   key={sub.id}
                   onClick={() => startGame(sub)}
-                  className="w-full bg-white p-5 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-amber-500 hover:shadow-md hover:bg-amber-50 transition-all flex justify-between items-center group text-left"
+                  className={`w-full bg-white p-5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all flex justify-between items-center group text-left ${activeTheme.colors.borderHover} ${activeTheme.colors.bgHover}`}
                 >
                   <div>
-                    <span className="block font-bold text-lg text-slate-700 group-hover:text-amber-600">{sub.name}</span>
+                    <span className={`block font-bold text-lg text-slate-700 transition-colors ${activeTheme.colors.textGroupHover}`}>{sub.name}</span>
                     <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Mulai Latihan</span>
                   </div>
-                  <div className="bg-slate-100 p-2 rounded-full group-hover:bg-amber-200 transition-colors">
-                    <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-amber-700"/>
+                  <div className={`bg-slate-100 p-2 rounded-full transition-colors ${activeTheme.colors.bgIconHover}`}>
+                    <ArrowRight className={`h-5 w-5 text-slate-400 ${activeTheme.colors.iconGroupHover}`}/>
                   </div>
                 </button>
               ))
@@ -202,16 +252,16 @@ export default function MathGame() {
   // 2. LOADING SCORE
   if (gameState === "calculating") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-indigo-600">
-        <div className="text-white text-center space-y-4 animate-pulse">
-           <Brain size={64} className="mx-auto"/>
-           <h2 className="text-2xl font-bold">Menghitung Skor...</h2>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className={`text-white text-center space-y-4 animate-pulse ${activeTheme.colors.text}`}>
+           <ActiveIcon size={64} className="mx-auto"/>
+           <h2 className="text-2xl font-bold text-white">Menghitung Skor...</h2>
         </div>
       </div>
     );
   }
 
-  // 3. PLAYING: TAMPILAN MATHGAME ADAPTED
+  // 3. PLAYING: TAMPILAN KUIS ADAPTIF
   if (gameState === "playing" && questions.length > 0) {
     const currentQ = questions[currentIndex];
     
@@ -219,10 +269,10 @@ export default function MathGame() {
       <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
         <Card className="w-full max-w-md border-none shadow-2xl rounded-[32px] overflow-hidden bg-white">
           
-          {/* Top Bar (Timer & Progress) */}
-          <div className="bg-amber-500 p-5 text-white flex justify-between items-center">
+          {/* Top Bar (Timer & Progress) Dinamis warnanya */}
+          <div className={`${activeTheme.colors.bgMain} p-5 text-white flex justify-between items-center`}>
             <div className="flex items-center gap-2">
-              <Timer size={20} className={timeLeft < 6 ? "animate-pulse text-red-200" : ""} />
+              <Timer size={20} className={timeLeft < 10 ? "animate-pulse text-red-200" : ""} />
               <span className="font-mono text-xl font-bold">{timeLeft}s</span>
             </div>
             <div className="flex flex-col items-end">
@@ -232,35 +282,27 @@ export default function MathGame() {
           </div>
 
           <CardContent className="p-6 md:p-8 space-y-6">
-            {/* Soal Area */}
             <div className="min-h-[120px] flex items-center justify-center">
-               <h2 className="text-2xl md:text-3xl font-black text-slate-800 text-center leading-relaxed">
+               <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center leading-relaxed">
                  {currentQ.question_text}
                </h2>
             </div>
 
-            {/* Jawaban Area (Grid Buttons) */}
             <div className="space-y-3">
               {Object.entries(currentQ.options).map(([key, value]) => (
                 <button
                   key={key}
                   onClick={() => handleAnswer(key)}
-                  className="w-full group relative overflow-hidden bg-slate-50 hover:bg-indigo-50 border-2 border-slate-100 hover:border-indigo-500 p-4 rounded-2xl transition-all duration-200 flex items-center gap-4 text-left active:scale-95"
+                  className={`w-full group relative overflow-hidden bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl transition-all duration-200 flex items-center gap-4 text-left active:scale-95 ${activeTheme.colors.borderHover} ${activeTheme.colors.bgHover}`}
                 >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white border-2 border-slate-200 group-hover:border-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-bold text-slate-500 transition-colors">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center font-bold text-slate-500 transition-colors group-hover:border-transparent group-hover:text-white ${activeTheme.colors.bgIconHover.replace('bg-', 'group-hover:bg-').replace('200', '500')}`}>
                     {key}
                   </div>
-                  <span className="text-base font-bold text-slate-700 group-hover:text-indigo-900 w-full break-words">
+                  <span className="text-sm font-bold text-slate-700 w-full break-words">
                     {value}
                   </span>
                 </button>
               ))}
-            </div>
-
-            <div className="text-center">
-               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                 Pilih jawaban yang benar
-               </p>
             </div>
           </CardContent>
         </Card>
@@ -271,7 +313,7 @@ export default function MathGame() {
   // 4. REFLECTION: HASIL & JURNAL
   if (gameState === "reflection") {
     return (
-      <div className="min-h-screen bg-indigo-50 p-6 flex flex-col items-center py-10">
+      <div className={`min-h-screen p-6 flex flex-col items-center py-10 bg-slate-50`}>
         <div className="w-full max-w-md space-y-6 animate-in slide-in-from-bottom-8 duration-500">
           
           <div className="text-center space-y-2">
@@ -279,32 +321,26 @@ export default function MathGame() {
               <Trophy size={48} className={finalScore >= 70 ? "text-yellow-500" : "text-slate-400"} />
             </div>
             <h1 className="text-2xl font-black text-slate-800">Selesai!</h1>
-            <p className="text-slate-500 text-sm">Skor Akhir Kamu</p>
-            <div className="text-6xl font-black text-indigo-600 tracking-tighter">{finalScore}</div>
+            <p className="text-slate-500 text-sm">Skor {activeTheme.title} Kamu</p>
+            <div className={`text-6xl font-black tracking-tighter ${activeTheme.colors.text}`}>{finalScore}</div>
           </div>
 
           <Card className="rounded-[32px] border-none shadow-xl bg-white">
             <CardContent className="p-6 space-y-8">
               
-              {/* Slider Confidence */}
               <div className="space-y-4">
                 <Label className="font-bold text-slate-700 flex justify-between">
                    <span>Tingkat Kepercayaan Diri</span>
-                   <span className="text-indigo-600">{confidence}/5</span>
+                   <span className={activeTheme.colors.text}>{confidence}/5</span>
                 </Label>
                 <Slider value={[confidence]} max={5} min={1} step={1} onValueChange={(v) => setConfidence(v[0])} />
-                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
-                  <span>Ragu</span>
-                  <span>Sangat Yakin</span>
-                </div>
               </div>
 
-              {/* Jurnal Input */}
               <div className="space-y-3">
                 <Label className="font-bold text-slate-700">Jurnal Belajar</Label>
                 <textarea 
-                  className="w-full p-4 border-2 border-slate-50 rounded-2xl text-sm min-h-[100px] focus:border-indigo-500 outline-none bg-slate-50 transition-all placeholder:text-slate-400"
-                  placeholder="Soal mana yang paling sulit? Kenapa?"
+                  className="w-full p-4 border-2 border-slate-50 rounded-2xl text-sm min-h-[100px] focus:border-slate-300 outline-none bg-slate-50 transition-all placeholder:text-slate-400"
+                  placeholder="Soal mana yang paling menjebak? Kenapa?"
                   value={journal}
                   onChange={(e) => setJournal(e.target.value)} 
                 />
@@ -314,10 +350,10 @@ export default function MathGame() {
                 type="button"
                 onClick={submitReflection} 
                 disabled={isSubmitting || !journal}
-                className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-indigo-600 font-bold text-lg shadow-lg transition-all"
+                className={`w-full h-14 rounded-2xl font-bold text-lg shadow-lg transition-all ${activeTheme.colors.bgMain} hover:opacity-90 text-white`}
               >
                 {isSubmitting ? "Menyimpan..." : (
-                  <span className="flex items-center gap-2"><Send size={18}/> Simpan Jurnal</span>
+                  <span className="flex items-center gap-2"><Send size={18}/> Simpan Hasil</span>
                 )}
               </Button>
 

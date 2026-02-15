@@ -19,7 +19,8 @@ import { toast } from "sonner";
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function QuestionBankManagement() {
-    usePageTitle("Manajemen Bank Soal");
+  usePageTitle("Manajemen Bank Soal");
+  
   // --- STATE ---
   const [questions, setQuestions] = useState([]);
   
@@ -28,8 +29,9 @@ export default function QuestionBankManagement() {
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
-  // Filter State
+  // Filter State (Ditambah 'type')
   const [filters, setFilters] = useState({
+    type: "",
     subject_id: "",
     class_id: "",
     teacher_id: "",
@@ -73,7 +75,7 @@ export default function QuestionBankManagement() {
   }, [filters]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Admin: Hapus soal ini secara permanen?")) return;
+    if (!window.confirm("Hapus soal ini secara permanen?")) return;
     try {
       await api.delete(`/api/admin/questions/${id}`);
       setQuestions(prev => prev.filter(q => q.id !== id));
@@ -89,7 +91,7 @@ export default function QuestionBankManagement() {
   };
 
   const handleResetFilter = () => {
-    setFilters({ subject_id: "", class_id: "", teacher_id: "", search: "" });
+    setFilters({ type: "", subject_id: "", class_id: "", teacher_id: "", search: "" });
   };
 
   return (
@@ -112,7 +114,21 @@ export default function QuestionBankManagement() {
           <Filter className="h-4 w-4"/> Filter Data
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Grid disesuaikan menjadi 5 kolom di layar besar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          {/* Filter Kategori Soal (BARU) */}
+          <select 
+            className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+            value={filters.type}
+            onChange={(e) => handleFilterChange('type', e.target.value)}
+          >
+            <option value="">Semua Kategori</option>
+            <option value="numeracy">🔢 Numerasi</option>
+            <option value="literacy">📚 Literasi</option>
+            <option value="tka">🧠 TKA (HOTS)</option>
+          </select>
+
           {/* Filter Mapel */}
           <select 
             className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
@@ -156,7 +172,7 @@ export default function QuestionBankManagement() {
         </div>
 
         {/* Reset Button */}
-        {(filters.subject_id || filters.class_id || filters.teacher_id || filters.search) && (
+        {(filters.type || filters.subject_id || filters.class_id || filters.teacher_id || filters.search) && (
           <div className="flex justify-end">
             <Button variant="ghost" size="sm" onClick={handleResetFilter} className="text-red-500 hover:text-red-600 hover:bg-red-50">
               Reset Filter
@@ -186,6 +202,12 @@ export default function QuestionBankManagement() {
                   {/* Header Card */}
                   <div className="flex flex-wrap justify-between items-start mb-3 gap-2">
                     <div className="flex flex-wrap gap-2 items-center">
+                      
+                      {/* Badge Kategori (BARU) */}
+                      <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md text-xs font-bold border border-amber-100 uppercase">
+                        {q.type === 'numeracy' ? 'Numerasi' : q.type === 'literacy' ? 'Literasi' : q.type === 'tka' ? 'TKA' : q.type || 'Umum'}
+                      </span>
+
                       {/* Badge Mapel */}
                       <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-bold border border-indigo-100">
                         {q.subject ? q.subject.name : 'Unknown'}

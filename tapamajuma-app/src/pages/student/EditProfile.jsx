@@ -33,6 +33,7 @@ export default function EditProfileStandalone() {
     phone_number: '',
     password: '',
     password_confirmation: '',
+    role: user.role
   });
 
   // Isi data saat user load
@@ -43,6 +44,7 @@ export default function EditProfileStandalone() {
         email: user.email || '',
         phone_number: user.phone_number || '',
         password: '',
+        role: user.role || 'student',
         password_confirmation: ''
       });
       setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
@@ -175,17 +177,21 @@ export default function EditProfileStandalone() {
                             />
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Nomor HP Orangtua</Label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-3 text-slate-400" size={18} />
-                            <Input 
-                                value={formData.phone_number}
-                                onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                                className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                            />
-                        </div>
-                    </div>
+                    {formData.role === 'student' && (
+    <div className="space-y-2 animate-in fade-in duration-300">
+        <Label>Nomor HP Orangtua (Khusus SISWA)</Label>
+        <div className="relative">
+            <User className="absolute left-3 top-3 text-slate-400" size={18} />
+            <Input 
+                value={formData.phone_number}
+                onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                placeholder="Contoh: 08123456789"
+                required // Tambahkan required di sini karena ini khusus siswa
+            />
+        </div>
+    </div>
+)}
                     <div className="space-y-2">
                         <Label>Email Address</Label>
                         <div className="relative">

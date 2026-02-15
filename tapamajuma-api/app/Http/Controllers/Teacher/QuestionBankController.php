@@ -6,10 +6,7 @@ use App\Exports\TemplateQuestionBankExport;
 use App\Http\Controllers\Controller;
 use App\Imports\QuestionBankImport;
 use App\Models\QuestionBank;
-use App\Models\Subject;
-use App\Models\ClassName; // <--- Import Model Kelas
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class QuestionBankController extends Controller
@@ -24,6 +21,10 @@ class QuestionBankController extends Controller
         if ($user->role !== 'superadmin') {
             $query->where('creator_id', $user->id);
         }
+
+        if ($request->has('type')) {
+        $query->where('type', $request->type);
+    }
         
         // Filter Dropdown Frontend
         if ($request->has('subject_id')) {
@@ -39,6 +40,7 @@ class QuestionBankController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'type' => 'required|in:numeracy,literacy,tka',
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:class_names,id', // <--- Validasi ID Kelas
             'question_text' => 'required|string',
@@ -47,6 +49,7 @@ class QuestionBankController extends Controller
         ]);
 
         $q = QuestionBank::create([
+            'type' => $request->type,
             'creator_id' => $request->user()->id,
             'subject_id' => $request->subject_id,
             'class_id' => $request->class_id, // <--- Simpan ID

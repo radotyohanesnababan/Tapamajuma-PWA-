@@ -39,6 +39,9 @@ import SessionReport from "./pages/superadmin/SessionReport";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import GalleryTeacher from "./pages/teacher/GalleryTeacher";
+import SoalList from "./pages/teacher/SoalList";
+import SoalAdd from "./pages/teacher/SoalAdd";
+import SoalImport from "./pages/teacher/SoalImport";
 
 
 
@@ -91,10 +94,13 @@ function App() {
             {/* GRUP 2.1: Peningkatan Kelas */}
             <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
             <Route path="/teacher/class-improvement/analysis" element={<AnalysisTab />} />
-        <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
-        <Route path="/teacher/class-improvement/gallery" element={<GalleryTeacher />} />
+            <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
+            <Route path="/teacher/class-improvement/gallery" element={<GalleryTeacher />} />
             {/* GRUP 2.2: Bank Soal */}
-          <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
+            <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
+            <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
+            <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
+            <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
           {/* GRUP 2.3: Pengaturan */}
             <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
 

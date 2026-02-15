@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 
 // ==========================================
 // 1. CLASS UTAMA (PENGATUR SHEET)
@@ -44,15 +43,16 @@ class QuestionInputSheet implements WithHeadings, WithTitle, WithEvents
     public function headings(): array
     {
         return [
-            'Nama Mapel',      // A
-            'Nama Kelas',      // B
-            'Soal',            // C
-            'Pilihan A',       // D
-            'Pilihan B',       // E
-            'Pilihan C',       // F
-            'Pilihan D',       // G
-            'Pilihan E',       // H
-            'Kunci'    // I
+            'Kategori Soal',   // A (Baru)
+            'Nama Mapel',      // B
+            'Nama Kelas',      // C
+            'Soal',            // D
+            'Pilihan A',       // E
+            'Pilihan B',       // F
+            'Pilihan C',       // G
+            'Pilihan D',       // H
+            'Pilihan E',       // I
+            'Kunci'            // J
         ];
     }
 
@@ -63,56 +63,69 @@ class QuestionInputSheet implements WithHeadings, WithTitle, WithEvents
                 $sheet = $event->sheet;
                 $rowCount = 100; // Terapkan validasi sampai baris 100
 
-                // A. STYLING HEADER
-                $sheet->getStyle('A1:G1')->getFont()->setBold(true);
-                $sheet->getStyle('A1:G1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                // A. STYLING HEADER (Diperbarui sampai kolom J)
+                $sheet->getStyle('A1:J1')->getFont()->setBold(true);
+                $sheet->getStyle('A1:J1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // B. ATUR LEBAR KOLOM
-                $sheet->getColumnDimension('A')->setWidth(25); 
-                $sheet->getColumnDimension('B')->setWidth(15); 
-                $sheet->getColumnDimension('C')->setWidth(50); 
-                $sheet->getColumnDimension('D')->setWidth(20); 
-                $sheet->getColumnDimension('E')->setWidth(20); 
-                $sheet->getColumnDimension('F')->setWidth(20); 
-                $sheet->getColumnDimension('G')->setWidth(15); 
+                $sheet->getColumnDimension('A')->setWidth(20); // Kategori
+                $sheet->getColumnDimension('B')->setWidth(25); // Mapel
+                $sheet->getColumnDimension('C')->setWidth(15); // Kelas
+                $sheet->getColumnDimension('D')->setWidth(50); // Soal
+                $sheet->getColumnDimension('E')->setWidth(20); // Opt A
+                $sheet->getColumnDimension('F')->setWidth(20); // Opt B
+                $sheet->getColumnDimension('G')->setWidth(20); // Opt C
+                $sheet->getColumnDimension('H')->setWidth(20); // Opt D
+                $sheet->getColumnDimension('I')->setWidth(20); // Opt E
+                $sheet->getColumnDimension('J')->setWidth(15); // Kunci
 
-                // C. SETUP DROPDOWN MAPEL (Kolom A)
+                // C. SETUP DROPDOWN KATEGORI SOAL (Kolom A) -> BARU
+                // Menggunakan value baku agar sesuai dengan backend database (numeracy, literacy, tka)
+                $validationKategori = $sheet->getCell('A2')->getDataValidation();
+                $validationKategori->setType(DataValidation::TYPE_LIST);
+                $validationKategori->setErrorStyle(DataValidation::STYLE_STOP);
+                $validationKategori->setAllowBlank(false);
+                $validationKategori->setShowDropDown(true);
+                $validationKategori->setFormula1('"numeracy,literacy,tka"');
+
+                // D. SETUP DROPDOWN MAPEL (Kolom B)
                 // Merujuk ke Sheet 'DataReferensi', Kolom A
-                $validationMapel = $sheet->getCell('A2')->getDataValidation();
+                $validationMapel = $sheet->getCell('B2')->getDataValidation();
                 $validationMapel->setType(DataValidation::TYPE_LIST);
                 $validationMapel->setErrorStyle(DataValidation::STYLE_STOP);
                 $validationMapel->setAllowBlank(false);
                 $validationMapel->setShowDropDown(true);
                 $validationMapel->setFormula1("'DataReferensi'!\$A\$2:\$A\$1000");
 
-                // D. SETUP DROPDOWN KELAS (Kolom B)
+                // E. SETUP DROPDOWN KELAS (Kolom C)
                 // Merujuk ke Sheet 'DataReferensi', Kolom B
-                $validationKelas = $sheet->getCell('B2')->getDataValidation();
+                $validationKelas = $sheet->getCell('C2')->getDataValidation();
                 $validationKelas->setType(DataValidation::TYPE_LIST);
                 $validationKelas->setErrorStyle(DataValidation::STYLE_STOP);
                 $validationKelas->setAllowBlank(false);
                 $validationKelas->setShowDropDown(true);
                 $validationKelas->setFormula1("'DataReferensi'!\$B\$2:\$B\$1000");
 
-                // E. SETUP DROPDOWN KUNCI (Kolom G)
-                // Manual A, B, C
-                $validationKunci = $sheet->getCell('G2')->getDataValidation();
+                // F. SETUP DROPDOWN KUNCI (Kolom J)
+                $validationKunci = $sheet->getCell('J2')->getDataValidation();
                 $validationKunci->setType(DataValidation::TYPE_LIST);
                 $validationKunci->setErrorStyle(DataValidation::STYLE_STOP);
                 $validationKunci->setAllowBlank(false);
                 $validationKunci->setShowDropDown(true);
                 $validationKunci->setFormula1('"A,B,C,D,E"');
 
-                // F. LOOP PENERAPAN VALIDASI & STYLE BARIS
+                // G. LOOP PENERAPAN VALIDASI & STYLE BARIS
                 for ($i = 2; $i <= $rowCount; $i++) {
-                    $sheet->getCell("A$i")->setDataValidation(clone $validationMapel);
-                    $sheet->getCell("B$i")->setDataValidation(clone $validationKelas);
-                    $sheet->getCell("I$i")->setDataValidation(clone $validationKunci);
+                    $sheet->getCell("A$i")->setDataValidation(clone $validationKategori);
+                    $sheet->getCell("B$i")->setDataValidation(clone $validationMapel);
+                    $sheet->getCell("C$i")->setDataValidation(clone $validationKelas);
+                    $sheet->getCell("J$i")->setDataValidation(clone $validationKunci);
                     
-                    // Wrap text untuk kolom Soal agar tidak memanjang ke samping
-                    $sheet->getStyle("C$i")->getAlignment()->setWrapText(true);
-                    // Align Top semua cell
-                    $sheet->getStyle("A$i:I$i")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+                    // Wrap text untuk kolom Soal (sekarang di kolom D) agar tidak memanjang ke samping
+                    $sheet->getStyle("D$i")->getAlignment()->setWrapText(true);
+                    
+                    // Align Top semua cell (Sekarang sampai kolom J)
+                    $sheet->getStyle("A$i:J$i")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
                 }
             },
         ];
@@ -126,22 +139,18 @@ class ReferenceDataSheet implements FromArray, WithTitle
 {
     public function title(): string
     {
-        return 'DataReferensi'; // Nama Sheet Sumber (PENTING)
+        return 'DataReferensi'; 
     }
 
     public function array(): array
     {
-        // Ambil Data dari Database
         $subjects = Subject::pluck('name')->toArray();
         $classes  = ClassName::pluck('name')->toArray();
 
-        // Cari array terpanjang untuk batas looping
         $maxRows = max(count($subjects), count($classes));
 
-        // Header
         $data = [['Daftar Mapel', 'Daftar Kelas']];
 
-        // Gabungkan data menjadi kolom A dan B
         for ($i = 0; $i < $maxRows; $i++) {
             $data[] = [
                 $subjects[$i] ?? null, // Kolom A

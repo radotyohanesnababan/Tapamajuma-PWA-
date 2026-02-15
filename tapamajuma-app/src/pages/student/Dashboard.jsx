@@ -11,7 +11,8 @@ import {
 // Import Ikon biar makin keren
 import { 
   Zap, Trophy, Target, Star, 
-  Calendar, Flame, Rocket, Smile 
+  Calendar, Flame, Rocket, Smile, 
+  ZapIcon
 } from "lucide-react";
 
 export default function StudentDashboard() {
@@ -164,14 +165,14 @@ export default function StudentDashboard() {
         
         <div className="space-y-3">
             {activities.slice().reverse().map((act) => (
-            <Card key={act.id} className="border-none shadow-sm rounded-2xl bg-white hover:scale-[1.02] transition-transform">
+            <Card key={act.id} className="border-none shadow-sm  rounded-2xl bg-white hover:scale-[1.02] transition-transform">
                 <CardContent className="p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-xl ${act.score > 70 ? 'bg-indigo-50 text-indigo-500' : 'bg-rose-50 text-rose-500'}`}>
-                        <Zap size={20} />
+                        <ZapIcon size={20} />
                     </div>
                     <div>
-                        <p className="font-black capitalize text-sm text-slate-700">{act.type}</p>
+                        <p className="font-black uppercase text-sm text-slate-700">{act.type}</p>
                         <p className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
                            {new Date(act.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                         </p>

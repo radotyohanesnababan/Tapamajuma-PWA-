@@ -16,6 +16,7 @@ class QuestionBank extends Model
         'question_text',
         'options',
         'correct_key',
+        'type',
     ];
 
     // Otomatis ubah JSON ke Array saat diambil
