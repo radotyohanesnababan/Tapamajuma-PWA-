@@ -76,4 +76,44 @@ class AIController extends Controller
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
+
+/**
+     * Fungsi bantuan internal untuk men-generate Insight Laporan
+     * Bisa dipanggil dari controller manapun tanpa melalui Route API.
+     */
+   public static function generateReportInsights($data)
+    {
+        try {
+            $apiKey = env('GEMINI_API_KEY');
+            if (!$apiKey) {
+                return ["Fitur Insight cerdas belum aktif karena API Key tidak ditemukan."];
+            }
+
+            // Susun Prompt baru yang mengkombinasikan Partisipasi (Kuantitas) dan Skor (Kualitas)
+            $prompt = "Kamu adalah konsultan pendidikan analitik. Analisis data aktivitas siswa SMP berikut dari sisi tingkat partisipasi dan kualitas pemahaman (rata-rata nilai maksimal 100):\n";
+            $prompt .= "- Literasi: {$data['literasi_count']} kegiatan, Rata-rata Nilai: {$data['literasi_avg']}\n";
+            $prompt .= "- Numerasi: {$data['numerasi_count']} kegiatan, Rata-rata Nilai: {$data['numerasi_avg']}\n";
+            $prompt .= "- TKA (Tes Akademik): {$data['tka_count']} kegiatan, Rata-rata Nilai: {$data['tka_avg']}\n";
+            $prompt .= "Berikan 3 poin masukan evaluasi dan rekomendasi tindakan konkrit untuk Kepala Sekolah. Fokus pada perbandingan antara kuantitas kegiatan dan kualitas nilainya. Format kalimat harus profesional, langsung ke poinnya, maksimal 2 kalimat per poin, dan JANGAN gunakan format bintang/tebal/markdown.";
+
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders(['Content-Type' => 'application/json'])
+                ->post($url, [
+                    'contents' => [['parts' => [['text' => $prompt]]]]
+                ]);
+                /** @var \Illuminate\Http\Client\Response $response */
+            if ($response->successful()) {
+                $resultText = $response->json('candidates.0.content.parts.0.text');
+                $cleanedText = str_replace('*', '', $resultText ?? '');
+                return array_filter(explode("\n", trim($cleanedText)));
+            }
+
+            return ["AI gagal merumuskan analisis (Status: " . $response->status() . ")."];
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gemini Insight Error: ' . $e->getMessage());
+            return ["Sistem AI sedang sibuk. Silakan evaluasi manual berdasarkan data tabel di atas."];
+        }
+    }
 }

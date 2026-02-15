@@ -134,9 +134,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/templates/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
         Route::post('/changelog', [ChangelogController::class, 'store']);
         Route::get('/changelog/all', [ChangelogController::class, 'index']);
+        
+        // Route untuk laporan aktivitas 
         Route::get('/activity-report/executive', [ReportController::class, 'executiveSummary']);
         Route::get('/activity-report/session', [ReportController::class, 'sessionEffectiveness']);
         Route::get('/activity-report/student', [ReportController::class, 'studentLog']);
+        Route::get('/activity-report/student-details/{id}', [ReportController::class, 'studentActivityDetails']);
+        Route::get('/activity-report/class-summary', [ReportController::class, 'classSummary']);
+        Route::get('/activity-report/teacher-summary', [ReportController::class, 'teacherSummary']);
         Route::get('/activity-report/pdf', [ReportController::class, 'downloadFullReport']);
     });
 

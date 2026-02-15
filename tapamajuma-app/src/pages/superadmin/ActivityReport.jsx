@@ -42,6 +42,24 @@ export default function ActivityReport() {
       path: "students" // Ganti sesuai route kamu
     },
     {
+      id: "classes",
+      title: "Rangkuman Aktivitas Per Kelas",
+      description: "Laporan aktivitas siswa per kelas dan rangkuman performa tiap kelas.",
+      icon: <FileText className="w-8 h-8 text-purple-600" />,
+      bg: "bg-purple-50",
+      btnColor: "text-purple-600 hover:bg-purple-50",
+      path: "classes" // Ganti sesuai route kamu
+    },
+    {
+      id: "teacher",
+      title: "Rangkuman Aktivitas Guru",
+      description: "Laporan aktivitas guru dan performa tiap guru.",
+      icon: <FileText className="w-8 h-8 text-cyan-600" />,
+      bg: "bg-cyan-50",
+      btnColor: "text-cyan-600 hover:bg-cyan-50",
+      path: "teachers" // Ganti sesuai route kamu
+    },
+    {
       id: "session",
       title: "Efektivitas Sesi Guru",
       description: "Laporan sesi 'Self Study' dan dampaknya terhadap aktivitas siswa.",
@@ -50,6 +68,7 @@ export default function ActivityReport() {
       btnColor: "text-orange-600 hover:bg-orange-50",
       path: "sessions" // Ganti sesuai route kamu
     }
+
   ];
 
   // --- FUNGSI DOWNLOAD ---

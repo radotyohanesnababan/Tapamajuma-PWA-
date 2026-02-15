@@ -1,237 +1,356 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Lengkap</title>
+    <title>Laporan Lengkap Tapamajuma</title>
     <style>
-        body { font-family: sans-serif; font-size: 11px; }
+        /* Mengatur margin global kertas, beri ruang di atas untuk header dan di bawah untuk footer */
+        @page { margin: 150px 40px 50px 40px; }
         
-        /* KOP SURAT */
-        .header { text-align: center; border-bottom: 3px double black; margin-bottom: 20px; padding-bottom: 10px; }
-        .header h2, .header h3, .header p { margin: 2px 0; }
+        body { font-family: sans-serif; font-size: 11px; }
+
+        /* Tambahkan di dalam <style> */
+        .col-third { width: 31%; display: inline-block; vertical-align: top; margin-right: 2%; }
+        .col-third:last-child { margin-right: 0; }
+        
+        /* HEADER FIXED (Otomatis muncul di tiap halaman) */
+        header { position: fixed; top: -130px; left: 0px; right: 0px; height: 110px; text-align: center; border-bottom: 3px double black; }
+        header h2, header h3, header p { margin: 2  px 0; }
         .logo-kiri { position: absolute; left: 0; top: 0; width: 60px; }
         .logo-kanan { position: absolute; right: 0; top: 0; width: 60px; }
 
+        /* FOOTER FIXED (Otomatis muncul di tiap halaman) */
+        footer { position: fixed; bottom: -30px; left: 0px; right: 0px; height: 20px; text-align: right; font-style: italic; font-size: 9px; color: #64748b; }
+
         /* JUDUL HALAMAN */
-        .page-title { font-weight: bold; font-size: 14px; margin-bottom: 15px; text-decoration: underline; }
-        .sub-title { font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
+        .page-title { font-weight: bold; font-size: 14px; margin-bottom: 15px; text-decoration: underline; background-color: #e2e8f0; padding: 5px; }
+        .sub-title { font-weight: bold; margin-top: 15px; margin-bottom: 5px; color: #1e293b; }
 
         /* TABEL */
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        th, td { border: 1px solid black; padding: 5px; text-align: left; }
-        th { background-color: #f0f0f0; }
+        th, td { border: 1px solid #94a3b8; padding: 5px; text-align: left; }
+        th { background-color: #f1f5f9; font-weight: bold; }
         
+        /* BOX REKOMENDASI */
+        .insight-box { border: 2px dashed #64748b; background-color: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 20px;}
+        .insight-box li { margin-bottom: 8px; line-height: 1.4;}
+
         /* UTILITIES */
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .page-break { page-break-after: always; }
-        .footer-print { font-style: italic; font-size: 9px; margin-top: 20px; text-align: right; }
+        .col-half { width: 48%; display: inline-block; vertical-align: top; }
     </style>
 </head>
 <body>
 
-    <div class="header" style="position: relative;">
+    <header>
         <img src="{{ $logoKiri }}" class="logo-kiri" alt="Logo Kiri">
         <img src="{{ $logoKanan }}" class="logo-kanan" alt="Logo Kanan">
         <h3>PEMERINTAH KABUPATEN TAPANULI UTARA</h3>
         <h3>DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
         <h2>SMP NEGERI 1 SIBORONGBORONG</h2>
         <p>Jalan Siliwangi No.2 Siborongborong 22474</p>
-    </div>
-    <p style="text-align: center; font-weight: bold; margin-bottom: 20px;">
-    Periode Laporan: {{ $periodText }}
-    </p>
-    <div class="page-title">BAGIAN 1: RINGKASAN PERFORMA SEKOLAH</div>
+    </header>
 
-    <div class="sub-title">a. Siswa</div>
-    <table>
-        <tr>
-            <td>Total Siswa Terdaftar</td>
-            <td class="text-right">{{ $summary['total_siswa'] }}</td>
-        </tr>
-        <tr>
-            <td>Total Siswa Aktif (Pernah Pakai Sistem)</td>
-            <td class="text-right">{{ $summary['siswa_aktif_sistem'] }}</td>
-        </tr>
-    </table>
+    <footer>
+        Dicetak Otomatis Oleh Sistem Tapamajuma pada {{ date('d-m-Y H:i') }}
+    </footer>
 
-    <div class="sub-title">b. Guru</div>
-    <table>
-        <tr>
-            <td>Total Guru Terdaftar</td>
-            <td class="text-right">{{ $summary['total_guru'] }}</td>
-        </tr>
-        <tr>
-            <td>Total Guru Sudah Melaksanakan Sesi</td>
-            <td class="text-right">{{ $summary['guru_aktif_sesi'] }}</td>
-        </tr>
-    </table>
+    <main>
+        <p class="text-center" style="font-weight: bold; margin-bottom: 20px;">
+            Periode Laporan: {{ $periodText }}
+        </p>
 
-    <div class="sub-title">c. Mata Pelajaran (5 Paling Diminati)</div>
-    <table>
-        <thead>
+        <div class="page-title">BAGIAN 1: RINGKASAN PERFORMA SEKOLAH</div>
+
+        <div class="sub-title">a. Partisipasi Pengguna</div>
+        <table>
             <tr>
-                <th width="10%">No</th>
-                <th>Mata Pelajaran</th>
-                <th width="20%">Total Aktivitas</th>
+                <td width="70%">Total Siswa Terdaftar</td><td class="text-right">{{ $summary['total_siswa'] }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($summary['top_mapel'] as $idx => $m)
             <tr>
-                <td class="text-center">{{ $idx + 1 }}</td>
-                <td>{{ $m->subject }}</td>
-                <td class="text-right">{{ $m->total }}</td>
+                <td>Total Siswa Aktif (Mengerjakan Tugas/Membaca)</td><td class="text-right">{{ $summary['siswa_aktif_sistem'] }}</td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div class="footer-print">Dicetak Otomatis Oleh Sistem Tapamajuma pada {{ date('d-m-Y H:i') }}</div>
-    <div class="page-break"></div>
-
-
-    <div class="header" style="position: relative;">
-        <img src="{{ $logoKiri }}" class="logo-kiri" alt="Logo Kiri">
-        <img src="{{ $logoKanan }}" class="logo-kanan" alt="Logo Kanan">
-        <h3>PEMERINTAH KABUPATEN TAPANULI UTARA</h3>
-        <h3>DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
-        <h2>SMP NEGERI 1 SIBORONGBORONG</h2>
-        <p>Jalan Siliwangi No.2 Siborongborong 22474</p>
-    </div>
-
-    <div class="page-title">BAGIAN 2: LAPORAN EFEKTIFITAS SESI KELAS</div>
-
-    <div class="sub-title">a. Lampiran Lengkap Record Sesi</div>
-    <table>
-        <thead>
             <tr>
-                <th>Tanggal</th>
-                <th>Guru Pengampu</th>
-                <th>Kelas</th>
-                <th>Topik</th>
-                <th>Hadir</th>
+                <td>Total Guru Terdaftar</td><td class="text-right">{{ $summary['total_guru'] }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($sessions as $sess)
             <tr>
-                <td>{{ \Carbon\Carbon::parse($sess->started_at)->format('d-m-Y') }}</td>
-                <td>{{ $sess->teacher->name ?? '-' }}</td>
-                <td>{{ $sess->class_name }}</td>
-                <td>{{ $sess->topic }}</td>
-                <td class="text-center">{{ $sess->students->count() }}</td>
+                <td>Total Guru Melaksanakan Sesi Pemantauan</td><td class="text-right">{{ $summary['guru_aktif_sesi'] }}</td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
+        </table>
 
-    <div class="sub-title">b. Rekapitulasi Guru</div>
-    <table>
-        <thead>
+        <div class="sub-title">b. Distribusi Tipe Kegiatan</div>
+        <table>
             <tr>
-                <th>Nama Guru</th>
-                <th class="text-center">Total Sesi</th>
+                <td width="70%">Total Kegiatan Literasi</td><td class="text-right">{{ $summary['total_literasi'] }} Kegiatan</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($teacherRecap as $tr)
             <tr>
-                <td>{{ $tr->teacher->name ?? '-' }}</td>
-                <td class="text-center">{{ $tr->total_sesi }}</td>
+                <td>Total Kegiatan Numerasi</td><td class="text-right">{{ $summary['total_numerasi'] }} Kegiatan</td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
+            <tr>
+                <td>Total Kegiatan TKA (Tes Kemampuan Akademik)</td><td class="text-right">{{ $summary['total_tka'] }} Kegiatan</td>
+            </tr>
+        </table>
 
-    <div class="footer-print">Dicetak Otomatis Oleh Sistem Tapamajuma pada {{ date('d-m-Y H:i') }}</div>
-    <div class="page-break"></div>
+        <div class="sub-title">c. Mata Pelajaran (5 Paling Diminati)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th width="10%" class="text-center">No</th>
+                    <th>Mata Pelajaran</th>
+                    <th width="20%" class="text-center">Total Aktivitas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($summary['top_mapel'] as $idx => $m)
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $m->subject }}</td>
+                    <td class="text-center">{{ $m->total }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="page-break"></div>
 
 
-    <div class="header" style="position: relative;">
-        <img src="{{ $logoKiri }}" class="logo-kiri" alt="Logo Kiri">
-        <img src="{{ $logoKanan }}" class="logo-kanan" alt="Logo Kanan">
-        <h3>PEMERINTAH KABUPATEN TAPANULI UTARA</h3>
-        <h3>DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
-        <h2>SMP NEGERI 1 SIBORONGBORONG</h2>
-        <p>Jalan Siliwangi No.2 Siborongborong 22474</p>
-    </div>
+        <div class="page-title">BAGIAN 2: EFEKTIFITAS SESI & KEAKTIFAN GURU</div>
 
-    <div class="page-title">BAGIAN 3: AKTIFITAS MANDIRI SISWA</div>
+        <div class="sub-title">a. Guru Pemantau Paling Aktif (Ranking)</div>
+        <p><i>Menampilkan guru yang paling rajin membuka sesi belajar mandiri.</i></p>
+        <table>
+            <thead>
+                <tr>
+                    <th width="10%" class="text-center">Rank</th>
+                    <th>Nama Guru</th>
+                    <th width="20%" class="text-center">Total Sesi Dipandu</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($teacherRecap as $idx => $tr)
+                <tr>
+                    <td class="text-center">#{{ $idx + 1 }}</td>
+                    <td>{{ $tr->teacher->name ?? '-' }}</td>
+                    <td class="text-center">{{ $tr->total_sesi }} Sesi</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-    <div class="sub-title">a. Literasi</div>
-    
-    <p><strong>Siswa Paling Aktif (Top 5)</strong></p>
-    <table>
-        <tr><th>Nama Siswa</th><th>Jumlah Keaktifan</th></tr>
-        @foreach($literasi['top_active'] as $t)
-        <tr><td>{{ $t->user->name }}</td><td class="text-center">{{ $t->total }}</td></tr>
+        <div class="sub-title">b. Riwayat Pelaksanaan Sesi</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Guru Pengampu</th>
+                    <th>Kelas</th>
+                    <th>Topik</th>
+                    <th class="text-center">Siswa Hadir</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($sessions as $sess)
+                <tr>
+                    <td>{{ \Carbon\Carbon::parse($sess->started_at)->format('d-m-Y') }}</td>
+                    <td>{{ $sess->teacher->name ?? '-' }}</td>
+                    <td>{{ $sess->class_name }}</td>
+                    <td>{{ $sess->topic }}</td>
+                    <td class="text-center">{{ $sess->students->count() }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="page-break"></div>
+
+
+        <div class="page-title">BAGIAN 3: ANALISIS KINERJA PER JENJANG ANGKATAN</div>
+
+        @foreach(['Kelas 7', 'Kelas 8', 'Kelas 9'] as $grade)
+        <div class="sub-title" style="background-color: #cbd5e1; padding: 3px;">Statistik {{ $grade }}</div>
+        
+        <div>
+            <div class="col-half" style="margin-right: 2%;">
+                <p><strong>Top 5 Siswa Teraktif (Sering Login/Mengerjakan)</strong></p>
+                <table>
+                    <tr><th>Nama Siswa</th><th class="text-center">Aktivitas</th></tr>
+                    @forelse($topPerAngkatan[$grade]['teraktif'] as $t)
+                    <tr><td>{{ $t->name }} ({{ $t->class_name }})</td><td class="text-center">{{ $t->total_keaktifan }}</td></tr>
+                    @empty
+                    <tr><td colspan="2" class="text-center">Belum ada data</td></tr>
+                    @endforelse
+                </table>
+            </div>
+            <div class="col-half">
+                <p><strong>Top 5 Siswa Skor Tertinggi (Kualitas Nilai)</strong></p>
+                <table>
+                    <tr><th>Nama Siswa</th><th class="text-center">Total Skor</th></tr>
+                    @forelse($topPerAngkatan[$grade]['tertinggi'] as $t)
+                    <tr><td>{{ $t->name }} ({{ $t->class_name }})</td><td class="text-center">{{ $t->total_skor }}</td></tr>
+                    @empty
+                    <tr><td colspan="2" class="text-center">Belum ada data</td></tr>
+                    @endforelse
+                </table>
+            </div>
+        </div>
+
+        <p style="margin-top:0;"><strong>Distribusi Minat Belajar {{ $grade }}:</strong></p>
+        <table>
+            <tr>
+                <th class="text-center">Literasi</th>
+                <th class="text-center">Numerasi</th>
+                <th class="text-center">TKA</th>
+            </tr>
+            <tr>
+                @php 
+                    $numGr = str_replace('Kelas ', '', $grade);
+                    $minat = isset($minatPerAngkatan[$numGr]) ? $minatPerAngkatan[$numGr]->pluck('total', 'type') : collect();
+                @endphp
+                <td class="text-center">{{ $minat['literacy'] ?? 0 }} Kegiatan</td>
+                <td class="text-center">{{ $minat['numeracy'] ?? 0 }} Kegiatan</td>
+                <td class="text-center">{{ $minat['tka'] ?? 0 }} Kegiatan</td>
+            </tr>
+        </table>
         @endforeach
-    </table>
 
-    <p><strong>Siswa Skor Tertinggi (Top 5)</strong></p>
-    <table>
-        <tr><th>Nama Siswa</th><th>Total Score</th></tr>
-        @foreach($literasi['top_score'] as $t)
-        <tr><td>{{ $t->user->name }}</td><td class="text-center">{{ $t->total_score }}</td></tr>
-        @endforeach
-    </table>
+        <div class="page-break"></div>
+        <div class="page-title">BAGIAN 4: RANGKUMAN PERSENTASE KEBERHASILAN KELAS</div>
+        <p><i>Persentase keberhasilan di bawah ini dihitung berdasarkan akumulasi rata-rata pencapaian skor siswa di masing-masing kelas.</i></p>
 
-    <div class="sub-title" style="margin-top: 30px;">b. Numerasi</div>
-    
-    <p><strong>Siswa Paling Aktif (Top 5)</strong></p>
-    <table>
-        <tr><th>Nama Siswa</th><th>Jumlah Keaktifan</th></tr>
-        @foreach($numerasi['top_active'] as $t)
-        <tr><td>{{ $t->user->name }}</td><td class="text-center">{{ $t->total }}</td></tr>
-        @endforeach
-    </table>
-    <p><strong>Siswa Skor Tertinggi (Top 5)</strong></p>
-    <table>
-        <tr><th>Nama Siswa</th><th>Total Score</th></tr>
-        @foreach($numerasi['top_score'] as $t)
-        <tr><td>{{ $t->user->name }}</td><td class="text-center">{{ $t->total_score }}</td></tr>
-        @endforeach
-    </table>
+        <div>
+            <div class="col-third">
+                <div class="sub-title">A. LITERASI</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kelas</th>
+                            <th class="text-center">Keberhasilan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($classSuccessRates as $c)
+                        <tr>
+                            <td>{{ $c->class_name }}</td>
+                            <td class="text-center">{{ $c->avg_literacy }}%</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-    <div class="footer-print">Dicetak Otomatis Oleh Sistem Tapamajuma pada {{ date('d-m-Y H:i') }}</div>
-    <div class="page-break"></div>
+            <div class="col-third">
+                <div class="sub-title">B. NUMERASI</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kelas</th>
+                            <th class="text-center">Keberhasilan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($classSuccessRates as $c)
+                        <tr>
+                            <td>{{ $c->class_name }}</td>
+                            <td class="text-center">{{ $c->avg_numeracy }}%</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-third">
+                <div class="sub-title">C. TKA</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kelas</th>
+                            <th class="text-center">Keberhasilan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($classSuccessRates as $c)
+                        <tr>
+                            <td>{{ $c->class_name }}</td>
+                            <td class="text-center">{{ $c->avg_tka }}%</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
 
 
-    <div class="header" style="position: relative;">
-        <img src="{{ $logoKiri }}" class="logo-kiri" alt="Logo Kiri">
-        <img src="{{ $logoKanan }}" class="logo-kanan" alt="Logo Kanan">
-        <h3>PEMERINTAH KABUPATEN TAPANULI UTARA</h3>
-        <h3>DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
-        <h2>SMP NEGERI 1 SIBORONGBORONG</h2>
-        <p>Jalan Siliwangi No.2 Siborongborong 22474</p>
-    </div>
+        <div class="page-title">BAGIAN 5: KEPUTUSAN SISTEM & REKOMENDASI</div>
 
-    <div class="page-title">BAGIAN 4: LAMPIRAN RECORD LENGKAP SISWA</div>
+        <div class="sub-title">a. Nominasi Siswa Teladan (Top 3 Keseluruhan)</div>
+        <p><i>Penilaian ini digabungkan secara otomatis oleh sistem berdasarkan kedisiplinan (jumlah aktifitas) dan kecerdasan (akumulasi skor nilai) pada kegiatan Literasi, Numerasi, dan TKA.</i></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th width="10%" class="text-center">Rank</th>
+                    <th>Nama Siswa</th>
+                    <th>Kelas</th>
+                    <th class="text-center">Total Aktivitas</th>
+                    <th class="text-center">Total Skor</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($siswaTeladan as $idx => $teladan)
+                <tr>
+                    <td class="text-center" style="font-weight: bold;">Ke-{{ $idx + 1 }}</td>
+                    <td style="font-weight: bold; color: #1e3a8a;">{{ $teladan->name }}</td>
+                    <td>{{ $teladan->class_name }}</td>
+                    <td class="text-center">{{ $teladan->total_keaktifan }}</td>
+                    <td class="text-center">{{ $teladan->total_skor }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center">Data belum mencukupi untuk penilaian.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
 
-    <table>
-        <thead>
-            <tr>
-                <th width="5%">No</th>
-                <th>Nama Siswa</th>
-                <th>Email / NIS</th>
-                <th class="text-center">Total Keaktifan</th>
-                <th class="text-center">Total Skor</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($allStudents as $idx => $s)
-            <tr>
-                <td class="text-center">{{ $idx + 1 }}</td>
-                <td>{{ $s->name }}</td>
-                <td>{{ $s->email }}</td>
-                <td class="text-center">{{ $s->total_keaktifan }}</td>
-                <td class="text-center">{{ $s->total_skor }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+        <div class="sub-title">b. Rekomendasi & Masukan Tindakan Untuk Sekolah</div>
+        <div class="insight-box">
+            <strong>Hasil Analisis Otomatis Tapamajuma:</strong>
+            <ul>
+                @foreach($insights as $insight)
+                    <li>{{ $insight }}</li>
+                @endforeach
+            </ul>
+        </div>
 
-    <div class="footer-print">Dicetak Otomatis Oleh Sistem Tapamajuma pada {{ date('d-m-Y H:i') }}</div>
+        <div class="page-break"></div>
 
+
+        <div class="page-title">BAGIAN 6: LAMPIRAN RECORD SELURUH SISWA</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="5%" class="text-center">No</th>
+                    <th>Nama Siswa</th>
+                    <th>Kelas</th>
+                    <th class="text-center">Total Keaktifan</th>
+                    <th class="text-center">Total Skor</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($allStudents as $idx => $s)
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $s->name }}</td>
+                    <td>{{ $s->class_name ?? '-' }}</td>
+                    <td class="text-center">{{ $s->total_keaktifan }}</td>
+                    <td class="text-center">{{ $s->total_skor }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+    </main>
 </body>
 </html>

@@ -27,6 +27,31 @@ class SelfStudySession extends Model
     protected $casts = [
         'started_at' => 'datetime',
     ];
+    /**
+     * =============================================
+     * RELASI UNTUK FITUR GURU
+     * =============================================
+     */
+
+    /**
+     * Relasi: Satu guru memandu banyak Sesi Belajar Mandiri.
+     */
+    public function sessions()
+    {
+        // Sesuaikan 'creator_id' dengan foreign key yang ada di tabel self_study_sessions
+        return $this->hasMany(SelfStudySession::class, 'creator_id');
+    }
+
+    /**
+     * Relasi: Satu guru membuat banyak Soal.
+     * (Asumsi nama model kamu adalah QuestionBank atau Soal)
+     */
+    public function questions()
+    {
+        // Ganti 'Question::class' dengan nama Model soal kamu yang sebenarnya (misal: BankSoal::class)
+        // Ganti 'creator_id' dengan nama kolom pembuat soal di tabel soal tersebut.
+        return $this->hasMany(QuestionBank::class, 'creator_id'); 
+    }
 
     /**
      * =============================================

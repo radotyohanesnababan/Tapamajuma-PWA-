@@ -140,6 +140,25 @@ protected function phoneNumber(): Attribute
         set: fn (string $value) => $this->formatPhoneNumber($value),
     );
 }
+/**
+     * Relasi untuk fitur Guru: Satu guru memandu banyak Sesi Belajar Mandiri.
+     */
+    public function sessions()
+    {
+        // Pastikan 'teacher_id' adalah nama kolom di tabel self_study_sessions
+        return $this->hasMany(\App\Models\SelfStudySession::class, 'teacher_id');
+    }
+
+    /**
+     * Relasi untuk fitur Guru: Satu guru membuat banyak Soal.
+     * PERHATIAN: Sesuaikan 'QuestionBank::class' dengan nama model tabel soalmu!
+     */
+    public function questions()
+    {
+        // Jika nama model soalmu bukan QuestionBank, ubah bagian ini.
+        // Jika nama kolom pembuatnya bukan 'creator_id', ubah juga bagian ini.
+        return $this->hasMany(\App\Models\QuestionBank::class, 'creator_id'); 
+    }
 
 // Helper function untuk ubah 08 jadi 628
 private function formatPhoneNumber($number)

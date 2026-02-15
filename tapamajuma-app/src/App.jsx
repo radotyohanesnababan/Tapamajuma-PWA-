@@ -42,6 +42,8 @@ import GalleryTeacher from "./pages/teacher/GalleryTeacher";
 import SoalList from "./pages/teacher/SoalList";
 import SoalAdd from "./pages/teacher/SoalAdd";
 import SoalImport from "./pages/teacher/SoalImport";
+import ClassSummary from "./pages/superadmin/ClassSummary";
+import TeacherSummary from "./pages/superadmin/TeacherSummary";
 
 
 
@@ -140,6 +142,8 @@ function App() {
             <Route path="activity-report/executive" element={<ExecutiveReport />} />
             <Route path="activity-report/students" element={<StudentLog />} />
             <Route path="activity-report/sessions" element={<SessionReport />} />
+            <Route path="activity-report/classes" element={<ClassSummary />} />
+            <Route path="activity-report/teachers" element={<TeacherSummary />} />
 
             {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
             <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}

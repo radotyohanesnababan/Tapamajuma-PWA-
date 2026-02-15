@@ -83,15 +83,7 @@ export default function SessionReport() {
 </div>
                 {/* --- END BAGIAN TENGAH --- */}
 
-                {/* Bagian Kanan: Persentase Efektivitas (Masih disimpan sbg info tambahan) */}
-                <div className="text-right min-w-[100px]">
-                    <p className="text-xs text-slate-400 mb-1">Efektivitas</p>
-                    <div className={`text-3xl font-black ${
-                        session.conversion_rate > 50 ? 'text-emerald-600' : 'text-slate-300'
-                    }`}>
-                        {session.conversion_rate}%
-                    </div>
-                </div>
+                
 
               </div>
             </CardContent>

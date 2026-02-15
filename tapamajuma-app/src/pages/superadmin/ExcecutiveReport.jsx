@@ -44,6 +44,36 @@ export default function ExecutiveReport() {
           ))}
         </CardContent>
       </Card>
+      {/* 3. Simple Bar Chart (Top Kegiatan) */}
+      {/* 3. Simple Bar Chart (Top Kegiatan) */}
+      <Card className="border-none shadow-sm">
+        <CardHeader><CardTitle>Kegiatan Terpopuler</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {/* Tambahkan pengecekan agar tidak crash jika data kosong */}
+          {data.activity_types && data.activity_types.length > 0 ? (
+            data.activity_types.map((act, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  {/* Gunakan act.type dan tambahkan capitalize agar rapi */}
+                  <span className="font-medium text-slate-700 capitalize">{act.type}</span>
+                  <span className="text-slate-500">{act.total} aktivitas</span>
+                </div>
+                
+                {/* CSS Bar Chart */}
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-indigo-500 rounded-full" 
+                    // Perhitungan persentase relatif terhadap data tertinggi (index 0)
+                    style={{ width: `${(act.total / data.activity_types[0].total) * 100}%` }} 
+                  ></div>
+                </div>
+              </div>
+            ))
+          ) : (
+             <div className="text-sm text-slate-500 text-center py-4">Belum ada data kegiatan.</div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
