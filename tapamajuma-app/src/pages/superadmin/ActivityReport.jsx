@@ -18,6 +18,8 @@ import api from "@/lib/axios";
 export default function ActivityReport() {
   usePageTitle("Laporan Aktivitas");
   const navigate = useNavigate();
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
 
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -75,10 +77,15 @@ export default function ActivityReport() {
   const handleDownloadFullReport = async () => {
     setIsDownloading(true);
     const toastId = toast.loading("Sedang membuat PDF Laporan Lengkap...");
-
+    
     try {
+      // Susun parameter URL
+      const params = new URLSearchParams();
+      if (reportStartDate) params.append('start_date', reportStartDate);
+      if (reportEndDate) params.append('end_date', reportEndDate);
+      const queryString = params.toString();
       // Request ke API Laravel
-      const response = await api.get('/api/admin/activity-report/pdf', {
+      const response = await api.get(`/api/admin/activity-report/pdf?${queryString}`, {
         responseType: 'blob', // PENTING: Agar dibaca sebagai file, bukan JSON
       });
 
@@ -171,8 +178,31 @@ export default function ActivityReport() {
           <CardContent className="p-8 flex flex-col justify-center h-full relative z-10">
             <h2 className="text-2xl font-bold mb-2">Butuh Laporan PDF?</h2>
             <p className="text-slate-300 mb-6 max-w-md">
-              Unduh seluruh data dengan format pdf.
+              Unduh seluruh data aktivitas siswa dan performa kelas dalam format PDF.
             </p>
+            
+            {/* Filter Tanggal Inline (Tema Gelap) */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Dari Tanggal</label>
+                <input 
+                  type="date" 
+                  className="bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto color-scheme-dark"
+                  value={reportStartDate}
+                  onChange={(e) => setReportStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Sampai Tanggal</label>
+                <input 
+                  type="date" 
+                  className="bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto color-scheme-dark"
+                  value={reportEndDate}
+                  onChange={(e) => setReportEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="flex gap-3">
               <Button 
                 onClick={handleDownloadFullReport}
@@ -190,8 +220,9 @@ export default function ActivityReport() {
                 )}
               </Button>
             </div>
+            
             {/* Dekorasi */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-3xl opacity-50 -mr-16 -mt-16"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-3xl opacity-50 -mr-16 -mt-16 pointer-events-none"></div>
           </CardContent>
         </Card>
 

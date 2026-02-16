@@ -4,165 +4,159 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use App\Models\User; // Sesuaikan dengan model User kamu
-use App\Models\DailyActivity; // Jangan lupa import model Kegiatan/Aktivitas
+use App\Models\User; 
+use App\Models\DailyActivity; 
 use Illuminate\Support\Facades\DB;
 
 class SendWeeklyReport extends Command
 {
     protected $signature = 'report:weekly';
-    protected $description = 'Kirim laporan mingguan siswa ke orang tua via WhatsApp menggunakan Wablas/Fonnte';
-
+    protected $description = 'Kirim laporan mingguan siswa ke orang tua via WhatsApp dengan perbandingan rata-rata kelas';
 
     public function handle()
     {
         $this->info('🚀 Memulai pengiriman laporan mingguan...');
 
-        // 1. Ambil Siswa yang punya No HP
-        // Tips: Tambahkan ->where('role', 'student') jika sistemmu punya guru/admin
-        $users = User::whereNotNull('phone_number')->get();
-        
-        // 2. Set Rentang Waktu (Minggu Ini)
         $startOfWeek = now()->startOfWeek();
         $endOfWeek   = now()->endOfWeek();
 
-        foreach ($users as $user) {
-            $this->info("Sedang memproses: {$user->name}...");
+        // 1. PRE-CALCULATE: Hitung rata-rata kelas untuk minggu ini sekaligus agar database tidak jebol
+        $this->info('📊 Menghitung rata-rata kelas...');
+        $classAveragesRaw = DB::table('daily_activities')
+            ->join('users', 'daily_activities.user_id', '=', 'users.id')
+            ->whereBetween('daily_activities.created_at', [$startOfWeek, $endOfWeek])
+            ->select(
+                'users.class_id',
+                'daily_activities.type',
+                DB::raw('ROUND(AVG(daily_activities.score), 1) as avg_score')
+            )
+            ->groupBy('users.class_id', 'daily_activities.type')
+            ->get();
 
-            // --- A. HITUNG KEGIATAN MANDIRI (RUMAH) ---
-            // Sumber: Table daily_activities
+        // Ubah format data agar mudah dicari: $classAverages[class_id][type] = skor
+        $classAverages = [];
+        foreach ($classAveragesRaw as $row) {
+            if ($row->class_id) {
+                $classAverages[$row->class_id][$row->type] = $row->avg_score;
+            }
+        }
+
+        // 2. Ambil Siswa beserta relasi kelasnya
+        $users = User::where('role', 'student')
+            ->whereNotNull('phone_number')
+            ->with('studentClass') // Menggunakan relasi yang sudah kamu buat
+            ->get();
+
+        foreach ($users as $user) {
+// --- A. HITUNG KEGIATAN MANDIRI & SEKOLAH ---
+            $className = $user->studentClass ? $user->studentClass->name : '-';
+            $classId = $user->class_id;
+
+            // 1. Kegiatan Mandiri (Rumah)
             $mandiriActivities = DailyActivity::where('user_id', $user->id)
                 ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
-                ->get(); // Ambil datanya dulu
-
+                ->get();
+            
             $totalMandiri = $mandiriActivities->count();
-            
-            // Hitung Rata-rata Nilai (Jika ada kolom score)
             $avgScore = $totalMandiri > 0 ? round($mandiriActivities->avg('score'), 1) : 0;
-            
-            // Cek Mapel Favorit (Literasi/Numerasi)
-            // Mengambil tipe terbanyak yang dikerjakan
-            if ($totalMandiri > 0) {
-                // 1. Grouping berdasarkan kolom 'subject'
-                $topSubject = $mandiriActivities
-                    ->whereNotNull('subject') // Pastikan subject tidak null
-                    ->where('subject', '!=', '') // Pastikan subject tidak string kosong
-                    ->groupBy('subject')      // Kelompokkan per nama mapel
-                    ->map->count()            // Hitung jumlah aktivitas per mapel
-                    ->sortDesc()              // Urutkan dari yang paling sering
-                    ->keys()                  // Ambil nama-nama mapelnya
-                    ->first();                // Ambil urutan pertama (Juara 1)
-                
-                // Fallback: Jika ternyata kolom subject kosong semua, baru ambil dari 'type'
-                if (!$topSubject) {
-                     $topSubject = $mandiriActivities->groupBy('type')->map->count()->sortDesc()->keys()->first();
-                }
-            } else {
-                $topSubject = '-';
-            }
-            // --- B. HITUNG KEGIATAN SEKOLAH (PAGI) ---
-            // Sumber: Tabel Pivot (session_students / nama tabelmu)
-            // Pastikan ganti 'session_students' dengan NAMA TABEL PIVOT ASLIMU
-            $totalSekolah = DB::table('session_attendances') // Ganti dengan tabel pivot yang benar
-                ->where('student_id', $user->id) // Kolom student_id di pivot
-                ->where('is_active', 1) // Hanya hitung yang aktif/hadir
+
+            // 2. Rincian Skor Individu
+            $litSkor = round($mandiriActivities->where('type', 'literacy')->avg('score') ?? 0, 1);
+            $numSkor = round($mandiriActivities->where('type', 'numeracy')->avg('score') ?? 0, 1);
+            $tkaSkor = round($mandiriActivities->where('type', 'tka')->avg('score') ?? 0, 1);
+
+            // 3. Kegiatan Sekolah (Pagi) - Pastikan nama tabel pivot-nya benar
+            $totalSekolah = DB::table('session_attendances') 
+                ->where('student_id', $user->id)
+                ->where('is_active', 1) 
                 ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->count();
 
-
-            // --- C. LOGIKA STATUS & KESIMPULAN ---
             $totalAktivitas = $totalMandiri + $totalSekolah;
 
+            // --- B. AMBIL RATA-RATA KELAS (Dari Pre-Calculate di luar loop) ---
+            // Catatan: Pastikan variabel $classAverages sudah dihitung di luar loop foreach
+            $classLit = $classAverages[$classId]['literacy'] ?? 0;
+            $classNum = $classAverages[$classId]['numeracy'] ?? 0;
+            $classTka = $classAverages[$classId]['tka'] ?? 0;
+
+            // --- C. LOGIKA STATUS & KESIMPULAN ---
             if ($totalAktivitas == 0) {
                 $status = "Tidak Aktif 😴";
-                $pesanSemangat = "Mohon bimbingan lebih intensif di rumah.";
-            } elseif ($avgScore >= 80) {
+                $pesanSemangat = "Kami belum melihat aktivitas minggu ini. Mohon bimbingan lebih intensif di rumah ya, Bapak/Ibu.";
+            } elseif ($avgScore >= 80 && $totalAktivitas >= 5) {
                 $status = "Sangat Membanggakan 🌟";
-                $pesanSemangat = "Nilai yang luar biasa! Pertahankan.";
+                $pesanSemangat = "Luar biasa! Keaktifan dan nilainya sangat baik. Mari kita pertahankan prestasi ini!";
             } elseif ($totalAktivitas >= 5) {
                 $status = "Rajin & Konsisten ✅";
-                $pesanSemangat = "Terima kasih sudah aktif belajar. Lanjutkan!";
+                $pesanSemangat = "Terima kasih sudah aktif belajar. Coba tingkatkan lagi skornya di minggu depan!";
             } else {
                 $status = "Perlu Ditingkatkan ⚠️";
-                $pesanSemangat = "Mohon bimbingan lebih intensif di rumah.";
+                $pesanSemangat = "Sudah mulai belajar, tapi yuk tambah lagi frekuensinya agar hasilnya lebih maksimal.";
             }
 
-            // --- D. SUSUN PESAN WHATSAPP ---
+            // --- D. SUSUN PESAN WHATSAPP INTERAKTIF ---
             $message =  "Halo, Orang Tua dari *{$user->name}*! 👋\n\n" .
-                        "Laporan Belajar Minggu Ini:\n" .
-                        "📅 " . $startOfWeek->format('d M') . " - " . $endOfWeek->format('d M Y') . "\n\n" .
+                        "Berikut adalah laporan belajar dari aplikasi TAPAMAJUMA:\n" .
+                        "📅 " . $startOfWeek->format('d M') . " - " . $endOfWeek->format('d M Y') . "\n" .
+                        "🏫 Kelas: *{$className}*\n\n" .
+                        
                         "📊 *Ringkasan Aktivitas:*\n" .
-                        "🏫 Sekolah (Pagi): {$totalSekolah}x Aktif Di Kelas\n" .
-                        "🏠 Mandiri (Rumah): {$totalMandiri} Sesi\n" .
+                        "• Sekolah (Pagi): {$totalSekolah}x Hadir Sesi\n" .
+                        "• Mandiri (Rumah): {$totalMandiri}x Mengerjakan Tugas\n" .
                         "----------------------------\n" .
-                        "∑  *TOTAL: {$totalAktivitas} Aktivitas*\n\n" .
-                        "📝 *Detail Prestasi Tugas Mandiri:*\n" .
-                        "- Rata-rata Nilai: *{$avgScore}*\n" .
-                        "- Fokus Mapel: " . ucwords($topSubject) . "\n\n" .
+                        "∑ *TOTAL: {$totalAktivitas} Aktivitas*\n\n" .
+                        
+                        "📝 *Capaian Nilai vs Rata-rata Kelas:*\n" .
+                        "a. LITERASI\n" .
+                        "   Skor Anak: *{$litSkor}*\n" .
+                        "   Rata-rata Kelas: {$classLit}\n\n" .
+                        
+                        "b. NUMERASI\n" .
+                        "   Skor Anak: *{$numSkor}*\n" .
+                        "   Rata-rata Kelas: {$classNum}\n\n" .
+                        
+                        "c. TKA\n" .
+                        "   Skor Anak: *{$tkaSkor}*\n" .
+                        "   Rata-rata Kelas: {$classTka}\n\n" .
+                        
                         "💡 Status: {$status}\n" .
                         "💬 _{$pesanSemangat}_\n\n" .
                         
                         "_*Tapamajuma* - Pemantauan Aktivitas Siswa_";
 
-            // // --- E. KIRIM KE WABLAS ---
-            // try {
-            //     $response = Http::withHeaders([
-            //         'Authorization' => env('WABLAS_TOKEN'),
-            //     ])->post(env('WABLAS_DOMAIN') . '/send', [
-            //         'target' => $user->phone_number,
-            //         'message' => $message,
-            //         'countryCode' => '62', // Auto ubah 08 jadi 62
-            //     ]);
+            // --- D. KIRIM KE WABLAS ---
+            try {
+                $token = env('WABLAS_TOKEN');
+                $secret = env('WABLAS_SECRET_KEY');
+                $apiUrl = rtrim(env('WABLAS_DOMAIN'), '/') . '/api/send-message';
 
-            //     // Casting ke string & decode manual (Anti-Error)
-            //     $res = json_decode((string)$response, true);
-
-            //     if (($res['status'] ?? false) == true || ($res['detail'] ?? '') == 'success') {
-            //         $this->info("✅ Terkirim ke {$user->name}");
-            //     } else {
-            //         $this->error("⚠️ Gagal ke {$user->name}: " . ($res['reason'] ?? 'Unknown'));
-            //     }
+                $authHeader = $token . "." . $secret;
                 
-            //     // Jeda 2 detik agar tidak dianggap SPAM oleh WA
-            //     sleep(10);
+                $response = Http::withHeaders([
+                    'Authorization' => $authHeader,
+                ])
+                ->asForm()
+                ->post($apiUrl, [
+                    'phone'   => $user->phone_number,
+                    'message' => $message,
+                    'flag'    => 'instant', 
+                ]);
+                /** @var \Illuminate\Http\Client\Response $response */
 
-            // } catch (\Exception $e) {
-            //     $this->error("❌ Error Koneksi: " . $e->getMessage());
-            // }
+                $res = $response->json();
 
-            // --- E. KIRIM KE WABLAS ---
-try {
-    $token = env('WABLAS_TOKEN');
-    $secret = env('WABLAS_SECRET_KEY');
-    $apiUrl = rtrim(env('WABLAS_DOMAIN'), '/') . '/api/send-message';
+                if ($response->successful() && ($res['status'] ?? false) == true) {
+                    $this->info("✅ Terkirim ke {$user->name}");
+                } else {
+                    $this->error("⚠️ Gagal ke {$user->name}: " . json_encode($res));
+                }
+                
+                sleep(2); // Jeda aman agar tidak diblokir WA
 
-    // Gabungkan Token dan Secret pakai titik sesuai dokumentasi
-    $authHeader = $token . "." . $secret;
-    
-    /** @var Response $response */
-    $response = Http::withHeaders([
-        'Authorization' => $authHeader,
-    ])
-    ->asForm() // PENTING: Dokumentasi pakai http_build_query, jadi kita pakai asForm()
-    ->post($apiUrl, [
-        'phone'   => $user->phone_number,
-        'message' => $message,
-        'flag'    => 'instant', // Sesuai dokumentasi kamu
-    ]);
-
-    $res = $response->json();
-
-    if ($response->successful() && ($res['status'] ?? false) == true) {
-        $this->info("✅ Terkirim ke {$user->name}");
-    } else {
-        $this->error("⚠️ Gagal ke {$user->name}: " . json_encode($res));
-    }
-    
-    sleep(2); // Jeda aman
-
-} catch (\Exception $e) {
-    $this->error("❌ Error: " . $e->getMessage());
-}
+            } catch (\Exception $e) {
+                $this->error("❌ Error: " . $e->getMessage());
+            }
         }
 
         $this->info("🎉 Selesai! Laporan mingguan terkirim.");

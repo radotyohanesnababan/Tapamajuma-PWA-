@@ -118,7 +118,7 @@
         <div class="page-title">BAGIAN 2: EFEKTIFITAS SESI & KEAKTIFAN GURU</div>
 
         <div class="sub-title">a. Guru Pemantau Paling Aktif (Ranking)</div>
-        <p><i>Menampilkan guru yang paling rajin membuka sesi belajar mandiri.</i></p>
+        <p><i>Menampilkan guru yang paling rajin membuka sesi keaktifan kelas.</i></p>
         <table>
             <thead>
                 <tr>
@@ -145,7 +145,6 @@
                     <th>Tanggal</th>
                     <th>Guru Pengampu</th>
                     <th>Kelas</th>
-                    <th>Topik</th>
                     <th class="text-center">Siswa Hadir</th>
                 </tr>
             </thead>
@@ -155,7 +154,6 @@
                     <td>{{ \Carbon\Carbon::parse($sess->started_at)->format('d-m-Y') }}</td>
                     <td>{{ $sess->teacher->name ?? '-' }}</td>
                     <td>{{ $sess->class_name }}</td>
-                    <td>{{ $sess->topic }}</td>
                     <td class="text-center">{{ $sess->students->count() }}</td>
                 </tr>
                 @endforeach
