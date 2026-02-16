@@ -351,7 +351,7 @@
         <table>
             <thead>
                 <tr>
-                    <th width="5%" class="text-center">No</th>
+                    <th width="5%" class="text-center">ID</th>
                     <th>Nama Siswa</th>
                     <th>Kelas</th>
                     <th class="text-center">Total Keaktifan</th>

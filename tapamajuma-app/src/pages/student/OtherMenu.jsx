@@ -1,4 +1,6 @@
-import React from 'react';
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -26,10 +28,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function OtherMenu() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
 
   const handleLogout = async () => {
     try {
@@ -40,7 +45,14 @@ export default function OtherMenu() {
     } catch {
       window.location.href = "/login";
     }
+    
   };
+
+   useEffect(() => {
+        if (user) {
+          setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
+        }
+      }, [user]);
 
   const menuItems = [
     {
@@ -79,7 +91,11 @@ export default function OtherMenu() {
         </div>
         
         <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-100 relative z-10">
-          {user?.name?.charAt(0)}
+          {previewUrl ? (
+                                <img src={previewUrl} className="w-full h-full object-cover" alt="Avatar" />
+                              ) : (
+                                user?.name?.charAt(0)
+                              )}
         </div>
         
         <div className="relative z-10">

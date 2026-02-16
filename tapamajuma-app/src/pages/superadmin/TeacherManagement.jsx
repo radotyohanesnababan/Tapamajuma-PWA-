@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Pencil, Trash2, Search, X, School, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function TeacherManagement() {
   usePageTitle("Manajemen Guru");
@@ -163,7 +164,10 @@ export default function TeacherManagement() {
                 <tr key={teacher.id} className="hover:bg-slate-50 group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <Avatar><AvatarFallback>{teacher.name[0]}</AvatarFallback></Avatar>
+                      <Avatar>
+                        <AvatarImage src={getStorageUrl(teacher.avatar)} />
+                        <AvatarFallback>{teacher.name[0]}</AvatarFallback>
+                      </Avatar>
                       <div>
                         <div className="font-bold">{teacher.name}</div>
                         <div className="text-xs text-slate-500">{teacher.email}</div>

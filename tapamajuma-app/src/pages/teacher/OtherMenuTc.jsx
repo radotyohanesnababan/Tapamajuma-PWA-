@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -24,9 +25,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function OtherMenu() {
+
   const { user } = useAuth();
+  const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -37,6 +41,11 @@ export default function OtherMenu() {
       window.location.href = "/login";
     }
   };
+  useEffect(() => {
+      if (user) {
+        setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
+      }
+    }, [user]);
 
   const menuItems = [
     {
@@ -51,14 +60,17 @@ export default function OtherMenu() {
   return (
     <div className="p-4 pb-24 max-w-md mx-auto bg-[#F8FAFC] min-h-screen space-y-6">
       
-      {/* PROFIL HEADER - Dibuat Lebih "Pop" */}
       <div className="flex items-center gap-5 bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
-            <Settings size={100} />
+          <Settings size={100} />
         </div>
         
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-100 relative z-10">
-          {user?.name?.charAt(0)}
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-100 relative z-10 overflow-hidden">
+          {previewUrl ? (
+                                <img src={previewUrl} className="w-full h-full object-cover" alt="Avatar" />
+                              ) : (
+                                user?.name?.charAt(0)
+                              )}
         </div>
         
         <div className="relative z-10">

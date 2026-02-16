@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function StudentManagement() {
   usePageTitle("Manajemen Siswa");
@@ -198,10 +199,10 @@ export default function StudentManagement() {
                     {/* Identity Column */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <Avatar className="h-10 w-10 border border-slate-200">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`} />
-                          <AvatarFallback>{student.name[0]}</AvatarFallback>
-                        </Avatar>
+                        <Avatar>
+                                                <AvatarImage src={getStorageUrl(student.avatar)} />
+                                                <AvatarFallback>{student.name[0]}</AvatarFallback>
+                                              </Avatar>
                         <div>
                           <div className="font-bold text-slate-800">{student.name}</div>
                           <div className="text-xs text-slate-500">{student.email}</div>

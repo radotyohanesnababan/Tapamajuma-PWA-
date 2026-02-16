@@ -99,7 +99,7 @@ export default function SuperadminDashboard() {
           </Card>
 
           {/* Grafik Shortcut */}
-        <Card className="border-none shadow-sm bg-indigo-900 text-white relative overflow-hidden">
+        {/* <Card className="border-none shadow-sm bg-indigo-900 text-white relative overflow-hidden">
           <CardContent className="p-8">
             <div className="relative z-10 space-y-4">
               <h2 className="text-2xl font-bold leading-tight">Siap untuk Laporan ?</h2>
@@ -108,10 +108,9 @@ export default function SuperadminDashboard() {
                 Download Rekapitulasi <ArrowUpRight size={16} />
               </Button>
             </div>
-            {/* Dekorasi Background */}
             <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
