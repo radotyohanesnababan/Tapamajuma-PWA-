@@ -14,7 +14,7 @@
         
         /* HEADER FIXED (Otomatis muncul di tiap halaman) */
         header { position: fixed; top: -130px; left: 0px; right: 0px; height: 110px; text-align: center; border-bottom: 3px double black; }
-        header h2, header h3, header p { margin: 2  px 0; }
+        header h2, header h3, header p { margin: 2px 0; }
         .logo-kiri { position: absolute; left: 0; top: 0; width: 60px; }
         .logo-kanan { position: absolute; right: 0; top: 0; width: 60px; }
 
@@ -39,6 +39,12 @@
         .text-right { text-align: right; }
         .page-break { page-break-after: always; }
         .col-half { width: 48%; display: inline-block; vertical-align: top; }
+
+        /* CSS UNTUK TANDA TANGAN */
+        .signature-container { width: 100%; margin-top: 40px; overflow: hidden; }
+        .signature-box { float: right; width: 280px; text-align: center; }
+        .signature-box p { margin: 3px 0; }
+        .signature-space { height: 70px; } /* Ruang kosong untuk ttd basah/stempel */
     </style>
 </head>
 <body>
@@ -213,6 +219,7 @@
         @endforeach
 
         <div class="page-break"></div>
+        
         <div class="page-title">BAGIAN 4: RANGKUMAN PERSENTASE KEBERHASILAN KELAS</div>
         <p><i>Persentase keberhasilan di bawah ini dihitung berdasarkan akumulasi rata-rata pencapaian skor siswa di masing-masing kelas.</i></p>
 
@@ -321,10 +328,25 @@
             </ul>
         </div>
 
+        <table style="width: 100%; border: none; margin-top: 40px; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 60%; border: none; background-color: transparent;"></td>
+                
+                <td style="width: 40%; border: none; text-align: center; background-color: transparent;">
+                    <p style="margin: 3px 0;">Siborongborong, {{ \Carbon\Carbon::parse(now())->locale('id')->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 3px 0;">Koordinator Pengelola Aplikasi Tapamajuma</p>
+                    
+                    <div style="height: 70px;"></div>
+                    
+                    <p style="margin: 3px 0; font-weight: bold; text-decoration: underline;">Torus Manuntun Nababan, S.Pd, M.Pd.</p>
+                    <p style="margin: 3px 0;">NIP. 197302282002121005</p>
+                </td>
+            </tr>
+        </table>
         <div class="page-break"></div>
 
-
-        <div class="page-title">BAGIAN 6: LAMPIRAN RECORD SELURUH SISWA</div>
+        <div class="page-title" style="text-align: center;">LAMPIRAN</div>
+        <div class="page-title">LAMPIRAN RECORD SELURUH SISWA</div>
 
         <table>
             <thead>
