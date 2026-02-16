@@ -194,7 +194,7 @@ const fetchGalleries = async () => {
     <div className="p-6 max-w-7xl mx-auto min-h-screen bg-slate-50">
       
       {/* HEADER & CONTROLS */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Galeri Karya Siswa</h1>
           <p className="text-sm text-slate-500">

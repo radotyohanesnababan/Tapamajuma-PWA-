@@ -61,7 +61,7 @@ export default function ChallengeForm() {
   useEffect(() => {
     // Deteksi hari otomatis (0=Minggu, 2=Selasa, 3=Rabu)
     const today = new Date().getDay();
-    if (today === 5 || today === 4) setTodayActivity("literacy"); 
+    if (today === 1 || today === 4) setTodayActivity("literacy"); 
     else if (today === 2 || today === 3 ) setTodayActivity("numeracy");
     else setTodayActivity("tka");
   }, []);
@@ -102,9 +102,18 @@ export default function ChallengeForm() {
        </div>
     )}
 
-    {/* === BAGIAN 2: LITERASI (BUTUH FORM) === */}
-    {/* Literasi tetap butuh form karena tombol simpannya ada di bawah */}
+    {/* === BAGIAN 2: LITERASI-SOALGURU (MANDIRI) === */}
+    {/* Kita taruh di LUAR <form> agar tombolnya tidak bentrok */}
     {todayActivity === "literacy" && (
+       <div className="transition-all duration-500">
+          {/* Numeracy menangani submit-nya sendiri di dalam MathGame */}
+          <LiteracyChallengeCard formData={formData} setFormData={setFormData} />
+       </div>
+    )}
+
+    
+    {/* Literasi tetap butuh form karena tombol simpannya ada di bawah */}
+    {todayActivity === "literacyforai" && (
       <form onSubmit={handleSubmit} className="space-y-6 transition-all duration-500">
         
         <LiteracyChallengeCard formData={formData} setFormData={setFormData} />

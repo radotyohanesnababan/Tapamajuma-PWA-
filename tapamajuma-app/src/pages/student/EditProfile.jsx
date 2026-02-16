@@ -33,7 +33,7 @@ export default function EditProfileStandalone() {
     phone_number: '',
     password: '',
     password_confirmation: '',
-    role: user.role
+    role: user?.role
   });
 
   // Isi data saat user load
