@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\QuestionBank;
 use App\Models\Subject;
-use App\Models\DailyActivity; // <--- Pakai Model Ini
+use App\Models\DailyActivity;
 use Illuminate\Http\Request;
 
 class StudentQuizController extends Controller
@@ -58,46 +58,31 @@ class StudentQuizController extends Controller
             'answers' => 'required|array',
         ]);
 
-        $user = $request->user();
         $answers = $request->answers;
         
-        // A. Hitung Nilai
+        // 1. Ambil SEMUA ID soal yang dijawab siswa
+        $questionIds = collect($answers)->pluck('question_id');
+
+        // 2. Query ke DB CUKUP 1 KALI untuk mengambil semua kunci jawaban sekaligus!
+        // keyBy('id') membuat kita mudah mencocokkannya nanti
+        $questions = QuestionBank::whereIn('id', $questionIds)->get()->keyBy('id');
+
         $correctCount = 0;
         $totalQuestions = count($answers);
 
+        // 3. Cocokkan jawaban (Ini terjadi murni di RAM, sangat cepat!)
         foreach ($answers as $ans) {
-            $question = QuestionBank::find($ans['question_id']);
-            // Cek jawaban
-            if ($question && $question->correct_key === $ans['selected_option']) {
+            $qId = $ans['question_id'];
+            
+            // Cek apakah soal ada dan jawabannya cocok
+            if (isset($questions[$qId]) && $questions[$qId]->correct_key === $ans['selected_option']) {
                 $correctCount++;
             }
         }
 
-        // Rumus Skor (Skala 0-100)
         $score = ($totalQuestions > 0) ? round(($correctCount / $totalQuestions) * 100) : 0;
 
-        // B. Tentukan Confidence Level otomatis berdasarkan nilai (Opsional)
-        // 1 = Rendah (<50), 2 = Sedang (50-79), 3 = Tinggi (80-100)
-        $confidence = 1;
-        if ($score >= 80) $confidence = 3;
-        elseif ($score >= 50) $confidence = 2;
-
-        // C. Cari Nama Mapel (Karena tabel daily_activities pakai string 'subject')
-        $subjectObj = Subject::find($request->subject_id);
-        $subjectName = $subjectObj ? $subjectObj->name : 'Umum';
-
-        // D. Simpan ke DailyActivity
-        // DailyActivity::create([
-        //     'user_id' => $user->id,
-        //     'type' => 'numeracy',         // Sesuai request
-        //     'subject' => $subjectName,    // "Matematika"
-        //     'score' => $score,            // Contoh: 80
-        //     'confidence_level' => $confidence, // Contoh: 3
-        //     'reading_content' => null,    // Null karena ini numerasi
-        //     'audio_path' => null,         // Null
-        //     'journal' => "Latihan Soal {$subjectName} (Benar: {$correctCount}/{$totalQuestions})", // Opsional: Catatan kecil
-        // ]);
-
+        // Langsung kembalikan skor ke React agar UI tidak nge-lag
         return response()->json([
             'score' => $score,
             'correct' => $correctCount,
