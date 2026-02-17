@@ -20,5 +20,5 @@ export const getStorageUrl = (path) => {
   // Hapus garis miring di awal path jika ada, agar tidak double slash
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  return `${baseUrl}/storage/${cleanPath}`;
+  return `${baseUrl}/${cleanPath}`;
 };
