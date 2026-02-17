@@ -69,13 +69,13 @@ class ProfileController extends Controller
 {
     $user = Auth::user();
     
-    // 1. Hitung Total XP dari tabel daily_activities
+    // 1. Hitung Total XP
     $totalXp = DB::table('daily_activities')
                 ->where('user_id', $user->id)
                 ->sum('score');
 
-    // 2. Hitung jumlah karya di galeri menggunakan Model
-    $totalWorks = Gallery::where('user_id', $user->id)->count();
+    // 2. Hitung jumlah karya
+    $totalWorks = \App\Models\Gallery::where('user_id', $user->id)->count();
 
     // 3. Ambil data 7 hari terakhir untuk grafik
     $chartData = DB::table('daily_activities')
@@ -89,10 +89,8 @@ class ProfileController extends Controller
                 ->orderBy('date', 'ASC')
                 ->get();
 
-    // 4. Ambil karya terbaru menggunakan Model Gallery (Lebih Aman)
-// Di dalam method getSummary() pada ProfileController.php
-
-$highlights = Gallery::where('user_id', $user->id)
+    // 4. Ambil Highlights
+    $highlights = \App\Models\Gallery::where('user_id', $user->id)
                 ->latest()
                 ->limit(4)
                 ->get()
@@ -100,10 +98,27 @@ $highlights = Gallery::where('user_id', $user->id)
                     return [
                         'id' => $gallery->id,
                         'title' => $gallery->title,
-                        // Gunakan 'file_path' sesuai struktur tabel kamu
                         'image_url' => $gallery->file_path 
                             ? asset('storage/' . $gallery->file_path) 
                             : null,
+                    ];
+                });
+
+    // 5. TAMBAHAN BARU: Ambil 5 Aktivitas Terakhir untuk UI React
+    $recentActivities = DB::table('daily_activities')
+                ->where('user_id', $user->id)
+                ->latest('created_at')
+                ->limit(5)
+                ->get()
+                ->map(function($act) use ($user) {
+                    return [
+                        'id' => $act->id,
+                        'student_name' => $user->name,
+                        // Gunakan asset() agar melempar URL full (http://...)
+                        'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
+                        'type' => $act->type,
+                        'score' => $act->score,
+                        'time_ago' => \Carbon\Carbon::parse($act->created_at)->diffForHumans()
                     ];
                 });
 
@@ -118,6 +133,7 @@ $highlights = Gallery::where('user_id', $user->id)
             'total_works' => $totalWorks,
             'rank' => $this->determineRank($totalXp),
             'streak' => 5, 
+            'recent_activities' => $recentActivities // <-- SEKARANG DATANYA ADA!
         ],
         'chart' => $chartData,
         'highlights' => $highlights

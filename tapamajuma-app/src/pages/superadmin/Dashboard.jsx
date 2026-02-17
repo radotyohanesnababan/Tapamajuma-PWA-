@@ -4,6 +4,8 @@ import { Users, Star, Activity, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
+import { getStorageUrl } from "@/lib/utils";
 
 export default function SuperadminDashboard() {
   usePageTitle("Dashboard");
@@ -64,37 +66,51 @@ export default function SuperadminDashboard() {
             </CardHeader>
             <CardContent>
           <div className="space-y-4">
-            {stats.recent_activities?.length > 0 ? (
-              stats.recent_activities.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-indigo-600 uppercase">
-              {item.student_name.charAt(0)}
-                </div>
-                <div>
-              <p className="text-sm font-bold text-slate-800">{item.student_name}</p>
-              <p className="text-xs text-slate-400">
-                Baru saja menyelesaikan{" "}
-                {item.type === 'literacy' 
-                  ? 'Kegiatan Literasi' 
-                  : item.type === 'numeracy' 
-                  ? 'Kegiatan Numerasi' 
-                  : 'Tidak Diketahui'}
-              </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-indigo-600">+{item.score} XP</p>
-                <p className="text-[10px] text-slate-400">{item.time_ago}</p>
-              </div>
-            </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-slate-400 text-xs italic">
-            Belum ada aktivitas siswa terekam.
-              </div>
-            )}
+  {stats?.recent_activities?.length > 0 ? (
+    stats.recent_activities.map((item) => (
+      <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-indigo-600 uppercase">
+            
+    
+            <Avatar className="w-10 h-10 border border-slate-200 shadow-sm shrink-0">
+                  {item.avatar && (
+                    <AvatarImage 
+                      src={getStorageUrl(item.avatar)} 
+                      alt={item.student_name}
+                      className="object-cover" 
+                    />
+                  )}
+                  <AvatarFallback className="bg-indigo-50 text-indigo-600 font-bold uppercase">
+                    {item.student_name ? item.student_name[0] : '?'}
+                  </AvatarFallback>
+                </Avatar>
+
           </div>
+          <div>
+            <p className="text-sm font-bold text-slate-800">{item.student_name}</p>
+            <p className="text-xs text-slate-400">
+              Baru saja menyelesaikan{" "}
+              {item.type === 'literacy' 
+                ? 'Kegiatan Literasi' 
+                : item.type === 'numeracy' 
+                ? 'Kegiatan Numerasi' 
+                : 'Kegiatan TKA'}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-black text-indigo-600">+{item.score} XP</p>
+          <p className="text-[10px] text-slate-400">{item.time_ago}</p>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div className="text-center py-4 text-slate-400 text-xs italic">
+      Belum ada aktivitas siswa terekam.
+    </div>
+  )}
+</div>
             </CardContent>
           </Card>
 

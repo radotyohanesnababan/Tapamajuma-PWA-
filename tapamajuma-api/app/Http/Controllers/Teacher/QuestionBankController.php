@@ -42,21 +42,33 @@ class QuestionBankController extends Controller
         $request->validate([
             'type' => 'required|in:numeracy,literacy,tka',
             'subject_id' => 'required|exists:subjects,id',
-            'class_id' => 'required|exists:class_names,id', // <--- Validasi ID Kelas
+            'class_id' => 'required|exists:class_names,id',
             'question_text' => 'required|string',
             'options' => 'required|array|min:3',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048', 
             'correct_key' => 'required|in:A,B,C,D,E',
         ]);
 
-        $q = QuestionBank::create([
+        // 1. Siapkan semua data teks ke dalam array
+        $data = [
             'type' => $request->type,
             'creator_id' => $request->user()->id,
             'subject_id' => $request->subject_id,
-            'class_id' => $request->class_id, // <--- Simpan ID
+            'class_id' => $request->class_id,
             'question_text' => $request->question_text,
             'options' => $request->options,
             'correct_key' => $request->correct_key,
-        ]);
+            // Perhatikan, 'image' belum kita masukkan di sini
+        ];
+
+        // 2. Jika ada file gambar yang diunggah
+        if ($request->hasFile('image')) {
+            // Simpan ke storage dan masukkan teks path-nya ke array $data
+            $data['image'] = $request->file('image')->store('questions', 'public');
+        }
+
+        // 3. Simpan ke database menggunakan array $data yang sudah bersih
+        $q = QuestionBank::create($data);
 
         return response()->json($q, 201);
     }

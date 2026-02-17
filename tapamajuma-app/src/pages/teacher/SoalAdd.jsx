@@ -4,9 +4,12 @@ import { ChevronLeft, Zap, Loader2 } from "lucide-react";
 import api from "@/lib/axios";
 import { toast } from "sonner";
 
+
 export default function SoalAdd() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Tambahkan state untuk file
+const [imageFile, setImageFile] = useState(null);
   
   // Data Master untuk Dropdown
   const [subjects, setSubjects] = useState([]);
@@ -28,31 +31,48 @@ export default function SoalAdd() {
     api.get("/api/admin/classes").then(res => setClasses(res.data)).catch(err => console.error(err));
   }, []);
 
-  const handleManualSubmit = async (e) => {
+const handleManualSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Format opsi ke JSON sesuai database kamu
-    const payload = {
-      type: formData.type,
-      subject_id: formData.subject_id,
-      class_id: formData.class_id,
-      question_text: formData.question_text,
-      correct_key: formData.correct_key,
-      options: {
-        A: formData.optA,
-        B: formData.optB,
-        C: formData.optC,
-        D: formData.optD,
-        E: formData.optE,
-      }
-    };
+    // 1. Buat FormData
+    const payloadData = new FormData();
+
+    // 2. Append data dasar
+    payloadData.append("type", formData.type);
+    payloadData.append("subject_id", formData.subject_id);
+    payloadData.append("class_id", formData.class_id);
+    payloadData.append("question_text", formData.question_text);
+    payloadData.append("correct_key", formData.correct_key);
+
+    // 3. FIX: Kirim Opsi sebagai Array/Object untuk Laravel!
+    payloadData.append("options[A]", formData.optA);
+    payloadData.append("options[B]", formData.optB);
+    payloadData.append("options[C]", formData.optC);
+    payloadData.append("options[D]", formData.optD);
+    payloadData.append("options[E]", formData.optE);
+
+    // 4. Append File Gambar (Jika ada)
+    if (imageFile) {
+      payloadData.append("image", imageFile);
+    }
 
     try {
-      await api.post("/api/teacher/bank-soal", payload);
+      // 5. Kirim via Axios
+      // Jangan set Content-Type manual, biarkan Axios dan Browser yang mengatur boundary multipart-nya
+      await api.post("/api/teacher/bank-soal", payloadData,
+        {
+          headers: {
+          "Content-Type": "multipart/form-data",
+        }
+        }
+      );
+      
+      
       toast.success("Soal berhasil disimpan!");
       navigate("/teacher/bank-soal/list");
     } catch (error) {
+      console.error("Error validasi:", error.response?.data);
       toast.error(error.response?.data?.message || "Gagal menyimpan soal");
     } finally {
       setIsSubmitting(false);
@@ -106,10 +126,14 @@ export default function SoalAdd() {
                 </select>
               </div>
             </div>
-
-            <div className="space-y-2">
+             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pertanyaan Utama</label>
               <textarea className="w-full rounded-2xl bg-slate-50 border-none p-5 text-sm font-medium focus:ring-2 focus:ring-emerald-400 min-h-[120px] shadow-inner outline-none" required placeholder="Tuliskan butir soal di sini..." value={formData.question_text} onChange={e => setFormData({...formData, question_text: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Upload Gambar (Jika ada)</label>
+              <input type="file" accept="image/*" className="w-full rounded-2xl bg-slate-50 border-none p-5 text-sm font-medium focus:ring-2 focus:ring-emerald-400 shadow-inner outline-none" onChange={e => setImageFile(e.target.files[0])} />
+              {imageFile && <p className="text-xs text-emerald-600 font-medium">✓ {imageFile.name}</p>}
             </div>
 
             <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 space-y-4 shadow-sm">

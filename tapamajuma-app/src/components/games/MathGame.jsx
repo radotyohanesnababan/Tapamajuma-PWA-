@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import api from "@/lib/axios"; 
+import api from "@/lib/axios";
+import { getStorageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
   Trophy, Timer, Brain, CheckCircle2, Calculator, 
@@ -67,9 +68,9 @@ const GAME_MODES = {
 const getTodayMode = () => {
   const day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
   
-  if (day === 1 || day === 2) return "literacy"; // Senin, Selasa
-  if (day >= 3 && day <= 5) return "numeracy";   // Rabu, Kamis, Jumat
-  return "tka";                                  // Sabtu, Minggu
+  if (day === 1 || day === 2 ) return "literacy"; // 1=Senin, 2=Selasa
+  if (day === 3 ||day === 4 || day === 5) return "numeracy";   // 3=Rabu, 4=Kamis, 5=Jumat
+  return "tka";                                  // 0=Minggu, 6=Sabtu
 };
 
 // ================= MAIN COMPONENT =================
@@ -287,6 +288,16 @@ export default function QuizEngine() {
                  {currentQ.question_text}
                </h2>
             </div>
+              {/* Jika soal memiliki gambar, tampilkan di bawah teks */}
+            {currentQ.image && (
+              <div className="w-full h-48 bg-slate-100 rounded-lg overflow-hidden">
+                <img 
+                  src={getStorageUrl(currentQ.image)} 
+                  alt={currentQ.question_text} 
+                  className="w-full h-full object-contain max-h-64"
+                />
+              </div>
+            )}
 
             <div className="space-y-3">
               {Object.entries(currentQ.options).map(([key, value]) => (

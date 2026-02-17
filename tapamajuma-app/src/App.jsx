@@ -44,6 +44,7 @@ import SoalAdd from "./pages/teacher/SoalAdd";
 import SoalImport from "./pages/teacher/SoalImport";
 import ClassSummary from "./pages/superadmin/ClassSummary";
 import TeacherSummary from "./pages/superadmin/TeacherSummary";
+import MediaBank from "./pages/teacher/MediaBank";
 
 
 
@@ -103,6 +104,7 @@ function App() {
             <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
             <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
             <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
+            <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
           {/* GRUP 2.3: Pengaturan */}
             <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
 

@@ -36,6 +36,7 @@ class AdminController extends Controller
                         'type' => $activity->type, // literasi atau numeracy
                         'subject' => $activity->subject, // Mapel terkait
                         'score' => $activity->score,
+                        'avatar' => $activity->user->avatar ?? null,
                         'time_ago' => $activity->created_at->diffForHumans(),
                     ];
                 });

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\PublicDataController;
 use App\Http\Controllers\Api\StudentQuizController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\MandiriSessionController;
+use App\Http\Controllers\Teacher\MediaBankController;
 use App\Http\Controllers\Teacher\QuestionBankController;
 use App\Http\Controllers\Teacher\TeacherMgmtController;
 use Illuminate\Http\Request;
@@ -110,6 +111,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
     Route::delete('/bank-soal/{id}', [QuestionBankController::class, 'destroy']);
     Route::get('/bank-soal/template', [QuestionBankController::class, 'downloadTemplate']);
+    Route::get('/media-bank', [MediaBankController::class, 'index']);
+    Route::post('/media-bank', [MediaBankController::class, 'store']);
+    Route::delete('/media-bank/{id}', [MediaBankController::class, 'destroy']);
     // Route Import
     Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
     });

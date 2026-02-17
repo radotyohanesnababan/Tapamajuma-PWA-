@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, Plus, Loader2, Trash2, Eye, EyeOff, CheckCircle2, Database } from "lucide-react";
 import api from "@/lib/axios";
+import { getStorageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function SoalList() {
@@ -10,6 +11,7 @@ export default function SoalList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("numeracy"); 
   const [showKeyId, setShowKeyId] = useState(null);
+  
   
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState([]); 
@@ -120,7 +122,11 @@ export default function SoalList() {
                 </div>
                 
                 <h3 className="text-slate-800 font-bold mb-6 text-base leading-relaxed pl-2">{q.question_text}</h3>
-                
+                {q.image && (
+                  <div className="pl-2 mb-4">
+                    <img src={getStorageUrl(q.image)} alt="Soal" className="h-60 object-cover rounded-xl border border-slate-100" />
+                  </div>
+                )}
                 {/* Opsi Jawaban (Karena tipe datanya JSON array) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {Object.entries(q.options || {}).map(([key, value]) => (

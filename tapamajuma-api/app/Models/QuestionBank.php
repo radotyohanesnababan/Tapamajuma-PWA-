@@ -15,6 +15,7 @@ class QuestionBank extends Model
         'class_id',
         'question_text',
         'options',
+        'image',
         'correct_key',
         'type',
     ];

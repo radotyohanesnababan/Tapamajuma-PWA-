@@ -16,6 +16,7 @@ import {
   LayoutGrid
 } from "lucide-react";
 import { toast } from "sonner";
+import { getStorageUrl } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function QuestionBankManagement() {
@@ -235,6 +236,16 @@ export default function QuestionBankManagement() {
                   <h3 className="text-slate-800 font-medium mb-4 text-base leading-relaxed">
                     {q.question_text}
                   </h3>
+                  {/* {Image} */}
+                  {q.image && (
+                    <div className="mb-4">
+                      <img 
+                        src={getStorageUrl(q.image)} 
+                        alt="Soal" 
+                        className="w-full max-h-60 object-contain rounded-lg border border-slate-200"
+                      />
+                    </div>
+                  )}
 
                   {/* Pilihan Jawaban */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">

@@ -18,29 +18,33 @@ class StudentQuizController extends Controller
         return response()->json($subjects);
     }
 
-    // 2. Ambil Soal (Tetap sama)
-   public function getQuestions(Request $request)
+   // 2. Ambil Soal
+    public function getQuestions(Request $request)
     {
         $user = $request->user();
         $subjectId = $request->query('subject_id');
+        
+        // 1. TANGKAP TIPE SOAL (numeracy, literacy, tka) DARI REACT
+        $type = $request->query('type'); 
 
-        // 1. Cek apakah siswa sudah punya kelas
+        // Cek apakah siswa sudah punya kelas
         if (!$user->class_id) {
             return response()->json(['error' => 'Akun Anda belum masuk ke kelas manapun.'], 403);
         }
 
-        // 2. Query ke tabel question_banks
+        // Query ke tabel question_banks
         $questions = QuestionBank::query()
-            ->where('subject_id', $subjectId)     // Filter Mapel
-            ->where('class_id', $user->class_id)  // Filter Kelas (Sesuai kelas siswa)
-            ->inRandomOrder()                     // Acak urutan soal
-            ->limit(10)                           // Batasi 10 soal per sesi
+            ->where('subject_id', $subjectId)     
+            ->where('class_id', $user->class_id)  
+            ->where('type', $type)                // 2. TAMBAHKAN FILTER TYPE INI!
+            ->inRandomOrder()                     
+            ->limit(10)                           
             ->get()
-            ->makeHidden(['correct_key']);        // PENTING: Sembunyikan kunci jawaban dari JSON
+            ->makeHidden(['correct_key']);        
 
-        // 3. Cek ketersediaan soal
+        // Cek ketersediaan soal
         if ($questions->isEmpty()) {
-            return response()->json(['message' => 'Belum ada soal tersedia.'], 404);
+            return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
         }
 
         return response()->json($questions);

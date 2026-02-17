@@ -61,8 +61,8 @@ export default function ChallengeForm() {
   useEffect(() => {
     // Deteksi hari otomatis (0=Minggu, 2=Selasa, 3=Rabu)
     const today = new Date().getDay();
-    if (today === 1 || today === 4) setTodayActivity("literacy"); 
-    else if (today === 2 || today === 3 ) setTodayActivity("numeracy");
+    if (today === 1 || today === 2) setTodayActivity("literacy"); 
+    else if (today === 3 || today === 4 || today === 5) setTodayActivity("numeracy");
     else setTodayActivity("tka");
   }, []);
 

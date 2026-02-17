@@ -31,22 +31,18 @@ class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
-    public function model(array $row)
+public function model(array $row)
     {
-        // KITA INTIP ISI EXCEL-NYA DI SINI
         \Illuminate\Support\Facades\Log::info("MEMBACA BARIS EXCEL: ", $row);
 
-        // Cek baris kosong (pintu depan)
         if (!isset($row['nama_mapel']) || !isset($row['nama_kelas'])) {
             \Illuminate\Support\Facades\Log::warning("BARIS DI-SKIP KARENA HEADER TIDAK COCOK ATAU KOSONG");
             return null;
         }
 
-        // 1. Cari Relasi
         $subject = Subject::where('name', trim($row['nama_mapel']))->first();
         $classObj = ClassName::where('name', trim($row['nama_kelas']))->first();
 
-        // 2. LOGGING ERROR JIKA RELASI GAGAL
         if (!$subject) {
             \Illuminate\Support\Facades\Log::error("IMPORT GAGAL: Mapel '" . $row['nama_mapel'] . "' tidak ditemukan.");
             return null;
@@ -56,13 +52,35 @@ class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets
             return null;
         }
 
-        // 3. Simpan jika aman
+        // ==========================================
+        // FITUR BARU: PEMANGKASAN URL GAMBAR (STRIPPING)
+        // ==========================================
+        $rawImageLink = $row['link_gambar_opsional'] ?? null; // Pastikan key ini sesuai dengan log kamu sebelumnya
+        $cleanImagePath = null;
+
+        if ($rawImageLink) {
+            // 1. Ambil URL dasar storage kita secara dinamis (misal: http://127.0.0.1:8000/storage)
+            $baseUrlToStrip = asset('storage'); 
+            
+            // 2. Ganti URL dasar tersebut menjadi string kosong ('')
+            // Contoh: http://127.0.0.1:8000/storage/brankas/foto.jpg -> /brankas/foto.jpg
+            $cleanImagePath = str_replace($baseUrlToStrip, '', $rawImageLink);
+
+            // 3. Bersihkan garis miring '/' di awal teks jika ada, agar rapi
+            $cleanImagePath = ltrim($cleanImagePath, '/');
+        }
+        // ==========================================
+
         return new QuestionBank([
             'creator_id'    => $this->creator_id,
             'type'          => trim($row['kategori_soal'] ?? 'numeracy'),
-            'subject_id'    => $subject->id,
+            'subject_id'    => $subject->id,    
             'class_id'      => $classObj->id,
             'question_text' => $row['soal'],
+            
+            // Masukkan path yang sudah bersih ke database!
+            'image'         => $cleanImagePath, 
+            
             'options'       => [
                 'A' => $row['pilihan_a'] ?? '',
                 'B' => $row['pilihan_b'] ?? '',
