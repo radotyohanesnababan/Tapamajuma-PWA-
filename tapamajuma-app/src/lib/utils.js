@@ -15,10 +15,10 @@ export const getStorageUrl = (path) => {
 
   // 2. Jika path masih berupa teks pendek (dari Tambah Manual)
   // Sesuaikan variabel env ini dengan milikmu (misal: import.meta.env.VITE_API_BASE_URL)
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'; 
+  const baseUrl = import.meta.env.VITE_STORAGE_URL || 'http://127.0.0.1:8000'; 
   
   // Hapus garis miring di awal path jika ada, agar tidak double slash
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  return `${baseUrl}/storage/${cleanPath}`;
+  return `${baseUrl}/${cleanPath}`;
 };
