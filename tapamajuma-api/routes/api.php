@@ -25,6 +25,24 @@ use App\Http\Controllers\Teacher\TeacherMgmtController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/test-r2', function () {
+    try {
+        // Mencoba membuat file di R2
+        Storage::disk('r2')->put('test-koneksi.txt', 'Halo dari TAPAMAJUMA!');
+        
+        // Mengambil kembali filenya
+        $content = Storage::disk('r2')->get('test-koneksi.txt');
+        
+        return response()->json([
+            'status' => 'Sukses!',
+            'isi_file' => $content,
+            'url_publik' => Storage::disk('r2')->url('test-koneksi.txt')
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes (Tanpa Login)
