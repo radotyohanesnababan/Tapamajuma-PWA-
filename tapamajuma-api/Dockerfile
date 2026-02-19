@@ -1,4 +1,3 @@
-# Gunakan versi Apache agar bisa langsung melayani HTTP
 FROM php:8.3-apache
 
 # 1. Install dependensi sistem
@@ -9,27 +8,28 @@ RUN apt-get update && apt-get install -y \
 # 2. Install ekstensi PHP (Wajib untuk TiDB Cloud)
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# 3. Aktifkan modul Rewrite Apache (Penting untuk routing Laravel)
+# 3. Konfigurasi Apache: Pindahkan DocumentRoot ke /public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# 4. Aktifkan modul Rewrite
 RUN a2enmod rewrite
 
-# 4. Ambil Composer
+# 5. Ambil Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 5. Set working directory ke standar Apache
+# 6. Set working directory
 WORKDIR /var/www/html
 
-# 6. Copy kodingan dari folder 'tapamajuma-api' (karena Root Directory di Render diset ke 'api')
+# 7. Copy kodingan (Ingat: Render sudah masuk ke folder 'api' sebagai root)
 COPY . .
 
-# 7. Jalankan Composer Install
+# 8. Jalankan Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# 8. Berikan izin akses folder storage & cache
+# 9. Berikan izin akses folder storage & cache
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# 9. Penyesuaian Port untuk Render
-# Render akan memberikan port dinamis lewat variabel $PORT (default 10000)
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
-# Start Apache
-CMD ["apache2-foreground"]
+# 10. Start Apache dan paksa ganti port ke variabel $PORT saat runtime
+CMD sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && apache2-foreground
