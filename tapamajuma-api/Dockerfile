@@ -1,23 +1,14 @@
 FROM php:8.3-apache
 
-# Install dependensi sistem untuk Ubuntu/Debian
+# 1. Install dependensi dan ca-certificates (tanpa pemanggilan manual update)
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev
+    git curl libpng-dev libonig-dev libxml2-dev zip unzip libzip-dev ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Bersihkan cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# 2. Install ekstensi PHP (Wajib untuk TiDB Cloud)
+# 2. Install ekstensi PHP
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# 3. Konfigurasi Apache: Pindahkan DocumentRoot ke /public
+# 3. Konfigurasi Apache Root
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
@@ -28,14 +19,20 @@ RUN a2enmod rewrite
 # 5. Ambil Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www
+# 6. Set working directory
+WORKDIR /var/www/html
 
-# Copy kodingan Laravel ke dalam container
-COPY . /var/www
+# 7. Copy kodingan
+COPY . .
 
-# Berikan izin akses folder storage & cache agar Laravel lancar
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# 8. Hapus cache config
+RUN rm -f bootstrap/cache/*.php
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# 9. Jalankan Composer
+RUN composer install --no-dev --optimize-autoloader
+
+# 10. Berikan izin akses
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+# 11. Start dengan bungkus "sh -c" agar format tidak pecah (Anti Error 127)
+CMD sh -c 'php artisan config:clear && sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && apache2-foreground'
