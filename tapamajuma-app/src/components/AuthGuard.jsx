@@ -7,6 +7,7 @@ export default function AuthGuard({ children, roleRequired }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+
 useEffect(() => {
   const checkAuth = async () => {
     try {
@@ -15,13 +16,12 @@ useEffect(() => {
       const userRole = user.role;
 
       // 1. CEK ONBOARDING: Jika sudah login tapi belum pilih role
-      if (!userRole) {
-        // Biarkan user lewat jika mereka memang sedang di proses callback
-        // atau arahkan ke halaman khusus lengkapi profil jika tersesat
-        console.warn("User belum melengkapi profil (role null)");
-        // navigate("/social-callback?needs_onboarding=true"); // Opsional
-        // return;
-      }
+if (!user.role) {
+  // Jika login sukses tapi role belum ada, JANGAN ke login!
+  // Lempar balik ke halaman onboarding saja.
+  navigate("/social-callback?needs_onboarding=true", { replace: true });
+  return;
+}
 
       // 2. Cek Role Spesifik (Guru/Superadmin)
       if (roleRequired && userRole !== roleRequired) {
