@@ -60,7 +60,7 @@ public function model(array $row)
 
         if ($rawImageLink) {
             // 1. Ambil URL dasar storage kita secara dinamis (misal: http://127.0.0.1:8000/storage)
-            $baseUrlToStrip = asset('storage'); 
+            $baseUrlToStrip = Storage::url(''); // Ini akan memberikan URL dasar untuk disk default (biasanya R2 di Render)
             
             // 2. Ganti URL dasar tersebut menjadi string kosong ('')
             // Contoh: http://127.0.0.1:8000/storage/brankas/foto.jpg -> /brankas/foto.jpg

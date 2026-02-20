@@ -14,12 +14,8 @@ use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-    /**
-     * Update profil user (Hanya untuk diri sendiri)
-     */
     public function update(Request $request)
     {
-        // Langsung ambil user yang sedang login tanpa parameter ID
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
@@ -30,26 +26,24 @@ class ProfileController extends Controller
             'password' => ['nullable', 'confirmed', 'min:8'],
         ]);
 
-        // Update data dasar
         $user->name = $request->name;
         $user->email = $request->email;
 
         if ($request->hasFile('avatar')) {
-        // Hapus foto lama jika ada (opsional)
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-            Storage::disk('public')->delete($user->avatar);
+            
+            if ($user->avatar && Storage::exists($user->avatar)) {
+                Storage::delete($user->avatar);
+            }
+
+            // PERBAIKAN: Hapus 'public', biarkan mengikuti FILESYSTEM_DISK di .env
+            $path = $request->file('avatar')->store('avatars'); 
+            $user->avatar = $path;
         }
 
-        $path = $request->file('avatar')->store('avatars', 'public');
-        $user->avatar = $path;
-    }
-
-        // Update warna avatar jika dikirim dari PWA
         if ($request->has('avatar_color')) {
             $user->avatar_color = $request->avatar_color;
         }
 
-        // Update password hanya jika diisi
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
@@ -58,90 +52,74 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Profil kamu berhasil diperbarui',
-            'user' => $user
+            'user' => [
+                'name' => $user->name,
+                // PERBAIKAN: Gunakan Storage::url agar link-nya otomatis ke Cloudflare
+                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                'avatar_color' => $user->avatar_color,
+            ]
         ], 200);
     }
 
-    /**
-     * Mengambil data ringkasan untuk halaman Profile/Presentasi (Aksi C.2)
-     */
    public function getSummary()
-{
-    $user = Auth::user();
-    
-    // 1. Hitung Total XP
-    $totalXp = DB::table('daily_activities')
-                ->where('user_id', $user->id)
-                ->sum('score');
+   {
+        $user = Auth::user();
+        
+        $totalXp = DB::table('daily_activities')->where('user_id', $user->id)->sum('score');
+        $totalWorks = \App\Models\Gallery::where('user_id', $user->id)->count();
 
-    // 2. Hitung jumlah karya
-    $totalWorks = \App\Models\Gallery::where('user_id', $user->id)->count();
+        $chartData = DB::table('daily_activities')
+                    ->where('user_id', $user->id)
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(score) as daily_score'))
+                    ->groupBy('date')->orderBy('date', 'ASC')->get();
 
-    // 3. Ambil data 7 hari terakhir untuk grafik
-    $chartData = DB::table('daily_activities')
-                ->where('user_id', $user->id)
-                ->where('created_at', '>=', now()->subDays(7))
-                ->select(
-                    DB::raw('DATE(created_at) as date'), 
-                    DB::raw('SUM(score) as daily_score')
-                )
-                ->groupBy('date')
-                ->orderBy('date', 'ASC')
-                ->get();
+        $highlights = \App\Models\Gallery::where('user_id', $user->id)
+                    ->latest()->limit(4)->get()
+                    ->map(function($gallery) {
+                        return [
+                            'id' => $gallery->id,
+                            'title' => $gallery->title,
+                            // PERBAIKAN: Gunakan Storage::url
+                            'image_url' => $gallery->file_path ? Storage::url($gallery->file_path) : null,
+                        ];
+                    });
 
-    // 4. Ambil Highlights
-    $highlights = \App\Models\Gallery::where('user_id', $user->id)
-                ->latest()
-                ->limit(4)
-                ->get()
-                ->map(function($gallery) {
-                    return [
-                        'id' => $gallery->id,
-                        'title' => $gallery->title,
-                        'image_url' => $gallery->file_path 
-                            ? asset('storage/' . $gallery->file_path) 
-                            : null,
-                    ];
-                });
+        $recentActivities = DB::table('daily_activities')
+                    ->where('user_id', $user->id)
+                    ->latest('created_at')->limit(5)->get()
+                    ->map(function($act) use ($user) {
+                        return [
+                            'id' => $act->id,
+                            'student_name' => $user->name,
+                            // PERBAIKAN: Gunakan Storage::url
+                            'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                            'type' => $act->type,
+                            'score' => $act->score,
+                            'time_ago' => \Carbon\Carbon::parse($act->created_at)->diffForHumans()
+                        ];
+                    });
 
-    // 5. TAMBAHAN BARU: Ambil 5 Aktivitas Terakhir untuk UI React
-    $recentActivities = DB::table('daily_activities')
-                ->where('user_id', $user->id)
-                ->latest('created_at')
-                ->limit(5)
-                ->get()
-                ->map(function($act) use ($user) {
-                    return [
-                        'id' => $act->id,
-                        'student_name' => $user->name,
-                        // Gunakan asset() agar melempar URL full (http://...)
-                        'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
-                        'type' => $act->type,
-                        'score' => $act->score,
-                        'time_ago' => \Carbon\Carbon::parse($act->created_at)->diffForHumans()
-                    ];
-                });
+        return response()->json([
+            'user' => [
+                'name' => $user->name,
+                // PERBAIKAN: Gunakan Storage::url
+                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                'avatar_color' => $user->avatar_color,
+            ],
+            'stats' => [
+                'total_xp' => (int)$totalXp,
+                'total_works' => $totalWorks,
+                'rank' => $this->determineRank($totalXp),
+                'streak' => 5, 
+                'recent_activities' => $recentActivities
+            ],
+            'chart' => $chartData,
+            'highlights' => $highlights
+        ]);
+    }
 
-    return response()->json([
-        'user' => [
-            'name' => $user->name,
-            'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
-            'avatar_color' => $user->avatar_color,
-        ],
-        'stats' => [
-            'total_xp' => (int)$totalXp,
-            'total_works' => $totalWorks,
-            'rank' => $this->determineRank($totalXp),
-            'streak' => 5, 
-            'recent_activities' => $recentActivities // <-- SEKARANG DATANYA ADA!
-        ],
-        'chart' => $chartData,
-        'highlights' => $highlights
-    ]);
-}
-
-    private function determineRank($score)
-    {
+    private function determineRank($score) {
         if ($score >= 1000) return 'Legenda Tapamajuma';
         if ($score >= 500) return 'Pahlawan Belajar';
         return 'Pejuang Belajar';

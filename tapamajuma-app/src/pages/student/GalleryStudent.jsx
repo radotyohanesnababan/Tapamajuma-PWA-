@@ -264,7 +264,8 @@ const normalizeYoutubeUrl = (url) => {
 
     // 2. Susun URL untuk file fisik (Gambar/Audio/PDF)
     // Hati-hati: Pastikan item.file_path tidak null
-    const fullPath = item.file_path ? `${storageUrl}${item.file_path}` : "";
+    if (!item.file_path) return null;
+    const fullPath = item.file_url || item.file_path;
 
     if (item.file_type === 'image') {
       return <img src={fullPath} className="w-full h-full object-cover" onError={(e) => { e.target.src = "https://placehold.co/400?text=Error"; }} />;
@@ -501,7 +502,7 @@ return (
               {/* Image Preview */}
               {selectedItem.file_type === 'image' && (
                 <img 
-                  src={`${import.meta.env.VITE_STORAGE_URL}${selectedItem.file_path}`} 
+                  src={selectedItem.file_url}
                   className="w-full h-auto max-h-[75vh] object-contain"
                   alt={selectedItem.title}
                 />
@@ -512,7 +513,7 @@ return (
                 <div className="flex flex-col items-center p-12 w-full bg-gradient-to-br from-indigo-500 to-purple-600">
                   <Music size={100} className="text-white/20 mb-6 animate-pulse" />
                   <audio controls className="w-full h-10 drop-shadow-2xl">
-                    <source src={`${import.meta.env.VITE_STORAGE_URL}${selectedItem.file_path}`} type="audio/mpeg" />
+                    <source src={selectedItem.file_url} type="audio/mpeg" />
                   </audio>
                   <p className="text-white font-black mt-4 tracking-widest text-[10px] uppercase opacity-80">Listening Mode</p>
                 </div>

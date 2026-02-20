@@ -20,7 +20,7 @@ class MediaBankController extends Controller
                             'id' => $item->id,
                             'file_name' => $item->file_name,
                             // Langsung buatkan URL penuh agar React tinggal pakai
-                            'url' => asset('storage/' . $item->file_path),
+                            'url' => Storage::url($item->file_path),
                             'created_at' => $item->created_at->diffForHumans()
                         ];
                     });
@@ -46,7 +46,7 @@ class MediaBankController extends Controller
 
         return response()->json([
             'message' => 'Gambar berhasil diunggah!',
-            'url' => asset('storage/' . $path)
+            'url' => Storage::url($path)
         ], 201);
     }
 
@@ -56,8 +56,8 @@ class MediaBankController extends Controller
         $media = MediaBank::findOrFail($id);
 
         // Hapus file fisiknya dari storage
-        if (Storage::disk('public')->exists($media->file_path)) {
-            Storage::disk('public')->delete($media->file_path);
+        if (Storage::exists($media->file_path)) {
+            Storage::delete($media->file_path);
         }
 
         // Hapus datanya dari database
