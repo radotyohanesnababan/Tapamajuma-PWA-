@@ -72,7 +72,7 @@ public function completeProfile(Request $request)
     // Validasi data yang masuk
     $request->validate([
         'role' => 'required|in:student,teacher',
-        'class_id' => 'required_if:role,student|exists:class_names,id',
+        'class_id' => 'required_if:role,student|nullable|exists:class_names,id',
     ]);
 
     $user = Auth::user(); // Ambil user yang sedang login lewat token
