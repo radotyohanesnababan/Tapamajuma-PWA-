@@ -13,27 +13,29 @@ export default function SocialCallback() {
   const [formData, setFormData] = useState({ role: '', class_id: '' });
   const [classes, setClasses] = useState([]);
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    const onboarding = searchParams.get('needs_onboarding') === 'true';
-    const role = searchParams.get('role');
+useEffect(() => {
+  const token = searchParams.get('token');
+  const onboarding = searchParams.get('needs_onboarding') === 'true';
 
-    if (token) {
-      // PENTING: Gunakan 'auth_token' agar sinkron dengan api.js (Axios)
-      localStorage.setItem('auth_token', token);
-      
-      if (onboarding) {
-        setNeedsOnboarding(true);
-        fetchClasses(); 
-      } else {
-        // Jika tidak butuh onboarding, langsung arahkan berdasarkan role
-        redirectByRole(role);
-      }
+  if (token) {
+    // 1. Simpan token
+    localStorage.setItem('auth_token', token);
+    console.log("Token tersimpan. Status Onboarding:", onboarding);
+
+    // 2. Kunci layar! Jangan biarkan redirect otomatis.
+    if (onboarding) {
+      setNeedsOnboarding(true);
+      fetchClasses(); // Ambil data kelas
+      setLoading(false);
     } else {
-      toast.error("Gagal login Google.");
-      navigate('/login');
+      // Untuk tes, jangan pakai window.location dulu, pakai alert!
+      alert("Login Sukses, User Lama. Klik OK untuk ke Dashboard");
+      window.location.href = "/";
     }
-  }, []);
+  } else {
+    console.error("Token tidak ditemukan di URL!");
+  }
+}, [searchParams]);
 
   const fetchClasses = async () => {
     try {
