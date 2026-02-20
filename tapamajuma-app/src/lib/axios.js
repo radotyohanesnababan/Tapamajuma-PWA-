@@ -13,7 +13,7 @@ const api = axios.create({
 // HANYA SATU INTERCEPTOR: Auth Bearer Token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,7 +28,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Token ditolak server -> Hapus lokal
-      localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
       // Opsional: Redirect
       // window.location.href = "/login"; 
