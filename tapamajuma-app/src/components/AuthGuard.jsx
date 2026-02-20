@@ -10,28 +10,33 @@ export default function AuthGuard({ children, roleRequired }) {
 useEffect(() => {
   const checkAuth = async () => {
     try {
-      // 1. Ambil data user dari backend Laravel
       const res = await api.get("/api/user");
-      const userRole = res.data.role; // Role dari database (student, teacher, atau superadmin)
-      
-      // 2. Jika rute ini butuh role spesifik dan user tidak memilikinya
+      const user = res.data;
+      const userRole = user.role;
+
+      // 1. CEK ONBOARDING: Jika sudah login tapi belum pilih role
+      if (!userRole) {
+        // Biarkan user lewat jika mereka memang sedang di proses callback
+        // atau arahkan ke halaman khusus lengkapi profil jika tersesat
+        console.warn("User belum melengkapi profil (role null)");
+        // navigate("/social-callback?needs_onboarding=true"); // Opsional
+        // return;
+      }
+
+      // 2. Cek Role Spesifik (Guru/Superadmin)
       if (roleRequired && userRole !== roleRequired) {
-        // Tentukan rute pulang berdasarkan role asli user
-        let dashboardTujuan = "/"; // Default untuk student
-        
-        if (userRole === "superadmin") {
-          dashboardTujuan = "/superadmin"; // Rute WebView Superadmin
-        } else if (userRole === "teacher") {
-          dashboardTujuan = "/teacher";
-        }
+        let dashboardTujuan = "/"; 
+        if (userRole === "superadmin") dashboardTujuan = "/superadmin";
+        else if (userRole === "teacher") dashboardTujuan = "/teacher";
 
         navigate(dashboardTujuan, { replace: true });
         return;
       }
 
       setAuthorized(true);
-    } catch {
-      // Jika belum login (401), arahkan ke login
+    } catch (err) {
+      // Jika error 401 (Unauthorized)
+      console.error("AuthGuard Error:", err);
       navigate("/login", { replace: true });
     } finally {
       setLoading(false);
