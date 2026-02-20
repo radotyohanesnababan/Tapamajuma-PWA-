@@ -43,8 +43,8 @@ export default function SocialCallback() {
   };
 
   const redirectByRole = (role) => {
-    if (role === 'teacher') window.location.href = '/teacher/dashboard';
-    else if (role === 'student') window.location.href = '/student/dashboard';
+    if (role === 'teacher') window.location.href = '/teacher';
+    else if (role === 'student') window.location.href = '/';
     else window.location.href = '/'; 
   };
 
