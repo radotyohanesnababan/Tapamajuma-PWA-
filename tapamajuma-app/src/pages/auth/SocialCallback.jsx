@@ -57,7 +57,7 @@ useEffect(() => {
   const handleCompleteProfile = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/auth/complete-profile', formData);
+      const res = await api.post('api/auth/complete-profile', formData);
       toast.success("Profil diperbarui!");
       redirectByRole(res.data.role);
     } catch (err) {
