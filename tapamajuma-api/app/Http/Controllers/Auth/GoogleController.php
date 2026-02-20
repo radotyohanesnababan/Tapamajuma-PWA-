@@ -47,7 +47,7 @@ class GoogleController extends Controller
 
         // 4. Buat Token Sanctum
         $auth_token = $user->createToken('auth_token')->plainTextToken;
-        \Log::info('Token Generated: ' . $token);
+        \Log::info('Token Generated: ' . $auth_token);
 
         // 5. Cek Onboarding (Jika role kosong, berarti user baru/belum pilih role)
         $needsOnboarding = is_null($user->role) ? 'true' : 'false';

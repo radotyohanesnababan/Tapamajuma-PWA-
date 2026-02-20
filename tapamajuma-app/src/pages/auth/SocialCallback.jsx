@@ -39,7 +39,7 @@ useEffect(() => {
 }, [searchParams]);
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/classes'); // Endpoint daftar kelas kamu
+      const res = await api.get('/api/public/classes'); // Endpoint daftar kelas kamu
       setClasses(res.data);
     } catch (err) {
       console.error("Gagal ambil kelas:", err);
