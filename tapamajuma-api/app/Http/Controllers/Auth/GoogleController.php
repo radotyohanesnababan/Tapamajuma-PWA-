@@ -57,5 +57,29 @@ class GoogleController extends Controller
         \Log::error('Google Auth Error: ' . $e->getMessage());
         return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
     }
+
+    // 3. Lengkapi Profil (Pilih Role & Kelas)
+
+}
+public function completeProfile(Request $request)
+{
+    // Validasi data yang masuk
+    $request->validate([
+        'role' => 'required|in:student,teacher',
+        'class_id' => 'required_if:role,student|exists:classes,id',
+    ]);
+
+    $user = Auth::user(); // Ambil user yang sedang login lewat token
+
+    $user->update([
+        'role' => $request->role,
+        'class_id' => $request->role === 'student' ? $request->class_id : null,
+    ]);
+
+    return response()->json([
+        'message' => 'Profil berhasil dilengkapi!',
+        'role' => $user->role,
+        'user' => $user
+    ]);
 }
 }

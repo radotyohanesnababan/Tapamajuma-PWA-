@@ -35,12 +35,15 @@ export default function SocialCallback() {
     }
   }, []);
 
+  
+
   const fetchClasses = async () => {
     try {
       const res = await api.get('/api/public/classes'); // Buat endpoint ini di Laravel
       setClasses(res.data);
     } catch (err) { console.error(err); }
   };
+  
 
   const redirectByRole = (role) => {
     if (role === 'teacher') window.location.href = '/teacher';
@@ -48,16 +51,28 @@ export default function SocialCallback() {
     else window.location.href = '/'; 
   };
 
-  const handleCompleteProfile = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/api/auth/complete-profile', formData);
-      toast.success("Profil diperbarui!");
-      redirectByRole(res.data.role);
-    } catch (err) {
-      toast.error("Gagal menyimpan data.");
-    }
-  };
+const handleCompleteProfile = async (e) => {
+  e.preventDefault();
+  
+  // Ambil token terbaru dari localStorage
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await api.post('/api/auth/complete-profile', formData, {
+      headers: {
+        // Kita paksa kirim token di sini sebagai cadangan
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json' 
+      }
+    });
+    
+    toast.success("Profil diperbarui!");
+    redirectByRole(res.data.role);
+  } catch (err) {
+    console.error(err.response?.data);
+    toast.error("Gagal menyimpan data.");
+  }
+};
 
   if (loading) return <LoadingScreen />; // Tampilkan loading spinner
 
