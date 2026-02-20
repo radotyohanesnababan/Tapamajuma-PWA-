@@ -47,10 +47,12 @@ class GoogleController extends Controller
 
         // 4. Buat Token Sanctum
         $auth_token = $user->createToken('auth_token')->plainTextToken;
+        \Log::info('Token Generated: ' . $token);
 
         // 5. Cek Onboarding (Jika role kosong, berarti user baru/belum pilih role)
         $needsOnboarding = is_null($user->role) ? 'true' : 'false';
-
+        \Log::info('Needs Onboarding: ' . $needsOnboarding);
+        
         return redirect('https://tapamajuma-pwa.vercel.app/social-callback?' . http_build_query([
             'auth_token' => $auth_token,
             'needs_onboarding' => $needsOnboarding,

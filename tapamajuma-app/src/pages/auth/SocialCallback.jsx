@@ -14,29 +14,29 @@ export default function SocialCallback() {
   const [classes, setClasses] = useState([]);
 
 useEffect(() => {
-  const token = searchParams.get('token');
+  // 1. Ambil 'auth_token' (sesuai URL: ...?auth_token=xxx)
+  const token = searchParams.get('auth_token'); 
   const onboarding = searchParams.get('needs_onboarding') === 'true';
+  const role = searchParams.get('role');
+
+  console.log("Token ditemukan:", token); // Untuk memastikan tidak null lagi
 
   if (token) {
-    // 1. Simpan token
+    // 2. Simpan ke localStorage dengan nama 'auth_token' (sesuai api.js/Axios)
     localStorage.setItem('auth_token', token);
-    console.log("Token tersimpan. Status Onboarding:", onboarding);
-
-    // 2. Kunci layar! Jangan biarkan redirect otomatis.
+    
     if (onboarding) {
       setNeedsOnboarding(true);
-      fetchClasses(); // Ambil data kelas
+      fetchClasses(); // Pastikan fungsi ini ada untuk ambil daftar kelas
       setLoading(false);
     } else {
-      // Untuk tes, jangan pakai window.location dulu, pakai alert!
-      alert("Login Sukses, User Lama. Klik OK untuk ke Dashboard");
-      window.location.href = "/";
+      // Jika bukan user baru, langsung arahkan
+      redirectByRole(role);
     }
   } else {
-    console.error("Token tidak ditemukan di URL!");
+    console.error("Token tidak ditemukan di URL! Pastikan kunci di URL adalah 'auth_token'");
   }
 }, [searchParams]);
-
   const fetchClasses = async () => {
     try {
       const res = await api.get('/classes'); // Endpoint daftar kelas kamu
