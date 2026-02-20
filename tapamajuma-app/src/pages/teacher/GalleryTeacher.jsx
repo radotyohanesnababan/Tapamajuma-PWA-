@@ -45,7 +45,7 @@ export default function GalleryTeacher() {
 const fetchGalleries = async () => {
   try {
     const res = await api.get('/api/teacher/galleries');
-    
+    const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
     console.log('Raw API Response:', res.data); // DEBUG
     
     // Handle berbagai struktur response
@@ -82,7 +82,7 @@ const fetchGalleries = async () => {
   const classMap = new Map();
   
   items.forEach(item => {
-    const cls = item.user?.student_class;
+    const cls = item.user?.student_class || item.user?.studentClass;
     if (cls && cls.id && cls.name) {
       if (!classMap.has(cls.id)) {
         classMap.set(cls.id, cls.name);
@@ -153,7 +153,7 @@ const fetchGalleries = async () => {
 
   // Helper render preview di Card (Grid)
   const renderPreviewThumbnail = (item) => {
-    const storageUrl = import.meta.env.VITE_STORAGE_URL || "";
+    const storageUrl = item.file_url || item.file_path;"";
 
     if (item.file_type === 'link') {
       const videoId = getYoutubeId(item.file_path);
@@ -175,7 +175,7 @@ const fetchGalleries = async () => {
       );
     }
 
-    const fullPath = item.file_path ? `${storageUrl}${item.file_path}` : "";
+const fullPath = item.file_url || item.file_path;
     if (item.file_type === 'image') return <img src={fullPath} className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'} />;
     if (item.file_type === 'audio') {
       return (
@@ -336,12 +336,12 @@ const fetchGalleries = async () => {
               {/* AREA KONTEN */}
               <div className="w-full bg-black min-h-[300px] flex items-center justify-center relative">
                 {selectedItem.file_type === 'image' && (
-                  <img src={`${import.meta.env.VITE_STORAGE_URL}${selectedItem.file_path}`} className="w-full h-auto max-h-[70vh] object-contain" />
+                  <img src={selectedItem.file_url||selectedItem.file_path} className="w-full h-auto max-h-[70vh] object-contain" />
                 )}
                 {selectedItem.file_type === 'audio' && (
                   <div className="w-full bg-indigo-50 p-10 flex flex-col items-center">
                     <Music size={60} className="text-indigo-500 mb-4 animate-bounce" />
-                    <audio controls className="w-full"><source src={`${import.meta.env.VITE_STORAGE_URL}${selectedItem.file_path}`} type="audio/mpeg" /></audio>
+                    <audio controls className="w-full"><source src={selectedItem.file_url} type="audio/mpeg" /></audio>
                   </div>
                 )}
                 {/* VIDEO PLAYER */}
