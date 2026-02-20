@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
@@ -66,7 +70,7 @@ public function completeProfile(Request $request)
     // Validasi data yang masuk
     $request->validate([
         'role' => 'required|in:student,teacher',
-        'class_id' => 'required_if:role,student|exists:classes,id',
+        'class_id' => 'required_if:role,student|exists:class_names,id',
     ]);
 
     $user = Auth::user(); // Ambil user yang sedang login lewat token
