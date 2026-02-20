@@ -26,7 +26,7 @@ class RegisteredUserController extends Controller
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'phone_number' => ['nullable', 'string', 'max:20'],
         'role' => ['required', 'string', 'in:student,teacher'],
-        'class_id' => ['nullable'], // Validasi input dari frontend
+        'class_id' => ['nullable'], 
     ]);
 
     // LOGIKA BARU:
@@ -46,6 +46,7 @@ class RegisteredUserController extends Controller
         'password' => Hash::make($request->string('password')),
         'role' => $request->role,
         'phone_number' => $request->phone_number,
+        'class_id' => $request->class_id,
         'accessible_classes' => $accessibleClasses, // <--- Simpan di sini
     ]);
 
