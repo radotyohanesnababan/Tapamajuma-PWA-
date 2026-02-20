@@ -37,7 +37,7 @@ export default function SocialCallback() {
 
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/api/classes'); // Buat endpoint ini di Laravel
+      const res = await api.get('/api/public/classes'); // Buat endpoint ini di Laravel
       setClasses(res.data);
     } catch (err) { console.error(err); }
   };

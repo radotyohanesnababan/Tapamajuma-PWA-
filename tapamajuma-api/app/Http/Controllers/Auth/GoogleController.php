@@ -20,46 +20,42 @@ class GoogleController extends Controller
 
     // 2. Tangani balasan dari Google
     public function handleGoogleCallback()
-    
-    {   
-        try {
-            $isNewUser = $user->wasRecentlyCreated || !$user->role;
-            $googleUser = Socialite::driver('google')->stateless()->user();
-            
-            // Cari user berdasarkan email
-            $user = User::where('email', $googleUser->getEmail())->first();
+{
+    try {
+        $googleUser = Socialite::driver('google')->stateless()->user();
+        
+        // 1. Cari user berdasarkan email
+        $user = User::where('email', $googleUser->getEmail())->first();
 
-            if ($user) {
-                // Jika user ada, update google_id
-                $user->update([
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                ]);
-            } else {
-                // Jika user baru, buat user
-                $user = User::create([
-                    'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                    'password' => bcrypt(Str::random(16)),
-                    'role' => 'student', // Default role
-                ]);
-            }
-
-            // Buat Token (Sanctum)
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            // Lempar balik ke React (Vercel) sambil bawa token
-                    return redirect('https://tapamajuma.vercel.app/social-callback?' . http_build_query([
-            'token' => $token,
-            'needs_onboarding' => $isNewUser ? 'true' : 'false',
-            'role' => $user->role // kirim role jika sudah ada
-        ]));
-            
-        } catch (\Exception $e) {
-            Log::error('Google Auth Error: ' . $e->getMessage());
-            return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
+        if (!$user) {
+            // 2. Jika tidak ada, buat user BARU
+            $user = User::create([
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'password' => bcrypt(\Illuminate\Support\Str::random(16)), // Password aman
+                'role' => null, // Biarkan null agar masuk onboarding
+            ]);
+        } else {
+            // 3. Jika ada, update google_id-nya saja
+            $user->update(['google_id' => $googleUser->getId()]);
         }
+
+        // 4. Buat Token Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // 5. Cek Onboarding (Jika role kosong, berarti user baru/belum pilih role)
+        $needsOnboarding = is_null($user->role) ? 'true' : 'false';
+
+        return redirect('https://tapamajuma-pwa.vercel.app/social-callback?' . http_build_query([
+            'token' => $token,
+            'needs_onboarding' => $needsOnboarding,
+            'role' => $user->role ?? ''
+        ]));
+        
+    } catch (\Exception $e) {
+        \Log::error('Google Auth Error: ' . $e->getMessage());
+        return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
     }
+}
 }
