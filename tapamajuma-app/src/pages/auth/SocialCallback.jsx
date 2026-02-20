@@ -62,7 +62,6 @@ export default function SocialCallback() {
       toast.error("Gagal menyimpan profil.");
     }
   };
-  console.log("Status Onboarding:", onboarding)
 
   if (loading && needsOnboarding) return <div className="h-screen flex items-center justify-center">Loading form...</div>;
 
