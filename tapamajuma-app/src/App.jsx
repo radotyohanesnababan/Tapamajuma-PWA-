@@ -45,6 +45,7 @@ import SoalImport from "./pages/teacher/SoalImport";
 import ClassSummary from "./pages/superadmin/ClassSummary";
 import TeacherSummary from "./pages/superadmin/TeacherSummary";
 import MediaBank from "./pages/teacher/MediaBank";
+import SocialCallback from "./pages/auth/SocialCallback";
 
 
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword/>}/>
           <Route path="/password-reset/:token" element={<ResetPassword/>}/>
           <Route path="/edit-profile" element={<EditProfile/>}/>
+          <Route path="/social-callback" element={<SocialCallback />} />
 
           {/* GRUP 1: HALAMAN SISWA (Dibungkus AuthGuard & StudentLayout) */}
           <Route 

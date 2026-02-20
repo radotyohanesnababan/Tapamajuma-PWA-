@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+    Route::post('/auth/complete-profile', [GoogleController::class, 'completeProfile']);
     
     // --- KHUSUS SISWA ---
     Route::get('/dashboard', [DashboardController::class, 'index']);
