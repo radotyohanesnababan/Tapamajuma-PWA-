@@ -21,27 +21,12 @@ use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardControll
 use App\Http\Controllers\Teacher\MandiriSessionController;
 use App\Http\Controllers\Teacher\MediaBankController;
 use App\Http\Controllers\Teacher\QuestionBankController;
-use App\Http\Controllers\Teacher\TeacherMgmtController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\GoogleController;
 
-Route::get('/test-r2', function () {
-    try {
-        // Mencoba membuat file di R2
-        Storage::disk('r2')->put('test-koneksi.txt', 'Halo dari TAPAMAJUMA!');
-        
-        // Mengambil kembali filenya
-        $content = Storage::disk('r2')->get('test-koneksi.txt');
-        
-        return response()->json([
-            'status' => 'Sukses!',
-            'isi_file' => $content,
-            'url_publik' => Storage::disk('r2')->url('test-koneksi.txt')
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -59,12 +44,12 @@ Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 |--------------------------------------------------------------------------
 */
 
+// Jalur Login Google
+Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/test-connection-auth', function () {
-    return response()->json(['status' => 'connected', 'message' => 'Pintu gerbang Laravel terbuka!']);
-});
-
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
