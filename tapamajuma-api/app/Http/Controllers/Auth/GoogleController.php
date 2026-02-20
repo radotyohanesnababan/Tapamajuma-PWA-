@@ -20,8 +20,10 @@ class GoogleController extends Controller
 
     // 2. Tangani balasan dari Google
     public function handleGoogleCallback()
+    
     {   
         try {
+            $isNewUser = $user->wasRecentlyCreated || !$user->role;
             $googleUser = Socialite::driver('google')->stateless()->user();
             
             // Cari user berdasarkan email
@@ -49,7 +51,11 @@ class GoogleController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // Lempar balik ke React (Vercel) sambil bawa token
-            return redirect('https://tapamajuma-pwa.vercel.app/social-callback?token=' . $token);
+                    return redirect('https://tapamajuma.vercel.app/social-callback?' . http_build_query([
+            'token' => $token,
+            'needs_onboarding' => $isNewUser ? 'true' : 'false',
+            'role' => $user->role // kirim role jika sudah ada
+        ]));
             
         } catch (\Exception $e) {
             Log::error('Google Auth Error: ' . $e->getMessage());
