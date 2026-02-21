@@ -169,15 +169,16 @@
         <div class="page-break"></div>
 
 
-        <div class="page-title">BAGIAN 3: ANALISIS KINERJA PER JENJANG ANGKATAN</div>
+<div class="page-title">BAGIAN 3: ANALISIS KINERJA PER JENJANG ANGKATAN</div>
 
         @foreach(['Kelas 7', 'Kelas 8', 'Kelas 9'] as $grade)
         <div class="sub-title" style="background-color: #cbd5e1; padding: 3px;">Statistik {{ $grade }}</div>
         
-        <div>
-            <div class="col-half" style="margin-right: 2%;">
-                <p><strong>Top 5 Siswa Teraktif (Sering Login/Mengerjakan)</strong></p>
-                <table>
+        <div style="width: 100%; margin-bottom: 15px;">
+            
+            <div style="width: 32%; float: left; margin-right: 2%;">
+                <p style="font-size: 11px;"><strong>Top 5 Aktif (Tugas/Soal)</strong></p>
+                <table style="font-size: 10px;">
                     <tr><th>Nama Siswa</th><th class="text-center">Aktivitas</th></tr>
                     @forelse($topPerAngkatan[$grade]['teraktif'] as $t)
                     <tr><td>{{ $t->name }} ({{ $t->class_name }})</td><td class="text-center">{{ $t->total_keaktifan }}</td></tr>
@@ -186,10 +187,11 @@
                     @endforelse
                 </table>
             </div>
-            <div class="col-half">
-                <p><strong>Top 5 Siswa Skor Tertinggi (Kualitas Nilai)</strong></p>
-                <table>
-                    <tr><th>Nama Siswa</th><th class="text-center">Total Skor</th></tr>
+
+            <div style="width: 32%; float: left; margin-right: 2%;">
+                <p style="font-size: 11px;"><strong>Top 5 Skor Tertinggi</strong></p>
+                <table style="font-size: 10px;">
+                    <tr><th>Nama Siswa</th><th class="text-center">Skor</th></tr>
                     @forelse($topPerAngkatan[$grade]['tertinggi'] as $t)
                     <tr><td>{{ $t->name }} ({{ $t->class_name }})</td><td class="text-center">{{ $t->total_skor }}</td></tr>
                     @empty
@@ -197,6 +199,20 @@
                     @endforelse
                 </table>
             </div>
+
+            <div style="width: 32%; float: left;">
+                <p style="font-size: 11px;"><strong>Top 5 Rajin Sesi Pagi</strong></p>
+                <table style="font-size: 10px;">
+                    <tr><th>Nama Siswa</th><th class="text-center">Hadir</th></tr>
+                    @forelse($topPerAngkatan[$grade]['teraktif_pagi'] as $t)
+                    <tr><td>{{ $t->name }} ({{ $t->class_name }})</td><td class="text-center">{{ $t->total_sesi_pagi }}</td></tr>
+                    @empty
+                    <tr><td colspan="2" class="text-center">Belum ada data</td></tr>
+                    @endforelse
+                </table>
+            </div>
+            
+            <div style="clear: both;"></div>
         </div>
 
         <p style="margin-top:0;"><strong>Distribusi Minat Belajar {{ $grade }}:</strong></p>
@@ -290,30 +306,32 @@
 
         <div class="page-title">BAGIAN 5: KEPUTUSAN SISTEM & REKOMENDASI</div>
 
-        <div class="sub-title">a. Nominasi Siswa Teladan (Top 3 Keseluruhan)</div>
-        <p><i>Penilaian ini digabungkan secara otomatis oleh sistem berdasarkan kedisiplinan (jumlah aktifitas) dan kecerdasan (akumulasi skor nilai) pada kegiatan Literasi, Numerasi, dan TKA.</i></p>
+        <div class="sub-title">a. Nominasi Siswa Teladan (Top 5 Keseluruhan)</div>
+        <p style="font-size: 11px;"><i>Penilaian ini digabungkan secara otomatis oleh sistem berdasarkan kedisiplinan (jumlah tugas selesai & kehadiran sesi pagi) dan kualitas pemahaman (akumulasi skor nilai) pada kegiatan Literasi, Numerasi, dan TKA.</i></p>
         
         <table>
             <thead>
                 <tr>
-                    <th width="10%" class="text-center">Rank</th>
-                    <th>Nama Siswa</th>
-                    <th>Kelas</th>
-                    <th class="text-center">Total Aktivitas</th>
-                    <th class="text-center">Total Skor</th>
+                    <th width="8%" class="text-center">Rank</th>
+                    <th width="32%">Nama Siswa</th>
+                    <th width="15%">Kelas</th>
+                    <th width="15%" class="text-center">Tugas Selesai</th>
+                    <th width="15%" class="text-center">Aktif Sesi Pagi</th>
+                    <th width="15%" class="text-center">Total Skor(K.Mandiri)</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($siswaTeladan as $idx => $teladan)
                 <tr>
-                    <td class="text-center" style="font-weight: bold;">Ke-{{ $idx + 1 }}</td>
+                    <td class="text-center" style="font-weight: bold;">Ke-{{ $loop->iteration }}</td>
                     <td style="font-weight: bold; color: #1e3a8a;">{{ $teladan->name }}</td>
                     <td>{{ $teladan->class_name }}</td>
                     <td class="text-center">{{ $teladan->total_keaktifan }}</td>
+                    <td class="text-center">{{ $teladan->total_sesi_pagi ?? 0 }}</td>
                     <td class="text-center">{{ $teladan->total_skor }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="text-center">Data belum mencukupi untuk penilaian.</td></tr>
+                <tr><td colspan="6" class="text-center">Data belum mencukupi untuk penilaian.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -370,6 +388,43 @@
                 @endforeach
             </tbody>
         </table>
+        <div style="page-break-before: always;"></div>
+
+        <div class="page-title" style="text-align: center;">LAMPIRAN</div>
+        <div class="page-title">REKAPITULASI KEAKTIFAN SESI PAGI PER KELAS</div>
+        
+        <p class="text-center" style="margin-top: -10px; margin-bottom: 20px; font-size: 12px;">
+            Periode: {{ $periodText }}
+        </p>
+
+        @forelse($morningSessionData as $className => $students)
+            <div style="margin-top: 20px; font-weight: bold; background-color: #f8fafc; padding: 5px 10px; border: 1px solid #000; border-bottom: none;">
+                Kelas: {{ $className }}
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th width="65%">Nama Siswa</th>
+                        <th width="30%" class="text-center">Total Kehadiran Aktif</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($students as $index => $student)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $student->name }}</td>
+                        <td class="text-center"><strong>{{ $student->total_active }}</strong> Sesi</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @empty
+            <p style="text-align: center; font-style: italic; margin-top: 30px;">
+                Tidak ada data kehadiran siswa pada periode ini.
+            </p>
+        @endforelse
 
     </main>
 </body>

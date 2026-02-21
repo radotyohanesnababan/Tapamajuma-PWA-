@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SelfStudySession extends Model
 {
     use HasFactory;
+    
 
     /**
      * Kolom yang boleh diisi secara massal (create/update).

@@ -8,7 +8,9 @@ import {
   GalleryHorizontal,
   Zap,
   Heart,
-  Sparkles
+  Sparkles,
+  ScooterIcon,
+  Star
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -45,19 +47,31 @@ export default function ClassImprovement() {
       color: "amber",
       accentIcon: <Sparkles size={14} className="fill-current" />,
       tags: ["Publikasi", "Karya Kreatif"]
+    },
+    {
+      title: "Cetak Nilai Keaktifan Siswa",
+      desc: "Cetak nilai keaktifan siswa dalam bentuk laporan terstruktur.",
+      icon: <ScooterIcon size={24} />,
+      bgIcon: <ScooterIcon size={120} className="opacity-10" />,
+      path: '/teacher/class-improvement/print-session-activity',
+      color: "green",
+      accentIcon: <Star size={14} className="fill-current" />,
+      tags: ["Publikasi", "Karya Kreatif"]
     }
   ];
 
   const colorConfig = {
     indigo: "bg-indigo-50 text-indigo-600 hover:border-indigo-300 shadow-indigo-100/50",
     rose: "bg-rose-50 text-rose-600 hover:border-rose-300 shadow-rose-100/50",
-    amber: "bg-amber-50 text-amber-600 hover:border-amber-300 shadow-amber-100/50"
+    amber: "bg-amber-50 text-amber-600 hover:border-amber-300 shadow-amber-100/50",
+    green: "bg-green-50 text-green-600 hover:border-green-300 shadow-green-100/50"
   };
 
   const btnConfig = {
     indigo: "bg-indigo-600 shadow-indigo-200",
     rose: "bg-rose-600 shadow-rose-200",
-    amber: "bg-amber-600 shadow-amber-200"
+    amber: "bg-amber-600 shadow-amber-200",
+    green: "bg-green-600 shadow-green-200"
   };
 
   return (

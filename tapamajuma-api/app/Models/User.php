@@ -80,6 +80,13 @@ class User extends Authenticatable
 {
     return $this->hasMany(DailyActivity::class);
 }
+
+public function attendances()
+    {
+        // Sesuaikan 'SessionAttendance::class' dengan nama model absensimu
+        // 'student_id' adalah foreign key di tabel session_attendances
+        return $this->hasMany(SessionAttendance::class, 'student_id');
+    }
 public function classes()
 {
     return $this->belongsToMany(

@@ -9,7 +9,8 @@ import {
   ArrowRight, 
   Download, 
   FileText, 
-  Loader2
+  Loader2,
+  CircleSlashIcon
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { toast } from "sonner";
@@ -64,11 +65,20 @@ export default function ActivityReport() {
     {
       id: "session",
       title: "Efektivitas Sesi Guru",
-      description: "Laporan sesi 'Self Study' dan dampaknya terhadap aktivitas siswa.",
+      description: "Laporan sesi 'Self Study' terhadap guru",
       icon: <Presentation className="w-8 h-8 text-orange-600" />,
       bg: "bg-orange-50",
       btnColor: "text-orange-600 hover:bg-orange-50",
       path: "sessions" // Ganti sesuai route kamu
+    },
+    {
+      id: "morning_session",
+      title: "Laporan Sesi Pagi",
+      description: "Laporan sesi 'Self Study' terhadap siswa",
+      icon: <CircleSlashIcon className="w-8 h-8 text-orange-600" />,
+      bg: "bg-orange-50",
+      btnColor: "text-orange-600 hover:bg-orange-50",
+      path: "morning-sessions" // Ganti sesuai route kamu
     }
 
   ];

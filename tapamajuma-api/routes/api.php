@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ChangelogController;
 use App\Http\Controllers\Admin\ClassMgmtController;
+use App\Http\Controllers\Admin\MorningSessionController;
 use App\Http\Controllers\Admin\QuestionMgmtController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StudentMgmtController;
@@ -24,9 +25,7 @@ use App\Http\Controllers\Teacher\QuestionBankController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
-
-
-
+use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,12 +119,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/media-bank/{id}', [MediaBankController::class, 'destroy']);
     // Route Import
     Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
+        // Cetak Aktivitas Sesi (Aksi B.3)
+    Route::get('/print-session', [TeacherPrintSessionController::class, 'getMorningSession']);
+    Route::get('/accessible-classes', [TeacherPrintSessionController::class, 'getAccessibleClasses']);
     });
+
+
     // [BARU] 2. Ambil Siswa (Sesuai React: /api/students?class=7A)
     Route::get('/students', [MandiriSessionController::class, 'getStudents']);
 
     // [BARU] 3. Simpan Presensi (Sesuai React: /api/self-study/store)
     Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
+
+
 
     // --- KHUSUS ADMIN  ---
     Route::prefix('admin')->group(function () {
@@ -151,6 +157,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/activity-report/class-summary', [ReportController::class, 'classSummary']);
         Route::get('/activity-report/teacher-summary', [ReportController::class, 'teacherSummary']);
         Route::get('/activity-report/pdf/', [ReportController::class, 'downloadFullReport']);
+        Route::get('/activity-report/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);
+        Route::get('/activity-report/morning-session-details/{student_id}', [MorningSessionController::class, 'getStudentSummary']);
     });
 
 });

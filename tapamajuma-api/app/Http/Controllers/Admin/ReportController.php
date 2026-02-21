@@ -276,16 +276,24 @@ public function downloadFullReport(Request $request)
         ->withSum(['dailyActivities as total_skor' => function($q) use ($startDate, $endDate) {
             $q->whereBetween('created_at', [$startDate, $endDate]);
         }], 'score')
+        ->withCount(['attendances as total_sesi_pagi' => function($q) use ($startDate, $endDate) {
+            $q->where('is_active', 1)->whereBetween('created_at', [$startDate, $endDate]);
+        }])
         ->get();
 
     $allStudents = $allStudentsRaw->sortBy('name');
 
-    // (Poin 10) TOP 3 Siswa Teladan (Kombinasi Skor Tinggi & Paling Aktif)
+    // (Poin 10) TOP 5 Siswa Teladan (Kombinasi Skor Tinggi & Paling Aktif)
     $siswaTeladan = $allStudentsRaw
-        ->filter(fn($s) => $s->total_keaktifan > 0) // Pastikan dia aktif
-        ->sortByDesc('total_skor')
-        ->sortByDesc('total_keaktifan') // Prioritas keaktifan, lalu skor
-        ->take(3);
+        ->filter(fn($s) => $s->total_keaktifan > 0 || $s->total_sesi_pagi > 0)
+        ->sortBy([
+            ['total_skor', 'desc'],        // Prioritas 1: Skor tertinggi
+            ['total_sesi_pagi', 'desc'],   // Prioritas 2: Paling rajin sesi pagi
+            ['total_keaktifan', 'desc'],   // Prioritas 3: Tugas terbanyak
+            
+        ])
+        ->take(5)
+        ->values(); // SANGAT PENTING: Mereset index menjadi 0, 1, 2 agar rapi di Blade
 
    $byAngkatan = $allStudentsRaw->groupBy(function($s) {
         $name = strtoupper($s->class_name ?? ''); // Pastikan tidak error kalau null
@@ -305,6 +313,7 @@ public function downloadFullReport(Request $request)
             'teraktif' => $studentsInGrade->sortByDesc('total_keaktifan')->take(5),
             // (Poin 6) Top 5 Skor Tertinggi
             'tertinggi' => $studentsInGrade->sortByDesc('total_skor')->take(5),
+            'teraktif_pagi' => $studentsInGrade->filter(fn($s) => $s->total_sesi_pagi > 0)->sortByDesc('total_sesi_pagi')->take(5),
         ];
     }
 
@@ -382,12 +391,29 @@ public function downloadFullReport(Request $request)
         ->groupBy('class_names.id', 'class_names.name')
         ->orderBy('class_names.name')
         ->get();
+    // --- (TAMBAHAN BARU) DATA REKAP SESI PAGI PER KELAS ---
+    // Mengambil siswa, menghitung total hadir, dan mengelompokkannya per kelas
+    $morningSessionData = User::where('role', 'student')
+        ->join('class_names', 'users.class_id', '=', 'class_names.id')
+        ->select('users.id', 'users.name', 'class_names.name as class_name')
+        ->withCount(['attendances as total_active' => function ($query) use ($startDate, $endDate) {
+            // Hitung hanya yang hadir (is_active = 1) di rentang tanggal laporan
+            $query->where('is_active', 1)
+                  ->whereBetween('created_at', [$startDate, $endDate]);
+        }])
+        // Opsional: Sembunyikan siswa yang total hadirnya 0 agar PDF tidak terlalu panjang
+        ->having('total_active', '>', 0) 
+        ->orderBy('class_names.name') // Urutkan kelasnya dulu (7A, 7B, dst)
+        ->orderByDesc('total_active') // Lalu urutkan dari yang paling rajin di kelas itu
+        ->orderBy('users.name')       // Terakhir urutkan abjad jika jumlah hadirnya sama
+        ->get()
+        ->groupBy('class_name'); // Kelompokkan datanya berdasarkan nama kelas
 
     $pdf = Pdf::loadView('pdf.activity-report', compact(
         'summary', 'sessions', 'teacherRecap', 'literasi', 'numerasi', 
         'allStudents', 'periodText', 'logoKiri', 'logoKanan',
         'topPerAngkatan', 'minatPerAngkatan', 'siswaTeladan', 'insights',
-        'classSuccessRates'
+        'classSuccessRates', 'morningSessionData'
     ));
 
     $memoryBytes = memory_get_peak_usage(true);

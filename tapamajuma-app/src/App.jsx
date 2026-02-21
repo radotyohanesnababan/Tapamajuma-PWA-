@@ -46,6 +46,8 @@ import ClassSummary from "./pages/superadmin/ClassSummary";
 import TeacherSummary from "./pages/superadmin/TeacherSummary";
 import MediaBank from "./pages/teacher/MediaBank";
 import SocialCallback from "./pages/auth/SocialCallback";
+import PrintSession from "./pages/teacher/PrintSession";
+import MorningSessionStudent from "./pages/superadmin/MorningSessionStudent";
 
 
 
@@ -101,6 +103,7 @@ function App() {
             <Route path="/teacher/class-improvement/analysis" element={<AnalysisTab />} />
             <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
             <Route path="/teacher/class-improvement/gallery" element={<GalleryTeacher />} />
+            <Route path="/teacher/class-improvement/print-session-activity" element={<PrintSession />} />
             {/* GRUP 2.2: Bank Soal */}
             <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
             <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
@@ -148,6 +151,8 @@ function App() {
             <Route path="activity-report/sessions" element={<SessionReport />} />
             <Route path="activity-report/classes" element={<ClassSummary />} />
             <Route path="activity-report/teachers" element={<TeacherSummary />} />
+            <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
+
 
             {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
             <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}
