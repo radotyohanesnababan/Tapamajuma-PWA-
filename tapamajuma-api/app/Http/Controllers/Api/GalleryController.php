@@ -99,7 +99,7 @@ class GalleryController extends Controller
             $fileType = 'link';
         } else {
             $request->validate([
-                'file' => 'required|file|mimes:jpg,jpeg,png,mp3,wav,webm,m4a,mpga,pdf|max:20480',
+                'file' => 'required|file|mimes:jpg,jpeg,png,mp3,wav,webm,m4a,mpga,pdf,ogg,mov|max:20480',
             ]);
 
             if ($request->hasFile('file')) {
