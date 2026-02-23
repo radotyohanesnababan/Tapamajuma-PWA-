@@ -125,11 +125,6 @@ const normalizeYoutubeUrl = (url) => {
 };
 
   const handleOpenPreview = (item) => {
-  console.log("ITEM DIKLIK:", item); 
-  
-  // Cek spesifik property (pastikan ejaannya sama persis dengan di Network Tab)
-  console.log("URL:", item.file_path); 
-  console.log("TYPE:", item.file_type);
   setSelectedItem(item);
   setPreviewOpen(true);
 };

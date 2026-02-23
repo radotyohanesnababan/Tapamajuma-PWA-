@@ -36,7 +36,7 @@ class MediaBankController extends Controller
         ]);
 
         $file = $request->file('image');
-        $path = $file->store('brankas_gambar', 'public');
+        $path = Storage::put('uploads', $request->file('image'));
 
         $media = MediaBank::create([
             'user_id' => $request->user()->id,
