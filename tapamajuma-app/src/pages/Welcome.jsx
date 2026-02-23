@@ -63,19 +63,19 @@ export default function Welcome() {
     ];
 
     const features = [
-        { id: 1, name: "Literasi Digital", icon: <BookOpen size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
-        { id: 2, name: "Numerasi Aktif", icon: <Activity size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
-        { id: 3, name: "TKA (HOTS)", icon: <BrainCircuit size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
-        { id: 4, name: "Sesi Mandiri", icon: <Target size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
-        { id: 5, name: "Refleksi Jurnal", icon: <Sparkles size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
-        { id: 6, name: "Pantau Orang Tua", icon: <Users size={32} className="text-sky-600 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 1, name: "Literasi Digital", icon: <BookOpen size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 2, name: "Numerasi Aktif", icon: <Activity size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 3, name: "TKA (HOTS)", icon: <BrainCircuit size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 4, name: "Sesi Mandiri", icon: <Target size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 5, name: "Refleksi Jurnal", icon: <Sparkles size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
+        { id: 6, name: "Pantau Orang Tua", icon: <Users size={32} className="text-sky-700 mb-3 group-hover:scale-110 transition-transform duration-300" /> },
     ];
 
     // Fungsi Fallback Image (Jika gambar rusak/tidak ditemukan)
     const handleImageError = (e) => {
         e.target.onerror = null; // Mencegah infinite loop jika fallback juga gagal
         // Mengganti dengan gambar placeholder SVG bawaan
-        e.target.src = 'https://placehold.co/800x600/f1f5f9/94a3b8?text=Gambar+Tidak+Tersedia';
+        e.target.src = 'https://placehold.co/800x700/f1f5f9/94a3b8?text=Gambar+Tidak+Tersedia';
     };
 
     return (
@@ -95,6 +95,7 @@ export default function Welcome() {
                             autoplay={{ delay: 5000, disableOnInteraction: false }}
                             loop={true}
                             className="w-full h-full"
+                            
                         >
                             {slides.map((src, index) => (
                                 <SwiperSlide key={index}>
@@ -103,6 +104,10 @@ export default function Welcome() {
                                         alt="Background Belajar"
                                         onError={handleImageError}
                                         className="w-full h-full object-cover"
+                                        width='800'
+                                        height='700'
+                                        loading={index === 0 ? "eager" : "lazy"} 
+                                        fetchPriority={index === 0 ? "high" : "low"}
                                     />
                                 </SwiperSlide>
                             ))}
@@ -122,19 +127,19 @@ export default function Welcome() {
                             <h1 className={`text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-800 drop-shadow-sm leading-[1.15] tracking-tight transition-all duration-700 delay-200 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                                 Bersama Membangun <br/>
                                 {/* Efek Gradien Teks */}
-                                <span className="bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-sky-700 to-indigo-700 bg-clip-text text-transparent">
                                     Generasi Maju
                                 </span>
                             </h1>
                             
-                            <p className={`text-lg text-slate-600 leading-relaxed max-w-lg mx-auto md:mx-0 font-medium transition-all duration-700 delay-300 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                            <p className={`text-lg text-slate-700 leading-relaxed max-w-lg mx-auto md:mx-0 font-medium transition-all duration-700 delay-300 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                                 TAPAMAJUMA hadir untuk memantau aktivitas belajar, literasi, numerasi, dan perkembangan siswa secara terintegrasi antara guru, siswa, dan orang tua.
                             </p>
                             
                             <div className={`flex justify-center md:justify-start space-x-4 pt-4 transition-all duration-700 delay-500 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                                 <Link 
                                     to="/login" 
-                                    className="group inline-flex items-center justify-center whitespace-nowrap rounded-2xl text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 bg-sky-600 text-white shadow-xl shadow-sky-200 hover:bg-sky-700 hover:-translate-y-1 h-14 px-10"
+                                    className="group inline-flex items-center justify-center whitespace-nowrap rounded-2xl text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 bg-sky-700 text-white shadow-xl shadow-sky-200 hover:bg-sky-700 hover:-translate-y-1 h-14 px-10"
                                 >
                                     Mulai Sekarang
                                     <Sparkles size={16} className="ml-2 group-hover:rotate-12 transition-transform" />
@@ -160,6 +165,8 @@ export default function Welcome() {
                                 src={`${import.meta.env.VITE_API_URL}/images/iconappp.png`} 
                                 alt="Logo TAPAMAJUMA Aplikasi Monitoring Siswa SMPN 1 Tarutung"
                                 onError={handleImageError}
+                                width="500"
+                                height="500"
                                 className="w-full max-w-sm rounded-[3rem] shadow-2xl border-8 border-white bg-white/50 backdrop-blur-sm transition-transform duration-700 hover:scale-105 relative z-10"
                             />
                         </div>
@@ -220,7 +227,7 @@ export default function Welcome() {
                                             src={src}
                                             alt={`Aktivitas ${index + 1}`}
                                             onError={handleImageError}
-                                            className="w-full h-full object-cover transition-transform duration-[10000ms] ease-linear hover:scale-110"
+                                            className="w-full h-full object-cover transition-transform [transition-duration:10s] ease-linear hover:scale-110"
                                             loading={index === 0 ? "eager" : "lazy"} 
                                             fetchpriority={index === 0 ? "high" : "low"}
                                         />
@@ -240,7 +247,7 @@ export default function Welcome() {
                                 </h2>
                             </div>
                             
-                            <p className="text-slate-600 leading-relaxed font-medium text-lg">
+                            <p className="text-slate-700 leading-relaxed font-medium text-lg">
                                 TAPAMAJUMA dirancang khusus untuk menjembatani komunikasi data antara pihak sekolah dan orang tua. Kami memastikan setiap perkembangan akademik dan karakter siswa terekam dengan baik dan transparan.
                             </p>
                             
@@ -248,7 +255,7 @@ export default function Welcome() {
                                 {/* List Item 1 */}
                                 <li className="flex items-start bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
                                     <div className="bg-sky-50 p-3 rounded-2xl mr-5 flex-shrink-0 group-hover:bg-sky-100 transition-colors">
-                                        <CheckCircle2 className="w-6 h-6 text-sky-600" />
+                                        <CheckCircle2 className="w-6 h-6 text-sky-700" />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-base">Pelaporan Real-time</h4>
@@ -258,7 +265,7 @@ export default function Welcome() {
                                 {/* List Item 2 */}
                                 <li className="flex items-start bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
                                     <div className="bg-indigo-50 p-3 rounded-2xl mr-5 flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                                        <CheckCircle2 className="w-6 h-6 text-indigo-600" />
+                                        <CheckCircle2 className="w-6 h-6 text-indigo-700" />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-base">Notifikasi WhatsApp</h4>

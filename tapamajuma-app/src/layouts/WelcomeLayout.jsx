@@ -5,7 +5,7 @@ import { IconBrandFacebook, IconLink, IconMail } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
 export default function WelcomeLayout({ title, children, auth }) {
-    const defaultTitle = 'TAPAMAJUMA - Monitoring Siswa SMP Negeri 1 Tarutung';
+    const defaultTitle = 'TAPAMAJUMA - Monitoring Siswa SMP Negeri 1 Siborongborong';
     const pageTitle = title ? `${title} | TAPAMAJUMA` : defaultTitle;
 
     // Mengubah title browser secara dinamis
@@ -108,12 +108,12 @@ export default function WelcomeLayout({ title, children, auth }) {
 
                             <div className="md:col-span-1">
                                 <h3 className="text-sm font-black text-slate-800 mb-4 border-b pb-2 border-slate-200 tracking-wider">HUBUNGI KAMI</h3>
-                                <a 
-                                    href="mailto:#" 
-                                    className="inline-block hover:text-cyan-600 font-bold transition text-sm mb-6 text-slate-500"
+                                                                <a 
+                                    href="mailto:smpn1siborongborong.taput@gmail.com" 
+                                    aria-label="Kirim Email ke SMPN 1 Siborongborong" // <--- Tambahkan ini
+                                    className="inline-block hover:text-emerald-600 font-bold transition text-sm mb-6 text-slate-600"
                                 >
-                                    <IconMail className="w-5 h-5 text-slate-500 group-hover:text-cyan-600 transition-colors" />
-                                    
+                                    smpn1siborongborong.taput@gmail.com
                                 </a>
 
                                 <h3 className="text-sm font-black text-slate-800 mb-4 border-b pb-2 border-slate-200 tracking-wider">SOSIAL MEDIA</h3>

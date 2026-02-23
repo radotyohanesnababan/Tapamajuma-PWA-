@@ -1,171 +1,201 @@
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
+
+// ==========================================
+// 1. IMPORT SINKRON (Critical Load)
+// ==========================================
+// Layout dan AuthGuard harus dimuat langsung agar kerangka dasar web tidak telat muncul.
+import AuthGuard from "./components/AuthGuard";
 import StudentLayout from "./layouts/StudentLayout";
 import TeacherLayout from "./layouts/TeacherLayout";
-import StudentDashboard from "./pages/student/Dashboard";
-import ChallengeForm from "./pages/student/ChallengeForm";
-import MathGame from "./components/games/MathGame";
-import TeacherDashboard from "./pages/teacher/Dashboard"; // Import dashboard guru
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import AuthGuard from "./components/AuthGuard";
-import AnalysisTab from "./pages/teacher/AnalysisTab";
-import WeeklyReflection from "./pages/student/WeeklyReflection";
-import PeerFeed from "./pages/student/PeerFeed";
-import TeacherReflection from "./pages/teacher/TeacherReflection";
-import { Toaster } from "@/components/ui/sonner";
-import GalleryStudent from "./pages/student/GalleryStudent";
-import OtherMenu from "./pages/student/OtherMenu";
-import OtherMenuTc from "./pages/teacher/OtherMenuTc";
-import OtherMenuSa from "./pages/superadmin/OtherMenuSa";
-import EditProfile from "./pages/student/EditProfile";
-import PresentationPage from "./pages/student/PresentationPage";
-import SuperadminDashboard from "./pages/superadmin/Dashboard";
 import SuperadminLayout from "./layouts/SuperadminLayout";
-import SesiMandiri from "./pages/teacher/SesiMandiri";
-import TeacherManagement from "./pages/superadmin/TeacherManagement";
-import StudentManagement from "./pages/superadmin/StudentManagement";
-import ClassManagement from "./pages/superadmin/ClassManagement";
-import ClassImprovement from "./pages/teacher/ClassImprovement";
-import BankSoal from "./pages/teacher/BankSoal";
-import SubjectManagement from "./pages/superadmin/SubjectManagement";
-import QuestionBankManagement from "./pages/superadmin/QuestionBankManagement";
-import ImportData from "./pages/superadmin/ImportData";
-import Changelog from "./pages/superadmin/Changelog"; 
-import Certificate from "./pages/student/Certificate";
-import ActivityReport from "./pages/superadmin/ActivityReport";
-import ExecutiveReport from "./pages/superadmin/ExcecutiveReport";
-import StudentLog from "./pages/superadmin/StudentLog";
-import SessionReport from "./pages/superadmin/SessionReport";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import GalleryTeacher from "./pages/teacher/GalleryTeacher";
-import SoalList from "./pages/teacher/SoalList";
-import SoalAdd from "./pages/teacher/SoalAdd";
-import SoalImport from "./pages/teacher/SoalImport";
-import ClassSummary from "./pages/superadmin/ClassSummary";
-import TeacherSummary from "./pages/superadmin/TeacherSummary";
-import MediaBank from "./pages/teacher/MediaBank";
-import SocialCallback from "./pages/auth/SocialCallback";
-import PrintSession from "./pages/teacher/PrintSession";
-import MorningSessionStudent from "./pages/superadmin/MorningSessionStudent";
 import Welcome from "./pages/Welcome";
 
+// ==========================================
+// 2. IMPORT ASINKRON (Lazy Load)
+// ==========================================
+// -- Auth --
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const SocialCallback = lazy(() => import("./pages/auth/SocialCallback"));
+
+// -- Student --
+const StudentDashboard = lazy(() => import("./pages/student/Dashboard"));
+const ChallengeForm = lazy(() => import("./pages/student/ChallengeForm"));
+const WeeklyReflection = lazy(() => import("./pages/student/WeeklyReflection"));
+const PeerFeed = lazy(() => import("./pages/student/PeerFeed"));
+const GalleryStudent = lazy(() => import("./pages/student/GalleryStudent"));
+const OtherMenu = lazy(() => import("./pages/student/OtherMenu"));
+const PresentationPage = lazy(() => import("./pages/student/PresentationPage"));
+const EditProfile = lazy(() => import("./pages/student/EditProfile"));
+// const Certificate = lazy(() => import("./pages/student/Certificate")); // (Dicoment di asli)
+
+// -- Teacher --
+const TeacherDashboard = lazy(() => import("./pages/teacher/Dashboard"));
+const SesiMandiri = lazy(() => import("./pages/teacher/SesiMandiri"));
+const ClassImprovement = lazy(() => import("./pages/teacher/ClassImprovement"));
+const AnalysisTab = lazy(() => import("./pages/teacher/AnalysisTab"));
+const TeacherReflection = lazy(() => import("./pages/teacher/TeacherReflection"));
+const GalleryTeacher = lazy(() => import("./pages/teacher/GalleryTeacher"));
+const PrintSession = lazy(() => import("./pages/teacher/PrintSession"));
+const BankSoal = lazy(() => import("./pages/teacher/BankSoal"));
+const SoalList = lazy(() => import("./pages/teacher/SoalList"));
+const SoalAdd = lazy(() => import("./pages/teacher/SoalAdd"));
+const SoalImport = lazy(() => import("./pages/teacher/SoalImport"));
+const MediaBank = lazy(() => import("./pages/teacher/MediaBank"));
+const OtherMenuTc = lazy(() => import("./pages/teacher/OtherMenuTc"));
+
+// -- Superadmin --
+const SuperadminDashboard = lazy(() => import("./pages/superadmin/Dashboard"));
+const TeacherManagement = lazy(() => import("./pages/superadmin/TeacherManagement"));
+const StudentManagement = lazy(() => import("./pages/superadmin/StudentManagement"));
+const ClassManagement = lazy(() => import("./pages/superadmin/ClassManagement"));
+const SubjectManagement = lazy(() => import("./pages/superadmin/SubjectManagement"));
+const QuestionBankManagement = lazy(() => import("./pages/superadmin/QuestionBankManagement"));
+const ImportData = lazy(() => import("./pages/superadmin/ImportData"));
+const OtherMenuSa = lazy(() => import("./pages/superadmin/OtherMenuSa"));
+const ActivityReport = lazy(() => import("./pages/superadmin/ActivityReport"));
+const Changelog = lazy(() => import("./pages/superadmin/Changelog"));
+const ExecutiveReport = lazy(() => import("./pages/superadmin/ExcecutiveReport"));
+const StudentLog = lazy(() => import("./pages/superadmin/StudentLog"));
+const SessionReport = lazy(() => import("./pages/superadmin/SessionReport"));
+const ClassSummary = lazy(() => import("./pages/superadmin/ClassSummary"));
+const TeacherSummary = lazy(() => import("./pages/superadmin/TeacherSummary"));
+const MorningSessionStudent = lazy(() => import("./pages/superadmin/MorningSessionStudent"));
+
+// -- Games --
+const MathGame = lazy(() => import("./components/games/MathGame"));
+
+
+// ==========================================
+// KOMPONEN LOADING
+// ==========================================
+// Dimunculkan oleh Suspense saat file Javascript halaman tujuan sedang di-download (percepatan mikro)
+const PageLoader = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+    <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"></div>
+  </div>
+);
 
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <BrowserRouter>
-        <Routes>
-          {/* Rute Publik */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword/>}/>
-          <Route path="/password-reset/:token" element={<ResetPassword/>}/>
-          <Route path="/edit-profile" element={<EditProfile/>}/>
-          <Route path="/social-callback" element={<SocialCallback />} />
-          <Route path="/" element={<Welcome />} />
+        {/* Suspense membungkus rute yang di-lazy load */}
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Rute Publik & Utama */}
+            <Route path="/" element={<Welcome />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/password-reset/:token" element={<ResetPassword />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/social-callback" element={<SocialCallback />} />
 
-          {/* GRUP 1: HALAMAN SISWA (Sekarang di bawah /student) */}
-          <Route 
-            path="/student" 
-            element={
-              // Opsional: Jika AuthGuard kamu mendukung pengecekan role, tambahkan roleRequired="student"
-              <AuthGuard> 
-                <StudentLayout />
-              </AuthGuard>
-            }
-          >
-            {/* Index berarti rute /student akan langsung merender StudentDashboard */}
-            <Route index element={<StudentDashboard />} />
-            <Route path="tantangan" element={<ChallengeForm />} />
-            <Route path="refleksi" element={
-              <div className="space-y-8">
-                <WeeklyReflection />
-                <hr />
-                <PeerFeed />
-              </div>
-            } />
-            <Route path="galeri" element={<GalleryStudent />} />
-            <Route path="other" element={<OtherMenu />} />
-            <Route path="presentation" element={<PresentationPage />} />
-          </Route>
+            {/* GRUP 1: HALAMAN SISWA */}
+            <Route 
+              path="/student" 
+              element={
+                <AuthGuard> 
+                  <StudentLayout />
+                </AuthGuard>
+              }
+            >
+              <Route index element={<StudentDashboard />} />
+              <Route path="tantangan" element={<ChallengeForm />} />
+              <Route path="refleksi" element={
+                <div className="space-y-8">
+                  <WeeklyReflection />
+                  <hr />
+                  <PeerFeed />
+                </div>
+              } />
+              <Route path="galeri" element={<GalleryStudent />} />
+              <Route path="other" element={<OtherMenu />} />
+              <Route path="presentation" element={<PresentationPage />} />
+            </Route>
 
-          {/* GRUP 2: HALAMAN GURU (Dibungkus AuthGuard dengan Role Required) */}
-          <Route 
-            path="/teacher" 
-            element={
-              <AuthGuard roleRequired="teacher">
-                <TeacherLayout />
-              </AuthGuard>
-            }
-          >
-            <Route index element={<TeacherDashboard />} />
-            <Route path="mandiri-session" element={<div className="p-4 font-bold"><SesiMandiri /></div>} />
-            {/* GRUP 2.1: Peningkatan Kelas */}
-            <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
-            <Route path="/teacher/class-improvement/analysis" element={<AnalysisTab />} />
-            <Route path="/teacher/class-improvement/reflection" element={<TeacherReflection />} />
-            <Route path="/teacher/class-improvement/gallery" element={<GalleryTeacher />} />
-            <Route path="/teacher/class-improvement/print-session-activity" element={<PrintSession />} />
-            {/* GRUP 2.2: Bank Soal */}
-            <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
-            <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
-            <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
-            <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
-            <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
-          {/* GRUP 2.3: Pengaturan */}
-            <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
+            {/* GRUP 2: HALAMAN GURU */}
+            <Route 
+              path="/teacher" 
+              element={
+                <AuthGuard roleRequired="teacher">
+                  <TeacherLayout />
+                </AuthGuard>
+              }
+            >
+              <Route index element={<TeacherDashboard />} />
+              <Route path="mandiri-session" element={<div className="p-4 font-bold"><SesiMandiri /></div>} />
+              <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
+              
+              {/* GRUP 2.1: Peningkatan Kelas */}
+              {/* PERBAIKAN: Hapus awalan '/' pada child routes agar mengikuti induk '/teacher' */}
+              <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
+              <Route path="class-improvement/analysis" element={<AnalysisTab />} />
+              <Route path="class-improvement/reflection" element={<TeacherReflection />} />
+              <Route path="class-improvement/gallery" element={<GalleryTeacher />} />
+              <Route path="class-improvement/print-session-activity" element={<PrintSession />} />
+              
+              {/* GRUP 2.2: Bank Soal */}
+              <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
+              <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
+              <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
+              <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
+              <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
+            </Route>
 
-            
-          </Route>
+            {/* GRUP 3: GAME */}
+            <Route 
+              path="/game/math" 
+              element={
+                <AuthGuard>
+                  <MathGame />
+                </AuthGuard>
+              } 
+            />
 
-          {/* GRUP 3: GAME (Bisa tambahkan AuthGuard juga agar siswa harus login dulu) */}
-          <Route 
-            path="/game/math" 
-            element={
-              <AuthGuard>
-                <MathGame />
-              </AuthGuard>
-            } 
-          />
-          {/* SUPERADMIN */}
-          <Route 
-            path="/superadmin" 
-            element={
-              <AuthGuard roleRequired="superadmin">
-                <SuperadminLayout />
-              </AuthGuard>
-            }
-          >
-            <Route index element={<SuperadminDashboard />} />
-            <Route path="teacher-mgmt" element={<div className="p-4 font-bold"><TeacherManagement /></div>} />
-            <Route path="student-mgmt" element={<div className="p-4 font-bold"><StudentManagement /></div>} />
-            <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
-            <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
-            <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
-            <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
-            <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
-            <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
-            <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
-            
-            {/* GRUP 3.1: Laporan */}
-            <Route path="activity-report/executive" element={<ExecutiveReport />} />
-            <Route path="activity-report/students" element={<StudentLog />} />
-            <Route path="activity-report/sessions" element={<SessionReport />} />
-            <Route path="activity-report/classes" element={<ClassSummary />} />
-            <Route path="activity-report/teachers" element={<TeacherSummary />} />
-            <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
+            {/* GRUP 4: SUPERADMIN */}
+            <Route 
+              path="/superadmin" 
+              element={
+                <AuthGuard roleRequired="superadmin">
+                  <SuperadminLayout />
+                </AuthGuard>
+              }
+            >
+              <Route index element={<SuperadminDashboard />} />
+              <Route path="teacher-mgmt" element={<div className="p-4 font-bold"><TeacherManagement /></div>} />
+              <Route path="student-mgmt" element={<div className="p-4 font-bold"><StudentManagement /></div>} />
+              <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
+              <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
+              <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
+              <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
+              <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
+              <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
+              <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
+              
+              {/* GRUP 4.1: Laporan */}
+              <Route path="activity-report/executive" element={<ExecutiveReport />} />
+              <Route path="activity-report/students" element={<StudentLog />} />
+              <Route path="activity-report/sessions" element={<SessionReport />} />
+              <Route path="activity-report/classes" element={<ClassSummary />} />
+              <Route path="activity-report/teachers" element={<TeacherSummary />} />
+              <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
+            </Route>
 
-
-            {/* <Route path="scores" element={<div className="p-4 font-bold">Rekap Nilai Siswa</div>} />
-            <Route path="settings" element={<div className="p-4 font-bold">Pengaturan Superadmin</div>} /> */}
-          </Route>
-
-        </Routes>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
       <Toaster position="top-center" richColors closeButton />
-    </>
+      <SpeedInsights />
+    </HelmetProvider>
   );
 }
 
