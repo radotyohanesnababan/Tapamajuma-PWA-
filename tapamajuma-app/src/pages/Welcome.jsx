@@ -158,7 +158,7 @@ export default function Welcome() {
                             <div className="absolute inset-0 bg-sky-400 blur-[100px] opacity-20 rounded-full animate-pulse"></div>
                             <img
                                 src={`${import.meta.env.VITE_API_URL}/images/iconappp.png`} 
-                                alt="Logo TAPAMAJUMA"
+                                alt="Logo TAPAMAJUMA Aplikasi Monitoring Siswa SMPN 1 Tarutung"
                                 onError={handleImageError}
                                 className="w-full max-w-sm rounded-[3rem] shadow-2xl border-8 border-white bg-white/50 backdrop-blur-sm transition-transform duration-700 hover:scale-105 relative z-10"
                             />

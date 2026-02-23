@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /superadmin/
+
+Sitemap: https://tapamajuma-pwa.vercel.app/sitemap.xml
