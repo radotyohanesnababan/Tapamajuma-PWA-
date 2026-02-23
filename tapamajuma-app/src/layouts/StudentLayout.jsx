@@ -6,11 +6,11 @@ export default function StudentLayout() {
   const location = useLocation(); // Hook untuk tahu kita sedang di halaman mana
 
   const navItems = [
-    { to: "/", icon: <Home size={20} />, label: "Beranda" },
-    { to: "/tantangan", icon: <BookOpen size={20} />, label: "Aksi" },
-    { to: "/refleksi", icon: <MessageCircle size={20} />, label: "Refleksi" },
-    { to: "/galeri", icon: <LayoutGrid size={20} />, label: "Galeri" },
-    { to: "/other", icon: <CircleUser size={20} />, label: "Lainnya" },
+    { to: "/student", icon: <Home size={20} />, label: "Beranda" },
+    { to: "/student/tantangan", icon: <BookOpen size={20} />, label: "Aksi" },
+    { to: "/student/refleksi", icon: <MessageCircle size={20} />, label: "Refleksi" },
+    { to: "/student/galeri", icon: <LayoutGrid size={20} />, label: "Galeri" },
+    { to: "/student/other", icon: <CircleUser size={20} />, label: "Lainnya" },
   ];
 
   return (
@@ -25,7 +25,7 @@ export default function StudentLayout() {
           // Logic cek aktif: 
           // 1. Jika path tepat sama (misal "/")
           // 2. Atau jika bukan home, cek apakah pathname diawali dengan item.to (agar submenu tetap nyala)
-          const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+          const isActive = location.pathname === item.to || (item.to !== "/student" && location.pathname.startsWith(item.to));
 
           return (
             <Link

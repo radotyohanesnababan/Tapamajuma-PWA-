@@ -48,6 +48,7 @@ import MediaBank from "./pages/teacher/MediaBank";
 import SocialCallback from "./pages/auth/SocialCallback";
 import PrintSession from "./pages/teacher/PrintSession";
 import MorningSessionStudent from "./pages/superadmin/MorningSessionStudent";
+import Welcome from "./pages/Welcome";
 
 
 
@@ -63,28 +64,31 @@ function App() {
           <Route path="/password-reset/:token" element={<ResetPassword/>}/>
           <Route path="/edit-profile" element={<EditProfile/>}/>
           <Route path="/social-callback" element={<SocialCallback />} />
+          <Route path="/" element={<Welcome />} />
 
-          {/* GRUP 1: HALAMAN SISWA (Dibungkus AuthGuard & StudentLayout) */}
+          {/* GRUP 1: HALAMAN SISWA (Sekarang di bawah /student) */}
           <Route 
+            path="/student" 
             element={
-              <AuthGuard>
+              // Opsional: Jika AuthGuard kamu mendukung pengecekan role, tambahkan roleRequired="student"
+              <AuthGuard> 
                 <StudentLayout />
               </AuthGuard>
             }
           >
-            <Route path="/" element={<StudentDashboard />} />
-            <Route path="/tantangan" element={<ChallengeForm />} />
-            <Route path="/refleksi" element={
-            <div className="space-y-8">
-              <WeeklyReflection /> {/* Form Input 3 Box */}
-              <hr />
-              <PeerFeed /> {/* Kabar Baik Teman Sekelas */}
-            </div>
-          } />
-            <Route path="/galeri" element={<GalleryStudent />} />
-            <Route path="/other" element={<OtherMenu />} />
-            <Route path="/presentation" element={<PresentationPage />} />
-            {/* <Route path="/certificates" element={<Certificate />} /> */}
+            {/* Index berarti rute /student akan langsung merender StudentDashboard */}
+            <Route index element={<StudentDashboard />} />
+            <Route path="tantangan" element={<ChallengeForm />} />
+            <Route path="refleksi" element={
+              <div className="space-y-8">
+                <WeeklyReflection />
+                <hr />
+                <PeerFeed />
+              </div>
+            } />
+            <Route path="galeri" element={<GalleryStudent />} />
+            <Route path="other" element={<OtherMenu />} />
+            <Route path="presentation" element={<PresentationPage />} />
           </Route>
 
           {/* GRUP 2: HALAMAN GURU (Dibungkus AuthGuard dengan Role Required) */}

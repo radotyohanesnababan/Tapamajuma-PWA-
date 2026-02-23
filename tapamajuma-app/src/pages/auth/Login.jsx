@@ -57,7 +57,7 @@ export default function Login() {
       } else if (user?.role === "superadmin") {
         navigate("/superadmin");
       } else {
-        navigate("/"); // Siswa
+        navigate("/student"); // Siswa
       }
 
     } catch (err) {

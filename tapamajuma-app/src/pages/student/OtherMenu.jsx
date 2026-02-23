@@ -66,7 +66,7 @@ export default function OtherMenu() {
       title: "Siap Presentasi",
       subtitle: "Laporan bulanan kamu (Aksi C.2)",
       icon: <Presentation className="text-indigo-500" size={22} />,
-      path: "/presentation",
+      path: "/student/presentation",
       color: "bg-indigo-50",
       badge: "C.2"
     },
@@ -74,7 +74,7 @@ export default function OtherMenu() {
         title: "Koleksi Sertifikat",
         subtitle: "Apresiasi atas kerja kerasmu",
         icon: <Award className="text-amber-500" size={22} />,
-        path: "/certificates",
+        path: "/student/certificates",
         color: "bg-amber-50",
         isComingSoon: true
     }

@@ -25,7 +25,7 @@ if (!user.role) {
 
       // 2. Cek Role Spesifik (Guru/Superadmin)
       if (roleRequired && userRole !== roleRequired) {
-        let dashboardTujuan = "/"; 
+        let dashboardTujuan = "/student"; 
         if (userRole === "superadmin") dashboardTujuan = "/superadmin";
         else if (userRole === "teacher") dashboardTujuan = "/teacher";
 
