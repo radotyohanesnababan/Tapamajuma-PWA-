@@ -13,6 +13,7 @@ import StudentLayout from "./layouts/StudentLayout";
 import TeacherLayout from "./layouts/TeacherLayout";
 import SuperadminLayout from "./layouts/SuperadminLayout";
 import Welcome from "./pages/Welcome";
+import GuestGuard from './components/GuestGuard';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
