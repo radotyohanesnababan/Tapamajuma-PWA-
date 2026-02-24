@@ -50,6 +50,7 @@ useEffect(() => {
 
   const redirectByRole = (role) => {
     if (role === 'teacher') window.location.href = '/teacher';
+    if (role === 'student') window.location.href = '/student';
     else if (role === 'superadmin') window.location.href = '/superadmin';
     else window.location.href = '/'; // Dashboard Siswa
   };
