@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleController extends Controller
 {
+
     // 1. Arahkan user ke Google
     public function redirectToGoogle()
     {
@@ -27,6 +28,7 @@ class GoogleController extends Controller
 {
     try {
         $googleUser = Socialite::driver('google')->stateless()->user();
+        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.my.id');
         
         // 1. Cari user berdasarkan email
         $user = User::where('email', $googleUser->getEmail())->first();
@@ -53,7 +55,7 @@ class GoogleController extends Controller
         $needsOnboarding = is_null($user->role) ? 'true' : 'false';
         \Log::info('Needs Onboarding: ' . $needsOnboarding);
         
-        return redirect('https://tapamajuma-pwa.vercel.app/social-callback?' . http_build_query([
+        return redirect($baseUrl . '/social-callback?' . http_build_query([
             'auth_token' => $auth_token,
             'needs_onboarding' => $needsOnboarding,
             'role' => $user->role ?? ''
@@ -61,7 +63,7 @@ class GoogleController extends Controller
         
     } catch (\Exception $e) {
         \Log::error('Google Auth Error: ' . $e->getMessage());
-        return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
+        return redirect($baseUrl . '/login?error=google_failed');
     }
 
     // 3. Lengkapi Profil (Pilih Role & Kelas)
