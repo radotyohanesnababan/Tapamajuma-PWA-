@@ -31,7 +31,7 @@ export const getStorageUrl = (path) => {
       }
       
       return path; 
-    } catch (e) {
+    } catch {
       return path;
     }
   }
