@@ -91,11 +91,13 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Rute Publik & Utama */}
-            <Route path="/" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/password-reset/:token" element={<ResetPassword />} />
+            <Route element={<GuestGuard />}>
+              <Route path="/" element={<Welcome />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/password-reset/:token" element={<ResetPassword />} />
+            </Route>
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/social-callback" element={<SocialCallback />} />
 
