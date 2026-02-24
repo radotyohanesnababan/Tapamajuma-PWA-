@@ -99,7 +99,11 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/password-reset/:token" element={<ResetPassword />} />
             </Route>
-            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/edit-profile" element={
+              <AuthGuard>
+                <EditProfile />
+              </AuthGuard>
+            } />
             <Route path="/social-callback" element={<SocialCallback />} />
 
             {/* GRUP 1: HALAMAN SISWA */}

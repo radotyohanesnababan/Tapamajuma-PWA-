@@ -1,6 +1,6 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
-export default function GuestGuard({ children }) {
+export default function GuestGuard() {
   const token = localStorage.getItem('auth_token');
   
   // Gunakan try-catch agar jika localStorage rusak/kosong, web tidak putih total
@@ -20,5 +20,5 @@ export default function GuestGuard({ children }) {
     return <Navigate to="/student" replace />;
   }
 
-  return children;
+  return <Outlet />;
 }
