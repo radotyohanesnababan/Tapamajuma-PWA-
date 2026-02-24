@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner"; // <--- Jangan lupa import ini!
 import api from "@/lib/axios";
 
 export default function AuthGuard({ children, roleRequired }) {
@@ -7,60 +8,77 @@ export default function AuthGuard({ children, roleRequired }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    let isMounted = true; // Mencegah update state jika komponen sudah unmount
 
-useEffect(() => {
-  const checkAuth = async () => {
-    try {
-      const res = await api.get("/api/user");
-      const user = res.data;
-      const userRole = user.role;
+    const checkAuth = async () => {
+      try {
+        const res = await api.get("/api/user");
+        
+        // Jaga-jaga kalau Laravel bungkus pake { data: ... }
+        // Kadang response itu res.data, kadang res.data.data tergantung API Resource
+        const user = res.data.data ? res.data.data : res.data; 
+        const userRole = user.role;
 
-      // 1. CEK ONBOARDING: Jika sudah login tapi belum pilih role
-if (!user.role) {
-  // Jika login sukses tapi role belum ada, JANGAN ke login!
-  // Lempar balik ke halaman onboarding saja.
-  navigate("/social-callback?needs_onboarding=true", { replace: true });
-  return;
-}
+        // Update localStorage biar GuestGuard sinkron sama data terbaru
+        localStorage.setItem("user_data", JSON.stringify(user));
 
-      // 2. Cek Role Spesifik (Guru/Superadmin)
-      if (roleRequired && userRole !== roleRequired) {
-        let dashboardTujuan = "/student"; 
-        if (userRole === "superadmin") dashboardTujuan = "/superadmin";
-        else if (userRole === "teacher") dashboardTujuan = "/teacher";
+        // 1. CEK ONBOARDING
+        if (!userRole) {
+          console.warn("Role kosong, lempar ke onboarding");
+          navigate("/social-callback?needs_onboarding=true", { replace: true });
+          return;
+        }
 
-        navigate(dashboardTujuan, { replace: true });
-        return;
-      }
+        // 2. CEK ROLE SPESIFIK
+        if (roleRequired && userRole !== roleRequired) {
+          let dashboardTujuan = "/student";
+          if (userRole === "superadmin") dashboardTujuan = "/superadmin";
+          else if (userRole === "teacher") dashboardTujuan = "/teacher";
+          
+          navigate(dashboardTujuan, { replace: true });
+          return;
+        }
 
-      setAuthorized(true);
+        // Jika semua aman
+        if (isMounted) setAuthorized(true);
+
       } catch (err) {
-    console.error("AuthGuard Error:", err);
-    // Hanya lempar ke login jika memang ditolak oleh server (401 atau 403)
-    if (err.response?.status === 401 || err.response?.status === 403) {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user_data");
-      localStorage.removeItem("onboarding_data"); 
-      localStorage.removeItem("token")
+        console.error("AuthGuard Error:", err);
+        
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          // Bersihkan semua sisa token
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_data");
+          localStorage.removeItem("onboarding_data");
+          
+          navigate("/login", { replace: true });
+        } else {
+          // Error jaringan/server (bukan error auth)
+          toast.error("Gagal terhubung ke server.");
+        }
+      } finally {
+        // PENTING: Matikan loading apapun yang terjadi!
+        if (isMounted) setLoading(false);
+      }
+    };
 
-      navigate("/login", { replace: true });
-    } else {
-      // Jika error koneksi/server down, jangan langsung logout
-      toast.error("Masalah koneksi ke server.");
-    }
-  }
-  };
+    checkAuth();
 
-  checkAuth();
-}, [navigate, roleRequired]);
+    return () => { isMounted = false; };
+  }, [navigate, roleRequired]);
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 text-xs font-medium animate-pulse">
-        Memverifikasi Sesi...
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-50 gap-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
+        <span className="text-xs font-medium text-slate-500 animate-pulse">
+          Memverifikasi Sesi...
+        </span>
       </div>
     );
   }
 
+  // Jika authorized true, render halaman. Jika tidak, render null (tunggu redirect)
   return authorized ? children : null;
 }
