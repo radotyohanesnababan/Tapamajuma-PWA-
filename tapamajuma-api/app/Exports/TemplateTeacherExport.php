@@ -2,36 +2,20 @@
 
 namespace App\Exports;
 
-use App\Models\ClassName; // Pastikan Model Kelas kamu namanya ClassName
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
-// --- CLASS UTAMA ---
-class TemplateTeacherExport implements WithMultipleSheets
+class TemplateTeacherExport implements WithHeadings, WithTitle, WithEvents, ShouldAutoSize
 {
     use Exportable;
 
-    public function sheets(): array
-    {
-        return [
-            new TeacherInputSheet(),    // Sheet 1: Form Input
-            new ClassReferenceSheet(),  // Sheet 2: Data Kelas (Hidden)
-        ];
-    }
-}
-
-// --- SHEET 1: FORM INPUT GURU ---
-class TeacherInputSheet implements WithHeadings, WithTitle, WithEvents
-{
     public function title(): string
     {
-        return 'Input Guru';
+        return 'Template Import Guru';
     }
 
     public function headings(): array
@@ -39,7 +23,7 @@ class TeacherInputSheet implements WithHeadings, WithTitle, WithEvents
         return [
             'Nama Lengkap',
             'Email',
-            'Kelas (Pilih)' // Dropdown Kelas (misal untuk Wali Kelas)
+            'NIS',
         ];
     }
 
@@ -47,47 +31,34 @@ class TeacherInputSheet implements WithHeadings, WithTitle, WithEvents
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // 1. Atur Lebar Kolom
-                $event->sheet->getColumnDimension('A')->setWidth(30);
-                $event->sheet->getColumnDimension('B')->setWidth(30);
-                $event->sheet->getColumnDimension('C')->setWidth(25);
-
-                // 2. LOGIC DROPDOWN (Validasi List)
-                $validation = $event->sheet->getCell('C2')->getDataValidation();
-                $validation->setType(DataValidation::TYPE_LIST);
-                $validation->setErrorStyle(DataValidation::STYLE_STOP);
-                $validation->setAllowBlank(true); // Boleh kosong jika bukan wali kelas
-                $validation->setShowInputMessage(true);
-                $validation->setShowErrorMessage(true);
-                $validation->setShowDropDown(true);
-                $validation->setErrorTitle('Kesalahan Input');
-                $validation->setError('Pilih kelas dari daftar yang tersedia.');
+                // 1. Atur Style Header (Baris 1)
+                $headerRange = 'A1:C1';
                 
-                // 3. Rumus merujuk ke Sheet 'DataKelas'
-                // Pastikan nama sheet di rumus sama persis dengan title() di ClassReferenceSheet
-                $validation->setFormula1("'DataKelas'!\$A\$1:\$A\$1000");
+                // Warna background Indigo dan teks putih
+                $event->sheet->getStyle($headerRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['argb' => 'FFFFFFFF'],
+                    ],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FF4F46E5'],
+                    ],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    ],
+                ]);
 
-                // 4. Terapkan validasi ke baris 2 sampai 100
-                for ($i = 2; $i <= 100; $i++) {
-                    $event->sheet->getCell("C$i")->setDataValidation(clone $validation);
-                }
+                // 2. Tambahkan border tipis untuk area input (opsional, biar rapi)
+                $event->sheet->getStyle('A1:C100')->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => ['argb' => 'FFCCCCCC'],
+                        ],
+                    ],
+                ]);
             },
         ];
-    }
-}
-
-// --- SHEET 2: REFERENSI DATA (HIDDEN) ---
-class ClassReferenceSheet implements FromCollection, WithTitle
-{
-    public function title(): string
-    {
-        return 'DataKelas'; // Nama ini PENTING, harus sama dengan formula di atas
-    }
-
-    public function collection()
-    {
-        // Format dropdown: "ID - Nama Kelas" (Contoh: "1 - X RPL 1")
-        // Pastikan tabel kamu memiliki kolom 'name'
-        return ClassName::selectRaw("CONCAT(id, ' - ', name) as label")->get();
     }
 }
