@@ -63,7 +63,7 @@ class GoogleController extends Controller
         
     } catch (\Exception $e) {
         Log::error('Google Auth Error: ' . $e->getMessage());
-        return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
+        return redirect($baseUrl . '/login?error=google_failed');
     }
 
     // 3. Lengkapi Profil (Pilih Role & Kelas)
