@@ -37,16 +37,20 @@ export default function OtherMenu() {
   const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
 
   const handleLogout = async () => {
+    // 1. Kabari Backend (Sopan santun)
     try {
-      await api.post("/logout");
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user_data");
-      window.location.href = "/login";
-    } catch {
-      window.location.href = "/login";
+        await api.post('/logout'); 
+    } catch (error) {
+        console.warn("Backend logout error (abaikan):", error);
+    } finally {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('onboarding_data');
+
+
+        window.location.href = '/login';
     }
-    
-  };
+};
 
    useEffect(() => {
         if (user) {
