@@ -34,13 +34,17 @@ if (!user.role) {
       }
 
       setAuthorized(true);
-    } catch (err) {
-      // Jika error 401 (Unauthorized)
-      console.error("AuthGuard Error:", err);
+      } catch (err) {
+    console.error("AuthGuard Error:", err);
+    // Hanya lempar ke login jika memang ditolak oleh server (401 atau 403)
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      localStorage.removeItem("auth_token");
       navigate("/login", { replace: true });
-    } finally {
-      setLoading(false);
+    } else {
+      // Jika error koneksi/server down, jangan langsung logout
+      toast.error("Masalah koneksi ke server.");
     }
+  }
   };
 
   checkAuth();
