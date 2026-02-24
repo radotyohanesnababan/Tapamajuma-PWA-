@@ -31,19 +31,35 @@ export default function Welcome() {
         };
     }, []);
     const handleInstallClick = async () => {
-        if (!deferredPrompt) return;
-        
-        // Munculkan prompt instalasi bawaan browser
+    console.log('Tombol Install diklik...'); // Debugging
+    
+    if (!deferredPrompt) {
+        console.warn('Event beforeinstallprompt belum ditangkap oleh browser.');
+        return;
+    }
+    
+    try {
+        // Tampilkan prompt
         deferredPrompt.prompt();
         
-        // Tunggu user memilih (Install atau Batal)
+        // Tunggu respon user
         const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        
         if (outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-            setIsInstallable(false); // Sembunyikan tombol setelah diinstal
+            console.log('PWA Berhasil diinstal!');
+            setIsInstallable(false);
+        } else {
+            console.log('User membatalkan instalasi.');
         }
+        
+        // Hapus prompt agar tidak bisa dipakai lagi (reset)
         setDeferredPrompt(null);
-    };
+        
+    } catch (error) {
+        console.error('Gagal memicu instalasi PWA:', error);
+    }
+};
     
     // State untuk memicu animasi masuk (entrance animation)
     const [isMounted, setIsMounted] = useState(false);

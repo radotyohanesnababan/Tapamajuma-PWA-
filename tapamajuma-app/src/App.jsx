@@ -82,6 +82,20 @@ const PageLoader = () => (
   </div>
 );
 
+useEffect(() => {
+    const handler = (e) => {
+        // Mencegah browser langsung nampilin prompt bawaan
+        e.preventDefault();
+        // Simpan event ke state agar bisa dipicu tombol manual
+        setDeferredPrompt(e);
+        setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+}, []);
+
 
 function App() {
   return (
