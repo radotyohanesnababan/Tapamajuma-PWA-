@@ -27,27 +27,32 @@ api.interceptors.request.use(
 
 // 2. INTERCEPTOR RESPONSE: Gabungan Failover & Auto Logout
 api.interceptors.response.use(
-  (response) => response,
+(response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // --- LOGIKA 1: AUTO-SWITCH KE RENDER ---
-    // Jika tidak ada respon (network error) atau server DomCloud lagi tepar (502, 503, 504)
+    // Cek jika server utama mati (Network Error atau status 502-504)
     if (!error.response || [502, 503, 504].includes(error.response.status)) {
       
-      // Jika kita belum pernah mencoba pindah (biar nggak looping)
+      // Pastikan kita belum mencoba pindah (mencegah loop tak terhingga)
       if (!originalRequest._retry) {
         originalRequest._retry = true;
         
-        console.warn("⚠️ DomCloud Down! Mengalihkan request ke Render...");
-        
-        // Ubah baseURL utama agar request selanjutnya langsung ke Render
-        api.defaults.baseURL = BACKUP_URL;
-        
-        // Update URL request yang sedang gagal ini
-        originalRequest.baseURL = BACKUP_URL;
+        console.warn("⚠️ Mengalihkan ke Backup Server...");
 
-        // Coba lagi pengiriman datanya
+        // 1. Ganti baseURL default untuk permintaan-permintaan selanjutnya
+        api.defaults.baseURL = BACKUP_URL;
+
+        // 2. PAKSA ganti URL pada request yang sedang gagal ini
+        // Kita ganti bagian domain lamanya dengan domain baru
+        if (originalRequest.url.includes(PRIMARY_URL)) {
+            originalRequest.url = originalRequest.url.replace(PRIMARY_URL, BACKUP_URL);
+        } else {
+            // Jika url-nya cuma '/login', kita pasang baseURL baru
+            originalRequest.baseURL = BACKUP_URL;
+        }
+
+        // 3. Kirim ulang request yang sudah diperbaiki
         return api(originalRequest);
       }
     }
