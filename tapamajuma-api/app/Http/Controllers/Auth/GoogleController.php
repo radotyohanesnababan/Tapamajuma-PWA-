@@ -51,7 +51,7 @@ class GoogleController extends Controller
 
         // 5. Cek Onboarding (Jika role kosong, berarti user baru/belum pilih role)
         $needsOnboarding = is_null($user->role) ? 'true' : 'false';
-        \Log::info('Needs Onboarding: ' . $needsOnboarding);
+        Log::info('Needs Onboarding: ' . $needsOnboarding);
         
         return redirect('https://tapamajuma-pwa.vercel.app/social-callback?' . http_build_query([
             'auth_token' => $auth_token,
@@ -60,7 +60,7 @@ class GoogleController extends Controller
         ]));
         
     } catch (\Exception $e) {
-        \Log::error('Google Auth Error: ' . $e->getMessage());
+        Log::error('Google Auth Error: ' . $e->getMessage());
         return redirect('https://tapamajuma-pwa.vercel.app/login?error=google_failed');
     }
 
