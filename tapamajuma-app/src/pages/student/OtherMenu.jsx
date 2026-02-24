@@ -39,7 +39,7 @@ export default function OtherMenu() {
   const handleLogout = async () => {
     // 1. Kabari Backend (Sopan santun)
     try {
-        await api.post('/logout'); 
+        await api.post('/api/logout'); 
     } catch (error) {
         console.warn("Backend logout error (abaikan):", error);
     } finally {

@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
         // --- 2. KABARI SERVER (BACKGROUND) ---
         // Biarkan dia jalan di background, kita tidak peduli hasilnya sukses/gagal
         // yang penting di HP user sudah bersih.
-        api.post("/logout").catch((err) => console.error("Logout server error:", err));
+        api.post("/api/logout").catch((err) => console.error("Logout server error:", err));
 
         // --- 3. LEMPAR KE LOGIN ---
         window.location.href = "/login";

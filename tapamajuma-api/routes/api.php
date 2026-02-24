@@ -27,6 +27,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 
+
+/*
+|--------------------------------------------------------------------------
+| Logout API Routes
+|--------------------------------------------------------------------------
+*/
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes (Tanpa Login)
@@ -49,6 +58,7 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

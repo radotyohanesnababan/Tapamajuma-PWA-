@@ -35,7 +35,7 @@ export default function OtherMenu() {
 
   const handleLogout = async () => {
     try {
-      await api.post("/logout");
+      await api.post("/api/logout");
       window.location.href = "/login";
     } catch {
       window.location.href = "/login";
