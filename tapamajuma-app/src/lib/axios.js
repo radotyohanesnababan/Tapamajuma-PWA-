@@ -2,19 +2,17 @@ import axios from "axios";
 import { toast } from "sonner";
 
 // =================================================================
-// 1. CONFIG URL (PAKAI LINK TROLL)
+// 1. CONFIG URL
 // =================================================================
 const ENV_URL = import.meta.env.VITE_API_URL; 
-const PROD_URL = "https://server-palsu-ngawur-troll.com"; // <--- LINK TROLL
-const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; 
+const PROD_URL = "https://tapamajuma-api.my.id"; // Balik ke DomCloud
+const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; // Render
 
 const savedBaseUrl = sessionStorage.getItem("active_base_url");
-// Kita matikan isDevelopment agar tetap bisa pindah saat ngetes di laptop
-// const isDevelopment = import.meta.env.DEV; 
+const isDevelopment = import.meta.env.DEV;
 
-let currentBaseUrl = savedBaseUrl || PROD_URL; 
-
-console.log("🛠️ Testing Mode: Menembak ke", currentBaseUrl);
+// Logic awal: prioritaskan session storage (hasil failover sebelumnya)
+let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
 
 const api = axios.create({
   baseURL: currentBaseUrl,
@@ -22,7 +20,7 @@ const api = axios.create({
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
-  timeout: 8000, // Kita persingkat timeout biar gak kelamaan nunggu link troll-nya mati
+  timeout: 15000, 
 });
 
 // =================================================================
@@ -30,7 +28,7 @@ const api = axios.create({
 // =================================================================
 api.interceptors.request.use(
   (config) => {
-    config.baseURL = currentBaseUrl;
+    config.baseURL = currentBaseUrl; // Selalu pakai yang paling update
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -49,40 +47,39 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response ? error.response.status : null;
 
-    // --- LOGIC FAILOVER UNIVERSAL ---
-    // 1. Kita cek apakah saat ini kita masih pakai URL bermasalah (Troll/DomCloud)
+    // SYARAT FAILOVER:
+    // 1. Kita sedang TIDAK menggunakan Render
+    // 2. Terjadi Network Error (mati total) atau Server Error (5xx)
     const isUsingBackup = currentBaseUrl === BACKUP_URL;
-    
-    // 2. Syarat pindah: Error Koneksi (Network Error) ATAU Server Error (5xx)
-    const isErrorServer = !error.response || (status >= 500 && status <= 599);
+    const isServerError = !error.response || (status >= 500 && status <= 599);
 
-    console.log("🔍 Mengecek Kondisi...");
-    console.log("- Status:", status || "Network Error");
-    console.log("- Sudah Pakai Backup?:", isUsingBackup);
-    console.log("- Harus Pindah?:", !isUsingBackup && isErrorServer);
-
-    if (!isUsingBackup && isErrorServer && !originalRequest._retry) {
-      
-      console.warn("🚀 LOGIC JALAN! Link Troll Gagal. Mengalihkan ke Render...");
+    if (!isUsingBackup && isServerError && !originalRequest._retry) {
+      console.warn("🚨 DOMCLOUD GANGGUAN. SWITCHING TO RENDER...");
 
       originalRequest._retry = true;
-      
-      // GANTI KE RENDER
       currentBaseUrl = BACKUP_URL;
       api.defaults.baseURL = BACKUP_URL;
       sessionStorage.setItem("active_base_url", BACKUP_URL);
 
-      toast.error("Server Utama (Troll) Mati. Pindah ke Render! 🚀");
+      toast.error("Server Utama gangguan. Dialihkan ke cadangan...", {
+        duration: 5000,
+      });
 
-      // Update request yang sedang gagal agar nembak ke Render
+      // Update URL request yang sedang gagal ini
       originalRequest.baseURL = BACKUP_URL;
-      
       if (originalRequest.url.startsWith("http")) {
         const urlObj = new URL(originalRequest.url);
         originalRequest.url = urlObj.pathname + urlObj.search;
       }
 
       return api(originalRequest);
+    }
+
+    // Auto Logout 401
+    if (status === 401 && window.location.pathname !== '/login') {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_data");
+        window.location.href = "/login";
     }
 
     return Promise.reject(error);
