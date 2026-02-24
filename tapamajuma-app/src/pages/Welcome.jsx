@@ -241,7 +241,7 @@ export default function Welcome() {
                                 {slides.map((src, index) => (
                                     <SwiperSlide key={index}>
                                         <img
-                                            src={src}
+                                            src={getStorageUrl(src)}
                                             alt={`Aktivitas ${index + 1}`}
                                             onError={handleImageError}
                                             className="w-full h-full object-cover transition-transform [transition-duration:10s] ease-linear hover:scale-110"
