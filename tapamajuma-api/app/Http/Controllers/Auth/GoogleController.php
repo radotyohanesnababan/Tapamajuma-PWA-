@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleController extends Controller
 {
+
     // 1. Arahkan user ke Google
     public function redirectToGoogle()
     {
@@ -27,6 +28,7 @@ class GoogleController extends Controller
 {
     try {
         $googleUser = Socialite::driver('google')->stateless()->user();
+        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.my.id');
         
         // 1. Cari user berdasarkan email
         $user = User::where('email', $googleUser->getEmail())->first();
@@ -47,13 +49,13 @@ class GoogleController extends Controller
 
         // 4. Buat Token Sanctum
         $auth_token = $user->createToken('auth_token')->plainTextToken;
-        \Log::info('Token Generated: ' . $auth_token);
+        Log::info('Token Generated: ' . $auth_token);
 
         // 5. Cek Onboarding (Jika role kosong, berarti user baru/belum pilih role)
         $needsOnboarding = is_null($user->role) ? 'true' : 'false';
         Log::info('Needs Onboarding: ' . $needsOnboarding);
         
-        return redirect('https://tapamajuma-pwa.vercel.app/social-callback?' . http_build_query([
+        return redirect($baseUrl . '/social-callback?' . http_build_query([
             'auth_token' => $auth_token,
             'needs_onboarding' => $needsOnboarding,
             'role' => $user->role ?? ''
