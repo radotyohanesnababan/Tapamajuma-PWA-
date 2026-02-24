@@ -1,37 +1,43 @@
 import axios from "axios";
+import { toast } from "sonner"; // Kita butuh notifikasi biar tau kalau lagi switch
 
 // =================================================================
-// KONFIGURASI URL DINAMIS
+// 1. CONFIG URL
 // =================================================================
+const ENV_URL = import.meta.env.VITE_API_URL; // Dari .env (Local/Vercel)
+const PROD_URL = "https://tapamajuma-api.my.id"; // DomCloud (Utama)
+const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; // Render (Cadangan)
 
-// 1. Ambil dari .env dulu (Settingan Local/Vercel)
-// Jika tidak ada di .env, baru gunakan URL Production sebagai fallback
-const ENV_URL = import.meta.env.VITE_API_URL;
-const PROD_URL = "https://tapamajuma-api.my.id"; 
-const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
+// Logic Pintar:
+// Cek dulu di SessionStorage, apakah kita sedang dalam "Mode Darurat"?
+const savedBaseUrl = sessionStorage.getItem("active_base_url");
 
-// Logic Penentuan URL Utama:
-// - Di Localhost: Pastikan .env isinya http://127.0.0.1:8000
-// - Di Vercel: Pastikan Environment Variable diset ke https://tapamajuma-api.my.id
-const PRIMARY_URL = ENV_URL || PROD_URL;
+// Tentukan URL Awal:
+// 1. Kalau ada settingan di storage (bekas failover), pakai itu.
+// 2. Kalau lagi dev, pakai localhost.
+// 3. Default pakai PROD_URL.
+const isDevelopment = import.meta.env.DEV;
+let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
 
-console.log("🌐 Axios Base URL:", PRIMARY_URL); // Debugging: Cek URL mana yang dipakai
+console.log("🌐 Initial Base URL:", currentBaseUrl);
 
 const api = axios.create({
-  baseURL: PRIMARY_URL,
+  baseURL: currentBaseUrl,
   headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
-  // Tambahkan timeout agar tidak menunggu selamanya (misal 10 detik)
-  timeout: 10000, 
+  timeout: 15000, // 15 Detik (Render free tier butuh waktu bangun tidur)
 });
 
 // =================================================================
-// 1. INTERCEPTOR REQUEST (Auth Token)
+// 2. INTERCEPTOR REQUEST (Token Injector)
 // =================================================================
 api.interceptors.request.use(
   (config) => {
+    // Pastikan baseURL selalu update sesuai kondisi terakhir
+    config.baseURL = currentBaseUrl;
+    
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -42,51 +48,69 @@ api.interceptors.request.use(
 );
 
 // =================================================================
-// 2. INTERCEPTOR RESPONSE (Failover & Auto Logout)
+// 3. INTERCEPTOR RESPONSE (The Failover Logic)
 // =================================================================
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // --- LOGIKA 1: FAILOVER SERVER (Hanya jika BUKAN Localhost) ---
-    // Kita tidak mau failover saat development, karena akan membingungkan
-    // (Dikira data local, padahal data dari server backup)
-    const isLocalhost = PRIMARY_URL.includes("127.0.0.1") || PRIMARY_URL.includes("localhost");
+    // Deteksi Error:
+    // 1. Network Error (DNS/Connection Refused) -> error.response undefined
+    // 2. Server Error (500, 502, 503, 504) -> Server nyerah
+    // 3. Timeout (ECONNABORTED)
+    const isNetworkError = !error.response || error.code === "ERR_NETWORK";
+    const isServerError = error.response && [500, 502, 503, 504].includes(error.response.status);
+    const isTimeout = error.code === "ECONNABORTED";
 
-    if (!isLocalhost && (!error.response || [502, 503, 504].includes(error.response.status))) {
+    // SYARAT FAILOVER:
+    // - Errornya parah (Mati/Down)
+    // - Bukan di Localhost (Kita gak mau switch ke Render pas lagi coding di laptop)
+    // - Belum pernah retry sebelumnya (Mencegah infinite loop)
+    if ((isNetworkError || isServerError || isTimeout) && !isDevelopment && !originalRequest._retry) {
       
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
+      // Cek: Apakah kita masih pakai URL Utama? Kalau iya, pindah ke Backup.
+      if (currentBaseUrl !== BACKUP_URL) {
+        console.warn("🚨 SERVER UTAMA DOWN! Mengalihkan ke Backup Server...");
         
-        console.warn("⚠️ Server Utama Down. Mengalihkan ke Backup Server:", BACKUP_URL);
+        // 1. Tandai request ini sudah diretry
+        originalRequest._retry = true;
 
-        // Ganti baseURL default axios
+        // 2. Ganti URL Global
+        currentBaseUrl = BACKUP_URL;
         api.defaults.baseURL = BACKUP_URL;
+        
+        // 3. Simpan ke Storage (Biar kalau direfresh tetap pakai Backup)
+        sessionStorage.setItem("active_base_url", BACKUP_URL);
 
-        // Ganti URL request yang sedang gagal
-        if (originalRequest.url.includes(PRIMARY_URL)) {
-            originalRequest.url = originalRequest.url.replace(PRIMARY_URL, BACKUP_URL);
-        } else {
-            // Jika url relatif (misal '/api/user'), pasang baseURL baru
-            originalRequest.baseURL = BACKUP_URL;
+        // 4. Beri Notifikasi ke User (Opsional tapi berguna)
+        toast.error("Server utama gangguan. Mengalihkan ke server cadangan...", {
+            duration: 5000,
+        });
+
+        // 5. Update URL request yang gagal tadi
+        // Ganti domain lama dengan domain baru
+        originalRequest.baseURL = BACKUP_URL;
+        
+        // Hapus URL absolut kalau ada, paksa pakai baseURL baru
+        if (originalRequest.url.startsWith("http")) {
+            const path = new URL(originalRequest.url).pathname;
+            originalRequest.url = path;
         }
 
+        // 6. Coba request ulang ke server baru
         return api(originalRequest);
       }
-    } else if (isLocalhost && !error.response) {
-       console.error("❌ Backend Local Mati! Pastikan 'php artisan serve' jalan.");
     }
 
-    // --- LOGIKA 2: AUTO LOGOUT (401 Unauthorized) ---
+    // --- LOGIKA AUTO LOGOUT (401) ---
     if (error.response && error.response.status === 401) {
-      // Cek agar tidak logout terus menerus jika halaman login mengecek status
-      if (window.location.pathname !== '/login') {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user_data");
-        // Gunakan replace agar history bersih
-        window.location.href = "/login"; 
-      }
+       // Jangan logout kalau errornya dari endpoint cek status login (biar gak loop)
+       if (window.location.pathname !== '/login') {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_data");
+          window.location.href = "/login";
+       }
     }
 
     return Promise.reject(error);
