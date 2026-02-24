@@ -39,6 +39,10 @@ if (!user.role) {
     // Hanya lempar ke login jika memang ditolak oleh server (401 atau 403)
     if (err.response?.status === 401 || err.response?.status === 403) {
       localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("onboarding_data"); 
+      localStorage.removeItem("token")
+
       navigate("/login", { replace: true });
     } else {
       // Jika error koneksi/server down, jangan langsung logout

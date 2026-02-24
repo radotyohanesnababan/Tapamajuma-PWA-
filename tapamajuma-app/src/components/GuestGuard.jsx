@@ -1,21 +1,25 @@
-// GuestGuard.jsx
 import { Navigate } from 'react-router-dom';
 
 export default function GuestGuard({ children }) {
   const token = localStorage.getItem('auth_token');
   
-  // Ambil role dari localStorage (Pastikan saat login role juga disimpan di storage)
-  const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
-  const role = userData.role;
+  // Ambil data user dari storage (pastikan saat login kamu menyimpannya)
+  const user = JSON.parse(localStorage.getItem('user_data') || '{}');
 
   if (token) {
-    // Jika sudah ada token, langsung tendang sesuai role tanpa ampun
-    console.log("User sudah login, GuestGuard menendang balik...");
+    // 1. Jika role belum ada tapi token ada (kasus user baru yang belum onboarding)
+    if (!user.role) {
+      return <Navigate to="/social-callback?needs_onboarding=true" replace />;
+    }
+
+    // 2. Lempar ke dashboard sesuai role masing-masing
+    if (user.role === 'teacher') return <Navigate to="/teacher" replace />;
+    if (user.role === 'superadmin') return <Navigate to="/superadmin" replace />;
     
-    if (role === 'teacher') return <Navigate to="/teacher" replace />;
-    if (role === 'superadmin') return <Navigate to="/superadmin" replace />;
+    // Default untuk student
     return <Navigate to="/student" replace />;
   }
 
+  // Jika tidak ada token, biarkan user akses halaman Login/Welcome
   return children;
 }
