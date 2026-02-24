@@ -24,6 +24,8 @@ useEffect(() => {
   if (token) {
     // 2. Simpan ke localStorage dengan nama 'auth_token' (sesuai api.js/Axios)
     localStorage.setItem('auth_token', token);
+    // Simpan juga minimal role-nya biar GuestGuard tau jalan pulang
+localStorage.setItem('user_data', JSON.stringify({ role: role }));
     
     if (onboarding) {
       setNeedsOnboarding(true);
