@@ -8,76 +8,69 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithValidation;
-// use Maatwebsite\Excel\Concerns\WithMultipleSheets; // (Opsional: Aktifkan jika ingin strict sheet 1 saja)
 
 class TeachersImport implements ToModel, WithHeadingRow, WithValidation, WithMultipleSheets
 {
     public function sheets(): array
     {
-        return [
-            0 => $this, // Artinya: Class ini HANYA menangani Sheet index ke-0 (Sheet Pertama)
-        ];
+        return [0 => $this];
     }
+
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * Jurus Tangkis: Bersihkan data sebelum divalidasi
+     */
+    public function prepareForValidation($data, $index)
+    {
+        // Jika nama dan email kosong, anggap baris sampah
+        if (empty($data['nama_lengkap']) && empty($data['email'])) {
+            return []; 
+        }
+
+        return $data;
+    }
+
     public function model(array $row)
     {
-        // --- 1. DEFENSIVE CODING (PENTING) ---
-        // Cek apakah baris ini memiliki kolom 'nama_lengkap' atau 'email'.
-        // Jika tidak ada (misal baris kosong atau ini adalah Sheet 2), LEWATI.
-        if (!isset($row['nama_lengkap']) || !isset($row['email'])) {
+        // Jika baris tidak punya kolom penting, lewati saja
+        if (!isset($row['nama_lengkap']) || empty($row['nama_lengkap'])) {
             return null;
         }
 
-        // --- 2. PARSING LOGIC UNTUK DROPDOWN MAPEL ---
-        // Format di Excel: "10 - Matematika"
-        // Kita butuh ambil angka "10" saja.
-        
         $subjectId = null;
-        
-        // Cek apakah user memilih mapel (karena kolom ini bisa saja kosong/opsional)
         if (isset($row['mapel_utama_pilih']) && $row['mapel_utama_pilih'] != null) {
             $rawMapel = $row['mapel_utama_pilih'];
             $parts = explode(' - ', $rawMapel);
-            
-            // Ambil angka depan (ID)
             $subjectId = isset($parts[0]) ? $parts[0] : null;
         }
 
-        // --- 3. CREATE USER ---
         return new User([
             'name'       => $row['nama_lengkap'],
             'email'      => $row['email'],
-            'role'       => 'teacher',       // Set role Guru
-            'nip'        => $row['nip_opsional'] ?? null, // Pakai null coalescing jika kosong
-            'subject_id' => $subjectId,      // Masukkan ID Mapel hasil parsing
-            'password'   => Hash::make('guru123'), // Default password
+            'role'       => 'teacher',
+            'nis'        => $row['nis_opsional'] ?? null,
+            'subject_id' => $subjectId,
+            'password'   => Hash::make('guru123'),
         ]);
     }
 
     public function rules(): array
     {
         return [
-            'nama_lengkap' => 'required',
-            'email'        => 'required|email|unique:users,email',
+            // Pakai sometimes agar baris kosong tidak memicu error required
+            'nama_lengkap' => 'sometimes|required',
+            'email'        => 'sometimes|required|email|unique:users,email',
             
-            // Mapel boleh kosong (nullable), tapi jika diisi harus format string
-            // Sesuaikan header Excel kamu: 'mapel_utama_pilih'
-            'mapel_utama_pilih' => 'nullable', 
-            
-            'nip_opsional' => 'nullable|numeric|unique:users,nis',
+            // Perbaikan: pastikan menunjuk ke kolom 'nis' di DB, bukan 'nis'
+            'nis_opsional' => 'nullable|numeric|unique:users,nis', 
         ];
     }
-    
-    // (Opsional) Custom pesan error agar lebih mudah dibaca user
+
     public function customValidationMessages()
     {
         return [
             'email.unique' => 'Email :input sudah terdaftar.',
-            'nip_opsional.unique' => 'NIP :input sudah digunakan guru lain.',
+            'nis_opsional.unique' => 'nis :input sudah digunakan guru lain.',
+            'email.required' => 'Ada email yang belum diisi di baris data.',
         ];
     }
 }

@@ -24,6 +24,8 @@ useEffect(() => {
   if (token) {
     // 2. Simpan ke localStorage dengan nama 'auth_token' (sesuai api.js/Axios)
     localStorage.setItem('auth_token', token);
+    // Simpan juga minimal role-nya biar GuestGuard tau jalan pulang
+localStorage.setItem('user_data', JSON.stringify({ role: role }));
     
     if (onboarding) {
       setNeedsOnboarding(true);
@@ -48,11 +50,20 @@ useEffect(() => {
     }
   };
 
-  const redirectByRole = (role) => {
-    if (role === 'teacher') window.location.href = '/teacher';
-    else if (role === 'superadmin') window.location.href = '/superadmin';
-    else window.location.href = '/'; // Dashboard Siswa
-  };
+const redirectByRole = (role) => {
+  console.log("Redirecting for role:", role); // Untuk pantau di console
+
+  if (role === 'teacher') {
+    window.location.href = '/teacher';
+  } else if (role === 'student') {
+    window.location.href = '/student';
+  } else if (role === 'superadmin') {
+    window.location.href = '/superadmin';
+  } else {
+    // Jika role kosong atau tidak dikenal, balik ke home atau login
+    window.location.href = '/'; 
+  }
+};
 
   const handleCompleteProfile = async (e) => {
     e.preventDefault();

@@ -86,16 +86,6 @@ export default function SoalImport() {
             </div>
 
           <form onSubmit={handleImportSubmit} className="space-y-6 text-left">
-            
-            <div className="space-y-2">
-              <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Pilih Kategori Soal</label>
-              <select className="w-full h-12 px-5 rounded-2xl bg-slate-50 border-none text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-green-400 appearance-none shadow-inner" value={importType} onChange={(e) => setImportType(e.target.value)}>
-                <option value="numeracy">🔢 Kategori: Numerasi</option>
-                <option value="literacy">📚 Kategori: Literasi</option>
-                <option value="tka">🧠 Kategori: TKA (HOTS)</option>
-              </select>
-            </div>
-
             <div className="bg-green-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 border border-green-100/50 border-dashed text-center">
               <p className="text-[9px] sm:text-[10px] font-black text-green-400 uppercase tracking-widest mb-3">Langkah 1: Gunakan Template</p>
               <Button 

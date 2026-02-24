@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -13,6 +13,7 @@ import StudentLayout from "./layouts/StudentLayout";
 import TeacherLayout from "./layouts/TeacherLayout";
 import SuperadminLayout from "./layouts/SuperadminLayout";
 import Welcome from "./pages/Welcome";
+import GuestGuard from './components/GuestGuard';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
@@ -91,12 +92,18 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Rute Publik & Utama */}
-            <Route path="/" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/password-reset/:token" element={<ResetPassword />} />
-            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route element={<GuestGuard />}>
+              <Route path="/" element={<Welcome />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/password-reset/:token" element={<ResetPassword />} />
+            </Route>
+            <Route path="/edit-profile" element={
+              <AuthGuard>
+                <EditProfile />
+              </AuthGuard>
+            } />
             <Route path="/social-callback" element={<SocialCallback />} />
 
             {/* GRUP 1: HALAMAN SISWA */}
