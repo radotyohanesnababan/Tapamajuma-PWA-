@@ -11,6 +11,7 @@ import 'swiper/css/effect-fade'; // Tambahan untuk efek fade (opsional, buat swi
 import { Autoplay, Navigation, Pagination, EffectFade } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Sparkles, Activity, BookOpen, BrainCircuit, Target, Users, CheckCircle2, ImageOff, Download } from 'lucide-react';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function Welcome() {
     const [auth, setAuth] = useState(false);
@@ -73,9 +74,9 @@ export default function Welcome() {
     }, []);
 
     const slides = [
-        '/storage/hero-1.webp', 
-        '/storage/hero-2.webp', 
-        '/storage/hero-3.webp'
+        'images/hero1.png',
+        'images/hero2.png',
+        'images/hero3.png',
     ];
 
     const features = [
@@ -116,8 +117,8 @@ export default function Welcome() {
                             {slides.map((src, index) => (
                                 <SwiperSlide key={index}>
                                     <img
-                                        src={src}
-                                        alt="Background Belajar"
+                                        src={getStorageUrl(src)}
+                                        alt="Rangkuman aktivitas belajar siswa di TAPAMAJUMA"
                                         onError={handleImageError}
                                         className="w-full h-full object-cover"
                                         width='800'
@@ -178,7 +179,7 @@ export default function Welcome() {
                             {/* Efek Glow di Belakang Gambar */}
                             <div className="absolute inset-0 bg-sky-400 blur-[100px] opacity-20 rounded-full animate-pulse"></div>
                             <img
-                                src={`${import.meta.env.VITE_API_URL}/images/iconappp.png`} 
+                                src={getStorageUrl("images/iconappp.png")}
                                 alt="Logo TAPAMAJUMA Aplikasi Monitoring Siswa Untuk SMPN 1 Siborongborong"
                                 onError={handleImageError}
                                 width="500"

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { IconBrandFacebook, IconLink, IconMail } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { getStorageUrl } from '@/lib/utils';
 
 export default function WelcomeLayout({ title, children, auth }) {
     const defaultTitle = 'TAPAMAJUMA - Monitoring Siswa SMP Negeri 1 Siborongborong';
@@ -23,7 +24,7 @@ export default function WelcomeLayout({ title, children, auth }) {
                     <div className="container mx-auto flex h-16 items-center justify-between px-6 lg:px-8">
                         <div className="flex items-center gap-3">
                             <img
-                                src={`${import.meta.env.VITE_API_URL}/images/iconappp.png`}
+                                src={getStorageUrl("images/iconappp.png")}
                                 alt="Logo TAPAMAJUMA"
                                 className="h-10 w-10 rounded-full object-contain border border-slate-100 shadow-sm"
                                 loading="lazy"
@@ -83,7 +84,7 @@ export default function WelcomeLayout({ title, children, auth }) {
                             <div className="md:col-span-2 space-y-4">
                                 <div className="flex items-center gap-3">
                                     <img
-                                        src={`${import.meta.env.VITE_API_URL}/images/iconappp.png`}
+                                        src={getStorageUrl("images/iconappp.png")}
                                         alt="Logo TAPAMAJUMA"
                                         className="h-8 w-8 rounded-full object-contain"
                                         loading="lazy"
