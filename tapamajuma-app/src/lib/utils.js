@@ -9,7 +9,7 @@ export const getStorageUrl = (path) => {
   if (!path) return null;
 
   // 1. Deteksi Lingkungan
-  const isDev = import.meta.env.DEV; // True jika jalan di 'npm run dev'
+  const isDev = import.meta.env.DEV; 
   const CDN_URL = "https://cdn.tapamajuma-api.my.id";
   
   // 2. Tentukan API Domain Aktif (untuk Failover)
@@ -21,7 +21,7 @@ export const getStorageUrl = (path) => {
     try {
       const urlObj = new URL(path);
       
-      // Jika di PRODUCTION tapi ada link 127.0.0.1 (Ghost Link)
+      // Jika di PRODUCTION tapi ada link localhost yang nyasar dari database
       if (!isDev && (urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost')) {
          const cleanPath = urlObj.pathname.includes('/storage/') 
             ? urlObj.pathname.split('/storage/')[1] 
@@ -30,31 +30,25 @@ export const getStorageUrl = (path) => {
          return `${CDN_URL}/${cleanPath}`;
       }
       
-      return path; // Biarkan apa adanya jika sudah benar
+      return path; 
     } catch (e) {
       return path;
     }
   }
 
-  // 4. JIKA PATH STRING PENDEK (Misal: "avatars/foto.jpg")
+  // 4. Pembersihan Path
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   const finalPath = cleanPath.replace(/^storage\//, "");
 
   // ==========================================
   // LOGIC PEMISAH LOKAL vs PRODUKSI
   // ==========================================
-  
   if (isDev) {
-    // DI LOCAL: Pakai URL API Local (biasanya http://127.0.0.1:8000)
-    // Kita tambahkan /storage karena local biasanya pakai filesystem 'public'
+    // DI LOCAL: Tetap pakai storage lokal (untuk simulasi upload)
     return `${domainApi}/storage/${finalPath}`;
   } else {
-    // DI PRODUCTION:
-    // Jika aset sistem (bukan upload user), pakai domain API aktif
-    if (finalPath.startsWith('images/') || finalPath.startsWith('assets/')) {
-        return `${domainApi}/${finalPath}`;
-    }
-    // Jika file upload user, tembak ke CDN R2
+    // DI PRODUCTION: SEMUANYA (termasuk folder images/) ambil dari CDN R2
+    // Kita tidak pakai domainApi lagi di sini supaya nggak nyasar ke DomCloud/Render
     return `${CDN_URL}/${finalPath}`;
   }
 };
