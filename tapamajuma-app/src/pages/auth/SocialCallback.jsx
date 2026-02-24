@@ -48,12 +48,20 @@ useEffect(() => {
     }
   };
 
-  const redirectByRole = (role) => {
-    if (role === 'teacher') window.location.href = '/teacher';
-    if (role === 'student') window.location.href = '/student';
-    else if (role === 'superadmin') window.location.href = '/superadmin';
-    else window.location.href = '/'; // Dashboard Siswa
-  };
+const redirectByRole = (role) => {
+  console.log("Redirecting for role:", role); // Untuk pantau di console
+
+  if (role === 'teacher') {
+    window.location.href = '/teacher';
+  } else if (role === 'student') {
+    window.location.href = '/student';
+  } else if (role === 'superadmin') {
+    window.location.href = '/superadmin';
+  } else {
+    // Jika role kosong atau tidak dikenal, balik ke home atau login
+    window.location.href = '/'; 
+  }
+};
 
   const handleCompleteProfile = async (e) => {
     e.preventDefault();
