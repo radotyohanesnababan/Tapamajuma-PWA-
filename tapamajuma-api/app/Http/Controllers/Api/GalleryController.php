@@ -106,6 +106,22 @@ class GalleryController extends Controller
             'url' => $shareUrl
         ]);
     }
+    public function showPublic($token)
+{
+    // Cari token, kalau gak ada error 404
+    $gallery = Gallery::where('share_token', $token)
+                      ->where('is_published', true)
+                      ->firstOrFail();
+
+    return response()->json([
+        'title' => $gallery->title,
+        'type' => $gallery->file_type,
+        // Pastikan url ini menghasilkan link yang benar
+        'url' => $this->formatGalleryUrl($gallery), 
+        'owner_name' => $gallery->user->name ?? 'Anonim',
+        'created_at' => $gallery->created_at->isoFormat('D MMMM Y'),
+    ]);
+}
 
     public function store(Request $request)
     {

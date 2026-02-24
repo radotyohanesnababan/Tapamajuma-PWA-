@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
 import ReactPlayer from 'react-player';
 import { InstagramEmbed, FacebookEmbed } from 'react-social-media-embed';
+import ShareButton from '@/components/ShareButton';
 
 export default function GalleryStudent() {
   const [items, setItems] = useState([]);
@@ -568,7 +569,7 @@ return (
     </div>
 
     {/* Kanan: Tombol Share (BARU) */}
-    <Share galleryId={selectedItem.id} title={selectedItem.title} />
+    <ShareButton galleryId={selectedItem.id} title={selectedItem.title} />
   </div>
 </div>
           </div>

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\ProfileController; // Tambahkan ini
 use App\Http\Controllers\Api\PublicDataController;
 use App\Http\Controllers\Api\StudentQuizController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\MandiriSessionController;
 use App\Http\Controllers\Teacher\MediaBankController;
@@ -30,11 +31,11 @@ use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionCo
 
 /*
 |--------------------------------------------------------------------------
-| Logout API Routes
+| Share Routes
 |--------------------------------------------------------------------------
 */
 
-
+Route::get('/public/gallery/{token}', [GalleryController::class, 'showPublic']);
 
 /*
 |--------------------------------------------------------------------------
