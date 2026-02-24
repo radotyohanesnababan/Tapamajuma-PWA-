@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Ambil URL utama dari .env, dan siapkan URL Render sebagai cadangan
 // const PRIMARY_URL = import.meta.env.VITE_API_URL;
-const PRIMARY_URL = "https://wi.woko.appx"; // Ganti dengan URL DomCloud asli kamu
+const PRIMARY_URL = "https://tapamajuma-api.my.id"; // Ganti dengan URL DomCloud asli kamu
 const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; // Ganti dengan URL Render asli kamu
 
 const api = axios.create({
