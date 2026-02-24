@@ -10,6 +10,20 @@ export default {
     ],
   theme: {
     extend: {
+        animation: {
+            'spin-slow': 'spin-slow 8s linear infinite',
+            'bounce-gentle': 'bounce-gentle 3s ease-in-out infinite',
+        },
+        keyframes: {
+            'spin-slow': {
+                from: { transform: 'rotate(0deg)' },
+                to: { transform: 'rotate(360deg)' },
+            },
+            'bounce-gentle': {
+                '0%, 100%': { transform: 'translateY(-5%)' },
+                '50%': { transform: 'translateY(0)' },
+            }
+        },
         borderRadius: {
             lg: 'var(--radius)',
             md: 'calc(var(--radius) - 2px)',
