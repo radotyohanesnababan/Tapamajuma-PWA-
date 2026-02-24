@@ -15,6 +15,7 @@ class Gallery extends Model
         'title',
         'file_path',
         'file_type',
+        'share_token',
         'is_published'
     ];
 
@@ -32,5 +33,13 @@ class Gallery extends Model
     public function activity()
     {
         return $this->belongsTo(DailyActivity::class, 'activity_id');
+    }
+
+    public function getPublicUrlAttribute()
+    {
+        if ($this->share_token) {
+            return env('FRONTEND_URL') . '/s/' . $this->share_token;
+        }
+        return null;
     }
 }

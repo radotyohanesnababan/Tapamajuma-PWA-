@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,DialogDescription } from "@/components/ui/dialog";
-import { PlayCircle, FileText, Image as ImageIcon, Plus, Music, FileUp, Loader2, Mic, Square, Trash2, Rocket, Sparkles, Globe, User, Heart } from "lucide-react"; // Tambahkan ikon Mic & Square
+import { PlayCircle, FileText, Image as ImageIcon, Plus, Music, FileUp, Loader2, Mic, Square, Trash2, Rocket, Sparkles, Globe, User, Heart, Share } from "lucide-react"; // Tambahkan ikon Mic & Square
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
 import ReactPlayer from 'react-player';
@@ -182,6 +182,7 @@ const normalizeYoutubeUrl = (url) => {
   // (Fungsi renderPreview tetap sama seperti sebelumnya)
   const renderPreview = (item) => {
     // URL Dasar Storage
+    // eslint-disable-next-line no-unused-vars
     const storageUrl = import.meta.env.VITE_STORAGE_URL;
 
     if (item.file_type === 'link') {
@@ -541,23 +542,35 @@ return (
 
             {/* User Details Footer */}
             <div className="p-8 bg-white relative">
-              <div className="absolute -top-6 left-8 bg-white p-2 rounded-2xl shadow-xl">
-                 <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
-                    {selectedItem.user?.name?.charAt(0)}
-                 </div>
-              </div>
-              <div className="pt-4">
-                <h2 className="text-2xl font-black text-slate-800 leading-tight tracking-tight">{selectedItem.title}</h2>
-                <div className="flex items-center mt-3 gap-2">
-                   <div className="flex flex-col">
-                      <p className="text-xs font-black text-indigo-600 uppercase tracking-tighter">{selectedItem.user?.name}</p>
-                      <p className="text-[10px] font-bold text-slate-400">
-                        Dipublikasikan {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                   </div>
-                </div>
-              </div>
-            </div>
+  {/* Avatar User (Tetap Sama) */}
+  <div className="absolute -top-6 left-8 bg-white p-2 rounded-2xl shadow-xl">
+     <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
+        {selectedItem.user?.name?.charAt(0)}
+     </div>
+  </div>
+
+  <div className="pt-4 flex justify-between items-end">
+    {/* Kiri: Judul & Info User (Tetap Sama) */}
+    <div>
+      <h2 className="text-2xl font-black text-slate-800 leading-tight tracking-tight max-w-[250px] truncate">
+        {selectedItem.title}
+      </h2>
+      <div className="flex items-center mt-3 gap-2">
+         <div className="flex flex-col">
+            <p className="text-xs font-black text-indigo-600 uppercase tracking-tighter">
+              {selectedItem.user?.name}
+            </p>
+            <p className="text-[10px] font-bold text-slate-400">
+              {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
+         </div>
+      </div>
+    </div>
+
+    {/* Kanan: Tombol Share (BARU) */}
+    <Share galleryId={selectedItem.id} title={selectedItem.title} />
+  </div>
+</div>
           </div>
         )}
       </DialogContent>

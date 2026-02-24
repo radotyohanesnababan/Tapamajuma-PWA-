@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class GalleryController extends Controller
 {
@@ -80,6 +81,30 @@ class GalleryController extends Controller
 
         $gallery->delete();
         return response()->json(['message' => 'Karya berhasil dihapus']);
+    }
+    public function share(Request $request, $id)
+    {
+        $gallery = Gallery::findOrFail($id);
+
+        // Opsional: Cek apakah user punya hak akses (misal hanya user login yang bisa share)
+        // if (!Auth::check()) abort(401);
+
+        // 1. Jika belum punya token, buatkan sekarang
+        if (!$gallery->share_token) {
+            $gallery->update([
+                'share_token' => Str::random(32), // Token unik 32 karakter
+                'is_public' => true // Pastikan statusnya public
+            ]);
+        }
+
+        // 2. Return URL Frontend yang siap dicopy
+        // Pastikan FRONTEND_URL ada di .env (misal: https://tapamajuma.my.id)
+        $shareUrl = env('FRONTEND_URL') . '/s/' . $gallery->share_token;
+
+        return response()->json([
+            'message' => 'Link siap dibagikan!',
+            'url' => $shareUrl
+        ]);
     }
 
     public function store(Request $request)

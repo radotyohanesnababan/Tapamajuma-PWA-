@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Fitur Galeri Karya (Aksi C.1)
     Route::get('/galleries', [GalleryController::class, 'index']);
     Route::post('/galleries', [GalleryController::class, 'store']);
+    Route::post('/galleries/{id}/share', [GalleryController::class, 'share']);
 
     // --- OTHER MENU & PROFILE (Aksi C.2) ---
     // Route ini digunakan siswa untuk edit mandiri dan melihat ringkasan presentasi
