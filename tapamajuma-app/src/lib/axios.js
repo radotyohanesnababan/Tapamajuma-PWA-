@@ -62,7 +62,7 @@ api.interceptors.response.use(
       sessionStorage.setItem("active_base_url", BACKUP_URL);
 
       toast.error("Server Utama gangguan. Dialihkan ke cadangan...", {
-        duration: 5000,
+        duration: 10000,
       });
 
       // Update URL request yang sedang gagal ini

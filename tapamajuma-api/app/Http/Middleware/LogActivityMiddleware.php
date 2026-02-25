@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 
-class LogUserActivity
+class LogActivityMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
