@@ -79,6 +79,8 @@ export default function GalleryStudent() {
   }
 }, [selectedItem]);
 
+
+
   // --- LOGIKA VOICE RECORDER ---
   const startRecording = async () => {
     try {
@@ -158,6 +160,70 @@ const normalizeYoutubeUrl = (url) => {
   setSelectedItem(item);
   setPreviewOpen(true);
 };
+
+function TikTokPreview({ url }) {
+  const [thumbnail, setThumbnail] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchThumb = async () => {
+      try {
+        const res = await fetch(
+          `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+        );
+        const data = await res.json();
+        if (data.thumbnail_url) {
+          setThumbnail(data.thumbnail_url);
+        }
+      } catch {
+        // gagal → fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchThumb();
+  }, [url]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="relative w-full h-full bg-black animate-pulse" />
+    );
+  }
+
+  // Ada thumbnail → tampilkan
+  if (thumbnail) {
+    return (
+      <div className="relative w-full h-full bg-black">
+        <img
+          src={thumbnail}
+          alt="TikTok thumbnail"
+          className="w-full h-full object-cover"
+        />
+        {/* Overlay gelap tipis */}
+        <div className="absolute inset-0 bg-black/30" />
+        {/* Icon play + label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+          <PlayCircle size={36} className="opacity-90 drop-shadow" />
+          <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">TikTok</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback — tidak ada thumbnail
+  return (
+    <div className="relative w-full h-full bg-black">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <svg className="w-12 h-12 mb-2" fill="white" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+        </svg>
+        <PlayCircle size={32} className="opacity-90" />
+        <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">TikTok</span>
+      </div>
+    </div>
+  );
+}
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -266,6 +332,10 @@ const normalizeYoutubeUrl = (url) => {
         </div>
       );
     }
+
+    if (item.file_path.includes('tiktok.com') || item.file_path.includes('vm.tiktok.com')) {
+  return <TikTokPreview url={item.file_path} />;
+}
       // C. Fallback untuk link lain (misal: Vimeo, Dailymotion, dll)
       return (
         <div className="relative w-full h-full bg-gray-800">

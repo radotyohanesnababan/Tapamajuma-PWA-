@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Download, ExternalLink, Music, Play, AlertCircle,
-  Instagram, Facebook, ArrowUpRight, Eye, MessageCircle, Phone
+  Instagram, Facebook, ArrowUpRight, Eye, MessageCircle, Phone,
+  Video
 } from "lucide-react";
 import api from "@/lib/axios";
 
@@ -88,7 +89,7 @@ function SocialCard({ url, platform, title }) {
     tiktok: {
       gradient: "from-[#000000] to-[#161616]",
       bgGlow: "bg-black",
-      icon: <Tiktok className="w-12 h-12 text-white" />,
+      icon: <Video className="w-12 h-12 text-white" />,
       label: "TikTok",
       btnClass: "bg-black hover:bg-gray-900 border-0",
       tagline: "Video TikTok",
