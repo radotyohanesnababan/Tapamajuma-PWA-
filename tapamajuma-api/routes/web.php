@@ -21,32 +21,32 @@ Route::get('/cek-hantu', function () {
 });
 
 Route::get('/s/{token}', function ($token) {
-    // 1. Cari data berdasarkan token
-    // Asumsi: Token disimpan di kolom 'share_token' pada tabel 'galleries'
-    $data = Gallery::where('share_token', $token)->first(); 
     
-    // Jika tidak ketemu, lempar ke homepage frontend
-    if (!$data) {
+    // 1. Cari Data
+    $gallery = Gallery::where('share_token', $token)->first();
+
+    if (!$gallery) {
         return redirect('https://tapamajuma.my.id'); 
     }
 
-    // 2. Siapkan Data untuk Meta Tag
-    // Pastikan path gambar menggunakan CDN atau URL lengkap
-    $imageUrl = $data->file_path;
+    // 2. LOGIKA DETEKSI GAMBAR / YOUTUBE
+    $imageUrl = $gallery->file_path; // Default ambil dari file path
     
-    // Cek apakah path sudah ada http-nya atau belum (biar gak double)
-    if (!str_starts_with($imageUrl, 'http')) {
+    // Cek apakah ini Link YouTube?
+    if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $gallery->url ?? $gallery->file_path, $matches)) {
+        // Jika YouTube, ambil thumbnail otomatis dari Google
+        $videoId = $matches[1];
+        $imageUrl = "https://img.youtube.com/vi/{$videoId}/hqdefault.jpg";
+    } 
+    // Jika bukan YouTube, tapi path gambar biasa
+    elseif (!str_starts_with($imageUrl, 'http')) {
         $imageUrl = "https://cdn.tapamajuma-api.my.id/" . $imageUrl;
     }
 
-    $title = ($data->title ?? 'Karya Siswa') . " | TAPAMAJUMA";
-    $description = "Lihat karya dari " . ($data->owner_name ?? 'Siswa') . " di TAPAMAJUMA.";
-    
-    // 3. URL Tujuan (Frontend React)
-    // Ini adalah link asli tempat user melihat kontennya
+    $title = ($gallery->title ?? 'Karya Siswa') . " | TAPAMAJUMA";
+    $description = "Lihat karya dari " . ($gallery->owner_name ?? 'Siswa') . " di TAPAMAJUMA.";
     $destinationUrl = "https://tapamajuma.my.id/s/" . $token;
 
-    // 4. Return View Pancingan
     return view('share_meta', compact('title', 'description', 'imageUrl', 'destinationUrl'));
 });
 

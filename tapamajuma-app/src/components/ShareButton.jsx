@@ -36,7 +36,7 @@ const ShareButton = ({ galleryId, title }) => {
             await navigator.clipboard.writeText(finalLink);
             
             setCopied(true);
-            toast.success("Link berhasil disalin! (Versi Preview)");
+            toast.success("Link berhasil disalin!");
             
             setTimeout(() => setCopied(false), 2000);
 
@@ -85,12 +85,12 @@ const ShareButton = ({ galleryId, title }) => {
                 ) : copied ? (
                     <>
                         <Check size={16} />
-                        <span>Disalin</span>
+                        <span>Link Disalin!</span>
                     </>
                 ) : (
                     <>
                         <Copy size={16} />
-                        <span>Salin Link</span>
+                        <span>Salin Link/Bagikan</span>
                     </>
                 )}
             </button>
