@@ -19,6 +19,7 @@ export default function GalleryStudent() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [tiktokEmbedFailed, setTiktokEmbedFailed] = useState(false);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -49,6 +50,36 @@ export default function GalleryStudent() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+  if (selectedItem?.file_path?.includes('tiktok.com')) {
+    setTiktokEmbedFailed(false); // reset tiap ganti item
+
+    if (window.TikTok) {
+      window.TikTok.reload();
+    } else {
+      const existing = document.getElementById('tiktok-embed-script');
+      if (!existing) {
+        const script = document.createElement('script');
+        script.id = 'tiktok-embed-script';
+        script.src = 'https://www.tiktok.com/embed.js';
+        script.async = true;
+        script.onerror = () => setTiktokEmbedFailed(true);
+        document.body.appendChild(script);
+      }
+    }
+
+    // Fallback timer — jika 5 detik belum render, tampilkan preview
+    const timer = setTimeout(() => {
+      const el = document.querySelector('.tiktok-embed iframe');
+      if (!el) setTiktokEmbedFailed(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }
+}, [selectedItem]);
+
+
 
   // --- LOGIKA VOICE RECORDER ---
   const startRecording = async () => {
@@ -129,6 +160,70 @@ const normalizeYoutubeUrl = (url) => {
   setSelectedItem(item);
   setPreviewOpen(true);
 };
+
+function TikTokPreview({ url }) {
+  const [thumbnail, setThumbnail] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchThumb = async () => {
+      try {
+        const res = await fetch(
+          `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+        );
+        const data = await res.json();
+        if (data.thumbnail_url) {
+          setThumbnail(data.thumbnail_url);
+        }
+      } catch {
+        // gagal → fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchThumb();
+  }, [url]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="relative w-full h-full bg-black animate-pulse" />
+    );
+  }
+
+  // Ada thumbnail → tampilkan
+  if (thumbnail) {
+    return (
+      <div className="relative w-full h-full bg-black">
+        <img
+          src={thumbnail}
+          alt="TikTok thumbnail"
+          className="w-full h-full object-cover"
+        />
+        {/* Overlay gelap tipis */}
+        <div className="absolute inset-0 bg-black/30" />
+        {/* Icon play + label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+          <PlayCircle size={36} className="opacity-90 drop-shadow" />
+          <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">TikTok</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback — tidak ada thumbnail
+  return (
+    <div className="relative w-full h-full bg-black">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <svg className="w-12 h-12 mb-2" fill="white" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+        </svg>
+        <PlayCircle size={32} className="opacity-90" />
+        <span className="text-[10px] uppercase font-bold tracking-widest mt-2 opacity-80">TikTok</span>
+      </div>
+    </div>
+  );
+}
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -237,6 +332,10 @@ const normalizeYoutubeUrl = (url) => {
         </div>
       );
     }
+
+    if (item.file_path.includes('tiktok.com') || item.file_path.includes('vm.tiktok.com')) {
+  return <TikTokPreview url={item.file_path} />;
+}
       // C. Fallback untuk link lain (misal: Vimeo, Dailymotion, dll)
       return (
         <div className="relative w-full h-full bg-gray-800">
@@ -418,7 +517,7 @@ return (
         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alamat Link (URL)</Label>
         <Input 
           className="rounded-2xl bg-slate-50 border-none h-12 shadow-inner focus-visible:ring-indigo-500" 
-          placeholder="Tempel link YT/IG/FB di sini..."
+          placeholder="Tempel link YT/IG/Tiktok di sini..."
           value={linkUrl}
           onChange={(e) => setLinkUrl(e.target.value)}
         />
@@ -516,27 +615,105 @@ return (
                 </div>
               )}
 
-              {/* Link Video Preview */}
-              {selectedItem.file_type === 'link' && (
-                <div className="w-full bg-black min-h-[350px] flex items-center justify-center relative overflow-hidden">
-                    {selectedItem.file_path.includes('instagram.com') ? (
-                      <div className="flex flex-col items-center justify-center p-10 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 w-full text-white">
-                        <ImageIcon size={48} className="mb-4" />
-                        <p className="font-black mb-4">Postingan Instagram</p>
-                        <a href={selectedItem.file_path} target="_blank" rel="noopener noreferrer" className="px-8 py-3 bg-white text-pink-600 rounded-full font-black text-xs hover:bg-pink-50 transition-colors">BUKA DI INSTAGRAM</a>
-                      </div>
-                    ) : selectedItem.file_path.includes('facebook.com') || selectedItem.file_path.includes('fb.watch') ? (
-                      <iframe src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(selectedItem.file_path)}&show_text=false&width=500`} width="100%" height="300" style={{ border: 'none', overflow: 'hidden' }} allowFullScreen={true} />
-                    ) : (
-                      (() => {
-                        const videoId = getYoutubeId(selectedItem.file_path);
-                        return videoId ? (
-                          <iframe width="100%" height="350" src={`https://www.youtube.com/embed/${videoId}`} title="YouTube" frameBorder="0" allowFullScreen className="w-full" />
-                        ) : (
-                          <ReactPlayer url={normalizeYoutubeUrl(selectedItem.file_path)} width="100%" height="300px" controls={true} />
-                        );
-                      })()
-                    )}
+                            {/* Link Video Preview */}
+                            {selectedItem.file_type === 'link' && (
+                              <div className="w-full bg-black min-h-[350px] flex items-center justify-center relative overflow-hidden">
+                                  {selectedItem.file_path.includes('instagram.com') ? (
+                <div className="w-full h-[350px] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-xl flex flex-col items-center justify-center gap-4 p-6">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-semibold text-lg">Postingan Instagram</p>
+                    <p className="text-white/80 text-sm mt-1">Konten ini hanya dapat dilihat di Instagram</p>
+                  </div>
+                  <a
+                    href={selectedItem.file_path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 bg-white text-pink-500 font-semibold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition"
+                  >
+                    Buka di Instagram
+                  </a>
+                </div>
+
+              ) : selectedItem.file_path.includes('facebook.com') || selectedItem.file_path.includes('fb.watch') ? (
+                <div className="w-full h-[350px] bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex flex-col items-center justify-center gap-4 p-6">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-semibold text-lg">Postingan Facebook</p>
+                    <p className="text-white/80 text-sm mt-1">Konten ini hanya dapat dilihat di Facebook</p>
+                  </div>
+                  <a
+                    href={selectedItem.file_path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 bg-white text-blue-600 font-semibold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition"
+                  >
+                    Buka di Facebook
+                  </a>
+                        </div>
+                        ) : selectedItem.file_path.includes('tiktok.com') || selectedItem.file_path.includes('vm.tiktok.com') ? (
+          tiktokEmbedFailed ? (
+            // FALLBACK — custom preview
+            <div className="w-full h-[350px] bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-xl flex flex-col items-center justify-center gap-4 p-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-full p-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-white font-semibold text-lg">Video TikTok</p>
+                <p className="text-white/60 text-sm mt-1">Konten ini hanya dapat dilihat di TikTok</p>
+              </div>
+              <a href={selectedItem.file_path} target="_blank" rel="noreferrer"
+                className="mt-2 bg-white text-black font-semibold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition flex items-center gap-2">
+                <span>Buka di TikTok</span>
+              </a>
+            </div>
+          ) : (
+            // EMBED RESMI TIKTOK
+            <div className="w-full flex justify-center overflow-hidden rounded-xl">
+              <blockquote
+                className="tiktok-embed"
+                cite={selectedItem.file_path}
+                data-video-id={selectedItem.file_path.match(/video\/(\d+)/)?.[1]}
+                style={{ maxWidth: '605px', minWidth: '325px' }}
+              >
+                <section />
+              </blockquote>
+            </div>
+          )
+
+              ) : (
+                (() => {
+                  const videoId = getYoutubeId(selectedItem.file_path);
+                  return videoId ? (
+                    <iframe
+                      width="100%"
+                      height="350"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="YouTube"
+                      frameBorder="0"
+                      allowFullScreen
+                      className="w-full"
+                    />
+                  ) : (
+                    <ReactPlayer
+                      url={normalizeYoutubeUrl(selectedItem.file_path)}
+                      width="100%"
+                      height="300px"
+                      controls={true}
+                    />
+                  );
+                })()
+              )}
                 </div>
               )}
             </div>
