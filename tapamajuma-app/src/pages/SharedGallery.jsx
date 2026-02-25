@@ -196,6 +196,65 @@ function PDFEmbed({ url }) {
     />
   );
 }
+  function TikTokEmbed({ url, title }) {
+  const [failed, setFailed] = useState(false);
+
+  // Ekstrak video ID dari URL
+  const videoId = url.match(/video\/(\d+)/)?.[1];
+
+  useEffect(() => {
+    if (!videoId) {
+      setFailed(true);
+      return;
+    }
+
+    setFailed(false);
+
+    // Load embed.js TikTok
+    const existing = document.getElementById('tiktok-embed-script');
+    if (existing) {
+      // Script sudah ada, trigger manual process
+      window?.TikTok?.reload?.();
+    } else {
+      const script = document.createElement('script');
+      script.id = 'tiktok-embed-script';
+      script.src = 'https://www.tiktok.com/embed.js';
+      script.async = true;
+      script.onerror = () => setFailed(true);
+      document.body.appendChild(script);
+    }
+
+    // Fallback: jika 6 detik iframe belum muncul → fallback
+    const timer = setTimeout(() => {
+      const el = document.querySelector('.tiktok-embed iframe');
+      if (!el) setFailed(true);
+    }, 6000);
+
+    return () => clearTimeout(timer);
+  }, [url, videoId]);
+
+  // Tidak ada video ID → langsung fallback
+  if (failed || !videoId) {
+    return <SocialCard url={url} platform="tiktok" title={title} />;
+  }
+
+  return (
+    <div className="w-full flex justify-center items-center bg-black py-4 min-h-[400px]">
+      <blockquote
+        className="tiktok-embed"
+        cite={url}
+        data-video-id={videoId}
+        style={{ maxWidth: '605px', minWidth: '325px', width: '100%' }}
+      >
+        {/* Loading placeholder sebelum embed.js jalan */}
+        <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+          <span className="text-white/50 text-sm">Memuat TikTok...</span>
+        </div>
+      </blockquote>
+    </div>
+  );
+}
 
 function GenericVideoEmbed({ url, title }) {
   return (
@@ -290,65 +349,9 @@ export default function SharedGallery() {
       </div>
     );
   }
-  function TikTokEmbed({ url, title }) {
-  const [failed, setFailed] = useState(false);
 
-  // Ekstrak video ID dari URL
-  const videoId = url.match(/video\/(\d+)/)?.[1];
 
-  useEffect(() => {
-    if (!videoId) {
-      setFailed(true);
-      return;
-    }
 
-    setFailed(false);
-
-    // Load embed.js TikTok
-    const existing = document.getElementById('tiktok-embed-script');
-    if (existing) {
-      // Script sudah ada, trigger manual process
-      window?.TikTok?.reload?.();
-    } else {
-      const script = document.createElement('script');
-      script.id = 'tiktok-embed-script';
-      script.src = 'https://www.tiktok.com/embed.js';
-      script.async = true;
-      script.onerror = () => setFailed(true);
-      document.body.appendChild(script);
-    }
-
-    // Fallback: jika 6 detik iframe belum muncul → fallback
-    const timer = setTimeout(() => {
-      const el = document.querySelector('.tiktok-embed iframe');
-      if (!el) setFailed(true);
-    }, 6000);
-
-    return () => clearTimeout(timer);
-  }, [url, videoId]);
-
-  // Tidak ada video ID → langsung fallback
-  if (failed || !videoId) {
-    return <SocialCard url={url} platform="tiktok" title={title} />;
-  }
-
-  return (
-    <div className="w-full flex justify-center items-center bg-black py-4 min-h-[400px]">
-      <blockquote
-        className="tiktok-embed"
-        cite={url}
-        data-video-id={videoId}
-        style={{ maxWidth: '605px', minWidth: '325px', width: '100%' }}
-      >
-        {/* Loading placeholder sebelum embed.js jalan */}
-        <div className="flex flex-col items-center justify-center h-[400px] gap-4">
-          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-          <span className="text-white/50 text-sm">Memuat TikTok...</span>
-        </div>
-      </blockquote>
-    </div>
-  );
-}
 
   const platform = detectPlatform(data.url);
   const isSocial = ["instagram", "facebook", "whatsapp", "youtube", "tiktok"].includes(platform);
