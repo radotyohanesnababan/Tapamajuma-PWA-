@@ -447,7 +447,7 @@ return (
         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alamat Link (URL)</Label>
         <Input 
           className="rounded-2xl bg-slate-50 border-none h-12 shadow-inner focus-visible:ring-indigo-500" 
-          placeholder="Tempel link YT/IG/FB di sini..."
+          placeholder="Tempel link YT/IG/Tiktok di sini..."
           value={linkUrl}
           onChange={(e) => setLinkUrl(e.target.value)}
         />
