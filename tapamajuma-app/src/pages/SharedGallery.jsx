@@ -84,7 +84,18 @@ function SocialCard({ url, platform, title }) {
       tagline: "Tautan WhatsApp",
       sub: "Ini adalah tautan obrolan atau grup WhatsApp. Klik untuk bergabung/chat.",
       action: "Buka WhatsApp"
+    },
+    tiktok: {
+      gradient: "from-[#000000] to-[#161616]",
+      bgGlow: "bg-black",
+      icon: <Tiktok className="w-12 h-12 text-white" />,
+      label: "TikTok",
+      btnClass: "bg-black hover:bg-gray-900 border-0",
+      tagline: "Video TikTok",
+      sub: "Konten ini berada di TikTok. Klik tombol di bawah untuk melihatnya.",
+      action: "Buka TikTok"
     }
+
   };
 
   const config = configs[platform] || configs.instagram; // Default ke IG kalo error
@@ -222,7 +233,7 @@ function ContentPreview({ data }) {
     if (platform === "youtube")   return <YouTubeEmbed url={url} title={title} />;
     
     // Grouping Social Media (IG, FB, WA) ke SocialCard
-    if (["instagram", "facebook", "whatsapp"].includes(platform)) {
+    if (["instagram", "facebook", "whatsapp",'tiktok'].includes(platform)) {
         return <SocialCard url={url} platform={platform} title={title} />;
     }
     
@@ -279,7 +290,7 @@ export default function SharedGallery() {
   }
 
   const platform = detectPlatform(data.url);
-  const isSocial = ["instagram", "facebook", "whatsapp", "youtube"].includes(platform);
+  const isSocial = ["instagram", "facebook", "whatsapp", "youtube", "tiktok"].includes(platform);
   const isDirectFile = ["image", "audio", "pdf"].includes(data.type);
 
   return (
