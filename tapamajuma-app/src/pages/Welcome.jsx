@@ -107,6 +107,11 @@ export default function Welcome() {
           name="description" 
           content="Pantau aktivitas belajar, literasi, dan numerasi siswa secara real-time. Hubungkan Guru, Siswa, dan Orang Tua dalam satu platform." 
         />
+        {/* Facebook / Open Graph (Ini yang bikin cakep di FB) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://tapamajuma.my.id/" />
+        <meta property="og:title" content="TAPAMAJUMA - Monitoring Belajar Terintegrasi" />
+        <meta property="og:description" content="Pantau aktivitas belajar, literasi, dan numerasi siswa secara real-time." />
         
         {/* Opsional: Untuk tampilan saat link dibagikan di WA/IG (Open Graph) */}
         <meta property="og:title" content="TAPAMAJUMA - Generasi Maju" />
