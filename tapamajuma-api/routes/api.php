@@ -58,7 +58,7 @@ Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle'
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum','LogUserActivity')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/user', function (Request $request) {
         return $request->user();
