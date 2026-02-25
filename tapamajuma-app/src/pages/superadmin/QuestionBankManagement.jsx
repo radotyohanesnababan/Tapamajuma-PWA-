@@ -1,19 +1,10 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  BookOpen, 
-  Trash2, 
-  Search, 
-  Eye, 
-  EyeOff,
-  Filter,
-  User,
-  CheckCircle2,
-  Loader2,
-  LayoutGrid
+  BookOpen, Trash2, Search, Eye, EyeOff, Filter,
+  User, CheckCircle2, Loader2, LayoutGrid, ChevronLeft, ChevronRight 
 } from "lucide-react";
 import { toast } from "sonner";
 import { getStorageUrl } from '@/lib/utils';
@@ -22,15 +13,21 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 export default function QuestionBankManagement() {
   usePageTitle("Manajemen Bank Soal");
   
-  // --- STATE ---
+  // --- STATE DATA ---
   const [questions, setQuestions] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 10
+  });
   
-  // Master Data untuk Filter
+  // Master Data Dropdown
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
-  // Filter State (Ditambah 'type')
+  // Filter State
   const [filters, setFilters] = useState({
     type: "",
     subject_id: "",
@@ -40,41 +37,69 @@ export default function QuestionBankManagement() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showKeyId, setShowKeyId] = useState(null);
+  const [showKeyId, setShowKeyId] = useState(null); // ID soal yang kuncinya dibuka
 
-  // --- FETCH DATA ---
-  const fetchData = async () => {
+  // --- FETCH DATA (Server-Side) ---
+// --- FETCH DATA (Server-Side) ---
+  const fetchData = async (page = 1) => {
     setIsLoading(true);
     try {
-      // Mengirim parameter filter ke backend
-      const params = new URLSearchParams(filters).toString();
-      const response = await api.get(`/api/admin/questions?${params}`);
+      const params = {
+        page: page,
+        per_page: pagination.per_page,
+        ...filters
+      };
+
+      const response = await api.get('/api/admin/questions', { params });
       
-      setQuestions(response.data.questions);
+      // 1. UBAH NAMA VARIABEL DISINI (Alias)
+      // Supaya tidak bentrok dengan state 'subjects', 'classes', dll
+      const { 
+        questions: questionsData, 
+        subjects: subjectsData, 
+        classes: classesData, 
+        teachers: teachersData 
+      } = response.data.data;
+
+      // Gunakan variabel alias tadi
+      setQuestions(questionsData.data);
       
-      // Set Master Data hanya sekali (atau update jika perlu)
-      if (subjects.length === 0) {
-        setSubjects(response.data.subjects);
-        setClasses(response.data.classes);
-        setTeachers(response.data.teachers);
+      setPagination({
+        current_page: questionsData.current_page,
+        last_page: questionsData.last_page,
+        total: questionsData.total,
+        per_page: questionsData.per_page
+      });
+
+      // 2. PERBAIKI LOGIKA IF
+      // Cek apakah STATE 'subjects' (di luar fungsi) masih kosong
+      // Jika kosong, isi dengan 'subjectsData' (dari API)
+      if (subjects.length === 0 && subjectsData?.length > 0) {
+        setSubjects(subjectsData);
+        setClasses(classesData);
+        setTeachers(teachersData);
       }
+      
     } catch (error) {
+      console.error(error);
       toast.error("Gagal memuat data soal");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch saat component mount atau filter berubah
+  // Effect: Fetch saat Filter berubah atau Page berubah
+  // Note: Kita handle page change manual di tombol, jadi di sini cukup filter
   useEffect(() => {
-    // Debounce search sedikit agar tidak spam request saat ketik
+    // Debounce search untuk performa
     const timer = setTimeout(() => {
-      fetchData();
-    }, 300);
+        fetchData(1); // Reset ke halaman 1 setiap kali filter berubah
+    }, 400);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]); 
 
+  // Handler Hapus
   const handleDelete = async (id) => {
     if (!window.confirm("Hapus soal ini secara permanen?")) return;
     try {
@@ -86,13 +111,21 @@ export default function QuestionBankManagement() {
     }
   };
 
-  // Helper Handle Change Filter
+  // Handler Filter UI
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handleResetFilter = () => {
     setFilters({ type: "", subject_id: "", class_id: "", teacher_id: "", search: "" });
+  };
+
+  // Handler Pagination
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.last_page) {
+      fetchData(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -105,22 +138,26 @@ export default function QuestionBankManagement() {
           Bank Soal Sekolah
         </h1>
         <p className="text-slate-500 mt-1">
-          Memantau dan mengelola koleksi soal ujian yang dibuat oleh guru.
+          Total {pagination.total} soal tersedia dalam database.
         </p>
       </div>
 
-      {/* FILTER BAR (Khusus Admin) */}
-      <div className="max-w-6xl mx-auto bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
-          <Filter className="h-4 w-4"/> Filter Data
+      {/* FILTER BAR */}
+      <div className="max-w-6xl mx-auto bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4 sticky top-4 z-20">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+            <Filter className="h-4 w-4"/> Filter Data
+            </div>
+            {(filters.type || filters.subject_id || filters.class_id || filters.teacher_id || filters.search) && (
+                <Button variant="ghost" size="sm" onClick={handleResetFilter} className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 text-xs">
+                Reset Filter
+                </Button>
+            )}
         </div>
         
-        {/* Grid disesuaikan menjadi 5 kolom di layar besar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          
-          {/* Filter Kategori Soal (BARU) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <select 
-            className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+            className="h-9 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
             value={filters.type}
             onChange={(e) => handleFilterChange('type', e.target.value)}
           >
@@ -130,9 +167,8 @@ export default function QuestionBankManagement() {
             <option value="tka">🧠 TKA (HOTS)</option>
           </select>
 
-          {/* Filter Mapel */}
           <select 
-            className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+            className="h-9 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
             value={filters.subject_id}
             onChange={(e) => handleFilterChange('subject_id', e.target.value)}
           >
@@ -140,9 +176,8 @@ export default function QuestionBankManagement() {
             {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
 
-          {/* Filter Kelas */}
           <select 
-            className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+            className="h-9 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
             value={filters.class_id}
             onChange={(e) => handleFilterChange('class_id', e.target.value)}
           >
@@ -150,9 +185,8 @@ export default function QuestionBankManagement() {
             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
 
-          {/* Filter Guru */}
           <select 
-            className="h-10 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+            className="h-9 px-3 rounded-md border text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500"
             value={filters.teacher_id}
             onChange={(e) => handleFilterChange('teacher_id', e.target.value)}
           >
@@ -160,123 +194,179 @@ export default function QuestionBankManagement() {
             {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
 
-          {/* Search */}
           <div className="relative">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-3.5 w-3.5" />
              <Input 
                 placeholder="Cari isi soal..." 
-                className="pl-9 h-10 bg-slate-50"
+                className="pl-9 h-9 bg-slate-50 text-sm"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
              />
           </div>
         </div>
-
-        {/* Reset Button */}
-        {(filters.type || filters.subject_id || filters.class_id || filters.teacher_id || filters.search) && (
-          <div className="flex justify-end">
-            <Button variant="ghost" size="sm" onClick={handleResetFilter} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-              Reset Filter
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* CONTENT LIST */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
-           <h2 className="font-bold text-lg text-slate-700">Daftar Soal ({questions.length})</h2>
-        </div>
-
-        <div className="grid gap-4">
-            {isLoading ? (
-              <div className="text-center py-10"><Loader2 className="animate-spin h-8 w-8 mx-auto text-indigo-600"/></div>
-            ) : questions.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">
-                <LayoutGrid className="h-10 w-10 mx-auto mb-2 opacity-50"/>
-                <p>Tidak ada soal ditemukan dengan filter ini.</p>
-              </div>
-            ) : (
-              questions.map((q) => (
-                <div key={q.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative">
-                  
-                  {/* Header Card */}
-                  <div className="flex flex-wrap justify-between items-start mb-3 gap-2">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
+        {/* Loading / Empty State */}
+        {isLoading ? (
+            <div className="text-center py-20"><Loader2 className="animate-spin h-10 w-10 mx-auto text-indigo-600"/></div>
+        ) : questions.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">
+            <LayoutGrid className="h-12 w-12 mx-auto mb-3 opacity-50"/>
+            <p>Tidak ada soal ditemukan dengan filter ini.</p>
+            </div>
+        ) : (
+            <div className="grid gap-4">
+            {questions.map((q) => (
+                <div key={q.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative group">
+                
+                {/* Header Card */}
+                <div className="flex flex-wrap justify-between items-start mb-3 gap-2">
                     <div className="flex flex-wrap gap-2 items-center">
-                      
-                      {/* Badge Kategori (BARU) */}
-                      <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md text-xs font-bold border border-amber-100 uppercase">
-                        {q.type === 'numeracy' ? 'Numerasi' : q.type === 'literacy' ? 'Literasi' : q.type === 'tka' ? 'TKA' : q.type || 'Umum'}
-                      </span>
-
-                      {/* Badge Mapel */}
-                      <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-bold border border-indigo-100">
-                        {q.subject ? q.subject.name : 'Unknown'}
-                      </span>
-                      {/* Badge Kelas */}
-                      <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold border border-emerald-100">
-                        Kelas {q.target_class ? q.target_class.name : '?'}
-                      </span>
-                      {/* Badge Creator (Khusus Admin) */}
-                      <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-xs font-medium border border-slate-200">
-                        <User size={12}/> {q.creator ? q.creator.name : 'Admin'}
-                      </span>
+                    <span className={`px-2 py-1 rounded-md text-xs font-bold border uppercase
+                        ${q.type === 'numeracy' ? 'bg-amber-50 text-amber-700 border-amber-100' : 
+                          q.type === 'literacy' ? 'bg-blue-50 text-blue-700 border-blue-100' : 
+                          'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                        {q.type}
+                    </span>
+                    <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-bold border border-indigo-100">
+                        {q.subject?.name || '-'}
+                    </span>
+                    <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold border border-emerald-100">
+                        {q.student_class?.name || 'Umum'}
+                    </span>
+                    <span className="flex items-center gap-1 bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-xs font-medium border border-slate-200">
+                        <User size={12}/> {q.creator?.name || 'Admin'}
+                    </span>
                     </div>
 
                     <button 
-                      onClick={() => handleDelete(q.id)}
-                      className="text-slate-300 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
-                      title="Hapus Soal"
+                        onClick={() => handleDelete(q.id)}
+                        className="text-slate-300 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
+                        title="Hapus Soal"
                     >
-                      <Trash2 size={16} />
+                    <Trash2 size={16} />
                     </button>
-                  </div>
-
-                  {/* Soal */}
-                  <h3 className="text-slate-800 font-medium mb-4 text-base leading-relaxed">
-                    {q.question_text}
-                  </h3>
-                  {/* {Image} */}
-                  {q.image && (
-                    <div className="mb-4">
-                      <img 
-                        src={getStorageUrl(q.image)} 
-                        alt="Soal" 
-                        className="w-full max-h-60 object-contain rounded-lg border border-slate-200"
-                      />
-                    </div>
-                  )}
-
-                  {/* Pilihan Jawaban */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                    {Object.entries(q.options || {}).map(([key, value]) => (
-                      <div key={key} className={`p-3 rounded-lg border text-sm flex gap-2 ${key === q.correct_key && showKeyId === q.id ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-100'}`}>
-                        <span className="font-bold min-w-[20px]">{key}.</span>
-                        <span>{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Toggle Kunci */}
-                  <button 
-                    onClick={() => setShowKeyId(showKeyId === q.id ? null : q.id)}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                  >
-                    {showKeyId === q.id ? <EyeOff size={14}/> : <Eye size={14}/>}
-                    {showKeyId === q.id ? "Sembunyikan Kunci" : "Lihat Kunci Jawaban"}
-                  </button>
-
-                  {showKeyId === q.id && (
-                    <div className="mt-2 text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
-                      <CheckCircle2 size={14} /> Kunci: {q.correct_key}
-                    </div>
-                  )}
                 </div>
-              ))
-            )}
-        </div>
-      </div>
 
+                {/* Soal */}
+                <div className="mb-4">
+                    <h3 className="text-slate-800 font-medium text-base leading-relaxed whitespace-pre-line">
+                        {q.question_text}
+                    </h3>
+                    {q.image && (
+                        <div className="mt-3">
+                        <img 
+                            src={getStorageUrl(q.image)} 
+                            alt="Visual Soal" 
+                            className="max-h-60 rounded-lg border border-slate-200 object-contain"
+                        />
+                        </div>
+                    )}
+                </div>
+
+                {/* Pilihan Jawaban */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    {/* Parsing JSON Options jika dari Laravel dikirim sebagai JSON string, atau object langsung */}
+                    {typeof q.options === 'object' && q.options !== null && Object.entries(q.options).map(([key, value]) => (
+                    <div key={key} 
+                        className={`p-3 rounded-lg border text-sm flex gap-3 items-start transition-colors
+                        ${key === q.correct_key && showKeyId === q.id 
+                            ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-200' 
+                            : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100'}`}
+                    >
+                        <span className={`font-bold min-w-[24px] h-6 flex items-center justify-center rounded text-xs
+                            ${key === q.correct_key && showKeyId === q.id ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+                            {key}
+                        </span>
+                        <span className={key === q.correct_key && showKeyId === q.id ? 'text-emerald-900 font-medium' : 'text-slate-600'}>
+                            {value}
+                        </span>
+                    </div>
+                    ))}
+                </div>
+
+                {/* Footer / Toggle Key */}
+                <div className="flex items-center justify-between border-t pt-3">
+                    <button 
+                        onClick={() => setShowKeyId(showKeyId === q.id ? null : q.id)}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+                    >
+                        {showKeyId === q.id ? <EyeOff size={14}/> : <Eye size={14}/>}
+                        {showKeyId === q.id ? "Sembunyikan Kunci" : "Lihat Kunci Jawaban"}
+                    </button>
+
+                    {showKeyId === q.id && (
+                        <div className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
+                        <CheckCircle2 size={14} /> Jawaban Benar: <span className="text-lg ml-1">{q.correct_key}</span>
+                        </div>
+                    )}
+                </div>
+
+                </div>
+            ))}
+            </div>
+        )}
+
+        {/* PAGINATION CONTROLS */}
+        {!isLoading && questions.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-slate-200 mt-6">
+                <div className="text-sm text-slate-500">
+                    Halaman <span className="font-bold text-slate-900">{pagination.current_page}</span> dari {pagination.last_page} 
+                    <span className="mx-2">•</span> 
+                    Total {pagination.total} Data
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline" size="sm"
+                        onClick={() => handlePageChange(pagination.current_page - 1)}
+                        disabled={pagination.current_page === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                    </Button>
+                    
+                    {/* Simplifikasi navigasi angka page */}
+                    <div className="hidden sm:flex items-center gap-1">
+                        {[...Array(Math.min(5, pagination.last_page))].map((_, i) => {
+                            // Logic sederhana untuk menampilkan halaman sekitar current page
+                            let pageNum = i + 1;
+                            if (pagination.last_page > 5) {
+                                if (pagination.current_page > 3) pageNum = pagination.current_page - 2 + i;
+                                if (pageNum > pagination.last_page) pageNum = pagination.last_page - (4 - i);
+                            }
+                            
+                            if(pageNum > 0 && pageNum <= pagination.last_page) {
+                                return (
+                                    <Button
+                                        key={pageNum}
+                                        variant={pagination.current_page === pageNum ? "default" : "ghost"}
+                                        size="sm"
+                                        className={`w-8 h-8 p-0 ${pagination.current_page === pageNum ? 'bg-indigo-600' : ''}`}
+                                        onClick={() => handlePageChange(pageNum)}
+                                    >
+                                        {pageNum}
+                                    </Button>
+                                )
+                            }
+                            return null;
+                        })}
+                    </div>
+
+                    <Button
+                        variant="outline" size="sm"
+                        onClick={() => handlePageChange(pagination.current_page + 1)}
+                        disabled={pagination.current_page === pagination.last_page}
+                    >
+                        Next <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                </div>
+            </div>
+        )}
+
+      </div>
     </div>
   );
 }

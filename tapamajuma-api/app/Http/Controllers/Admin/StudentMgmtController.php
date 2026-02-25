@@ -21,13 +21,15 @@ class StudentMgmtController extends Controller
      * Mengambil daftar siswa + data master kelas untuk dropdown
      */
     public function index()
+
     {
         // 1. Ambil siswa dengan relasi kelasnya
         // Pastikan di Model User sudah ada method studentClass()
+        $per_page = request()->query('per_page', 15); // Ambil dari query param, default 15
         $students = User::where('role', 'student')
                         ->with('studentClass') // Eager load relasi biar ringan
                         ->orderBy('name', 'asc')
-                        ->get();
+                        ->paginate($per_page); // Pagination, 15 per halaman
 
         // 2. Ambil daftar kelas untuk dropdown pilihan di form
         $classes = ClassName::orderBy('name', 'asc')->get();

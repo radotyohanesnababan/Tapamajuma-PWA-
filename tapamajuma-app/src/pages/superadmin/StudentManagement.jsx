@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-undef */
 import React, { useState, useEffect } from 'react';
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -19,35 +21,63 @@ import { getStorageUrl } from '@/lib/utils';
 
 export default function StudentManagement() {
   usePageTitle("Manajemen Siswa");
-  // STATE DATA
+
+  // --- STATE ---
   const [students, setStudents] = useState([]);
-  const [classes, setClasses] = useState([]); // Master kelas untuk dropdown
+  const [classes, setClasses] = useState([]); 
   
+  // State Pagination & Meta (PENTING: Pengganti setTotalData manual)
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+    perPage: 15
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // STATE UI
+  // UI State
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
 
-  // FORM STATE
+  // Form State
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    nis: "",
-    password: "",
-    class_id: "" // Menyimpan ID kelas yang dipilih
+    name: "", email: "", nis: "", password: "", class_id: ""
   });
 
-  // 1. FETCH DATA (SISWA + KELAS)
-  const fetchData = async () => {
+  // --- 1. FETCH DATA (Server Side) ---
+  const fetchData = async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await api.get('/api/admin/students');
-      setStudents(response.data.students);
-      setClasses(response.data.classes);
+      const params = {
+        page: page,
+        per_page: pagination.perPage,
+        search: searchQuery // Kirim search ke server
+      };
+
+      const response = await api.get('/api/admin/students', { params });
+      
+      // Ambil data dari response Laravel
+      // Asumsi response Laravel: { students: { data: [], current_page: 1, ... }, classes: [] }
+      const { students: studentData, classes: classData } = response.data;
+
+      setStudents(studentData.data); // Ambil array datanya saja
+      setClasses(classData);
+
+      // Update Pagination Info
+      setPagination(prev => ({
+        ...prev,
+        currentPage: studentData.current_page,
+        lastPage: studentData.last_page,
+        total: studentData.total,
+        perPage: studentData.per_page,
+        from: studentData.from,
+        to: studentData.to,
+      }));
+
     } catch (error) {
       console.error(error);
       toast.error("Gagal memuat data", { description: "Terjadi kesalahan koneksi server." });
@@ -56,15 +86,25 @@ export default function StudentManagement() {
     }
   };
 
+  // Effect: Fetch saat page atau search berubah
   useEffect(() => {
-    fetchData();
-  }, []);
+    // Debounce search agar tidak spam request
+    const timer = setTimeout(() => {
+        fetchData(pagination.currentPage); 
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.currentPage, pagination.perPage, searchQuery]);
+
+  // Reset ke halaman 1 jika search berubah
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  }, [searchQuery]);
+
 
   // --- CRUD HANDLERS ---
-
   const handleAdd = () => {
     setIsEditing(false);
-    // Reset form, class_id default ke string kosong (pilihan "Pilih Kelas")
     setFormData({ name: "", email: "", nis: "", password: "", class_id: "" });
     setIsModalOpen(true);
   };
@@ -76,34 +116,26 @@ export default function StudentManagement() {
       name: student.name,
       email: student.email,
       nis: student.nis || "",
-      password: "", // Kosongkan password
-      class_id: student.class_id || "" // ID kelas saat ini
+      password: "",
+      class_id: student.class_id || ""
     });
     setIsModalOpen(true);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
-    if (!formData.class_id) {
-      return toast.warning("Pilih Kelas", { description: "Siswa wajib dimasukkan ke dalam kelas." });
-    }
+    if (!formData.class_id) return toast.warning("Pilih Kelas");
 
     setIsSaving(true);
     try {
       if (isEditing) {
-        // UPDATE
-        const response = await api.put(`/api/admin/students/${currentId}`, formData);
-        
-        // Update local state (response controller sudah include relasi studentClass)
-        setStudents(prev => prev.map(s => s.id === currentId ? response.data : s));
-        toast.success("Berhasil Update", { description: "Data siswa diperbarui." });
+        await api.put(`/api/admin/students/${currentId}`, formData);
+        toast.success("Berhasil Update");
+        fetchData(pagination.currentPage); // Refresh data tabel
       } else {
-        // CREATE
-        const response = await api.post('/api/admin/students', formData);
-        
-        setStudents(prev => [response.data, ...prev]);
-        toast.success("Siswa Ditambahkan", { description: "Siswa baru berhasil didaftarkan." });
+        await api.post('/api/admin/students', formData);
+        toast.success("Siswa Ditambahkan");
+        fetchData(1); // Refresh ke halaman 1
       }
       setIsModalOpen(false);
     } catch (error) {
@@ -115,23 +147,17 @@ export default function StudentManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Yakin ingin menghapus siswa ini?")) return;
-
+    if (!window.confirm("Yakin hapus siswa ini?")) return;
     try {
       await api.delete(`/api/admin/students/${id}`);
-      setStudents(prev => prev.filter(s => s.id !== id));
-      toast.success("Terhapus", { description: "Data siswa dihapus dari sistem." });
+      toast.success("Terhapus");
+      fetchData(pagination.currentPage); // Refresh data
     } catch {
-      toast.error("Gagal Hapus", { description: "Terjadi kesalahan server." });
+      toast.error("Gagal Hapus");
     }
   };
 
-  // FILTER SEARCH
-  const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.nis?.includes(searchQuery) || 
-    s.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-8 space-y-8 font-sans text-slate-900">
@@ -167,7 +193,7 @@ export default function StudentManagement() {
             />
           </div>
           <div className="text-xs font-medium text-slate-500">
-            {isLoading ? "Memuat..." : `Menampilkan ${filteredStudents.length} siswa`}
+            {isLoading ? "Memuat..." : `Menampilkan ${students.length} siswa`}
           </div>
         </div>
 
@@ -192,8 +218,8 @@ export default function StudentManagement() {
                     </div>
                   </td>
                 </tr>
-              ) : filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
+              ) : students.length > 0 ? (
+                students.map((student) => (
                   <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                     
                     {/* Identity Column */}
@@ -260,6 +286,115 @@ export default function StudentManagement() {
             </tbody>
           </table>
         </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4 border-t border-slate-100">
+  
+  {/* KIRI: Info & Selector Jumlah Data */}
+  <div className="flex items-center gap-4">
+    <div className="text-sm text-slate-500">
+      Menampilkan <span className="font-medium text-slate-700">{pagination.from + 1}</span> - <span className="font-medium text-slate-700">{Math.min(pagination.to, students.length)}</span> dari <span className="font-medium text-slate-700">{students.length}</span>
+    </div>
+    
+    <select 
+  className="text-xs border rounded p-1.5 bg-white text-slate-600 outline-none focus:border-indigo-500"
+  // 1. Ambil nilai dari object pagination
+  value={pagination.perPage} 
+  
+  // 2. Saat berubah: Update perPage DAN Reset ke Halaman 1
+  onChange={(e) => {
+    const newPerPage = Number(e.target.value);
+    setPagination(prev => ({
+      ...prev,
+      perPage: newPerPage,
+      currentPage: 1 // Wajib reset ke hal 1 agar tidak error out of bound
+    }));
+  }}
+>
+  <option value={15}>15 per hal</option>
+  <option value={50}>50 per hal</option>
+  <option value={100}>100 per hal</option>
+</select>
+  </div>
+
+{/* KANAN: Navigasi & Jump to Page */}
+<div className="flex items-center gap-3">
+  
+  {/* Input Loncat ke Halaman */}
+  <div className="flex items-center gap-2 mr-2">
+    <span className="text-xs text-slate-400">Ke hal:</span>
+    <input 
+      type="number" 
+      min="1" 
+      max={pagination.lastPage} // Ganti totalPages -> pagination.lastPage
+      className="w-12 border rounded p-1 text-xs text-center outline-none focus:border-indigo-500"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          // Validasi input agar tidak kurang dari 1 atau lebih dari halaman terakhir
+          const val = Math.max(1, Math.min(Number(e.target.value), pagination.lastPage));
+          
+          // Update state (ini akan otomatis trigger fetchData via useEffect)
+          setPagination(prev => ({ ...prev, currentPage: val }));
+        }
+      }}
+      placeholder={pagination.currentPage} // Ganti currentPage -> pagination.currentPage
+    />
+  </div>
+
+  {/* Tombol Navigasi */}
+  <div className="flex gap-1">
+    
+    {/* Tombol Prev */}
+    <Button
+      variant="outline" size="sm"
+      onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+      disabled={pagination.currentPage === 1}
+      className="h-8 px-3"
+    >
+      Prev
+    </Button>
+
+    <div className="hidden md:flex gap-1">
+      {/* Logika Pagination (Looping halaman) */}
+      {[...Array(pagination.lastPage)].map((_, i) => {
+        const pageNum = i + 1;
+        
+        // Logika Tampilan: Tampilkan halaman 1, terakhir, dan sekitar halaman aktif
+        if (
+          pageNum === 1 || 
+          pageNum === pagination.lastPage || 
+          (pageNum >= pagination.currentPage - 1 && pageNum <= pagination.currentPage + 1)
+        ) {
+          return (
+            <Button
+              key={pageNum}
+              variant={pagination.currentPage === pageNum ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 w-8 p-0 ${pagination.currentPage === pageNum ? 'bg-indigo-600' : ''}`}
+              onClick={() => setPagination(prev => ({ ...prev, currentPage: pageNum }))}
+            >
+              {pageNum}
+            </Button>
+          );
+        } 
+        // Tampilkan titik-titik (...)
+        else if (pageNum === pagination.currentPage - 2 || pageNum === pagination.currentPage + 2) {
+          return <span key={pageNum} className="px-1 text-slate-300">...</span>;
+        }
+        return null;
+      })}
+    </div>
+
+    {/* Tombol Next */}
+    <Button
+      variant="outline" size="sm"
+      onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+      disabled={pagination.currentPage === pagination.lastPage}
+      className="h-8 px-3"
+    >
+      Next
+    </Button>
+  </div>
+</div>
+</div>
       </div>
 
       {/* --- MODAL FORM --- */}

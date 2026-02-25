@@ -36,8 +36,9 @@ class QuestionMgmtController extends Controller
         if ($request->has('search') && $request->search) {
             $query->where('question_text', 'like', '%' . $request->search . '%');
         }
+        $perPage = $request->input('per_page', 10);
 
-        $questions = $query->latest()->get();
+        $questions = $query->latest()->paginate($perPage);
 
         // 2. Ambil Data Master untuk Dropdown Filter
         $subjects = Subject::orderBy('name')->get();
@@ -45,10 +46,14 @@ class QuestionMgmtController extends Controller
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
 
         return response()->json([
+            'status' => 'success',
+            'data' =>[
             'questions' => $questions,
             'subjects' => $subjects,
             'classes' => $classes,
             'teachers' => $teachers,
+            ]
+
         ]);
     }
 
