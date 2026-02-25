@@ -12,6 +12,7 @@ import { Autoplay, Navigation, Pagination, EffectFade } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Sparkles, Activity, BookOpen, BrainCircuit, Target, Users, CheckCircle2, ImageOff, Download } from 'lucide-react';
 import { getStorageUrl } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
 
 export default function Welcome() {
     const [auth, setAuth] = useState(false);
