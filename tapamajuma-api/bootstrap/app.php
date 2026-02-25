@@ -14,28 +14,23 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         
-        // 1. Masukkan Middleware Khusus ke Grup API saja (Biar Web ga error)
+        // 1. Group API Middleware
         $middleware->api(prepend: [
-            \App\Http\Middleware\ForceJsonResponse::class, // Paksa JSON
-            \App\Http\Middleware\LogActivityMiddleware::class, // Log Aktivitas
-        ]);
-        
-        $middleware->validateCsrfTokens(except: [
-            '*' 
+            \App\Http\Middleware\ForceJsonResponse::class, // Paksa return JSON
+            \App\Http\Middleware\LogActivityMiddleware::class, // Pastikan nama class & file ini SAMA
         ]);
 
-        // 3. Matikan Redirect Fisik (SOLUSI YANG BENAR)
-        // Return null artinya: "Jangan redirect kemana-mana".
-        // Laravel otomatis akan melempar AuthenticationException,
-        // yang nanti ditangkap oleh Laravel jadi response 401 JSON (karena header Accept: json).
+        // 2. Setting CORS (Agar domain frontend diizinkan)
+        // Ini akan menimpa setting default config/cors.php
+        $middleware->validateCsrfTokens(except: ['*']); // Matikan CSRF untuk API
+
+        // 3. FIX ERROR 500: Jangan return response()->json() disini!
+        // Return NULL agar Laravel tahu "Jangan Redirect".
+        // Karena header Accept: application/json ada (dari frontend/ForceJsonResponse),
+        // Laravel otomatis akan melempar error 401 Unauthorized JSON.
         $middleware->redirectGuestsTo(fn (Request $request) => null);
-        
-        // Sama juga untuk user yang sudah login tapi akses halaman guest
         $middleware->redirectUsersTo(fn (Request $request) => null);
-
-        // 4. CSRF (Biasanya tidak perlu di-set untuk API, tapi kalau mau aman biarkan default)
-        // API Routes secara default TIDAK melewati CSRF check.
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Opsional: Custom error handling jika perlu
+        // Opsional: Custom exception handling
     })->create();
