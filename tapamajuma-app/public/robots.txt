@@ -1,8 +1,17 @@
 User-agent: *
+
+# Area yang boleh di-index
 Allow: /
 Allow: /login
+Allow: /register
+Allow: /s/
+
+# Area privat (Dashboard) - Blokir agar tidak muncul di Google
 Disallow: /student/
 Disallow: /teacher/
 Disallow: /superadmin/
+Disallow: /admin/
+Disallow: /api/
 
+# Link Peta Situs
 Sitemap: https://tapamajuma.my.id/sitemap.xml
