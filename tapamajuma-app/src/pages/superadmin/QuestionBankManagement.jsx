@@ -51,14 +51,12 @@ export default function QuestionBankManagement() {
       };
 
       const response = await api.get('/api/admin/questions', { params });
-      
-      // 1. UBAH NAMA VARIABEL DISINI (Alias)
-      // Supaya tidak bentrok dengan state 'subjects', 'classes', dll
       const { 
         questions: questionsData, 
         subjects: subjectsData, 
         classes: classesData, 
         teachers: teachersData 
+
       } = response.data.data;
 
       // Gunakan variabel alias tadi
