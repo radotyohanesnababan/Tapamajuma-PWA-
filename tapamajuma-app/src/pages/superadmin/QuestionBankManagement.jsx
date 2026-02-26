@@ -104,7 +104,7 @@ export default function QuestionBankManagement() {
       await api.delete(`/api/admin/questions/${id}`);
       setQuestions(prev => prev.filter(q => q.id !== id));
       toast.success("Soal dihapus");
-    } catch (error) {
+    } catch  {
       toast.error("Gagal menghapus");
     }
   };

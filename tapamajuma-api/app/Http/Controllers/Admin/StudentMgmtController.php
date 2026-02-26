@@ -20,25 +20,38 @@ class StudentMgmtController extends Controller
      * GET /api/admin/students
      * Mengambil daftar siswa + data master kelas untuk dropdown
      */
-    public function index()
+    public function index(Request $request) // Tambahkan parameter Request $request
+{
+    // 1. Inisialisasi Query dasar
+    $query = User::where('role', 'student')
+                 ->with('studentClass'); // Eager load relasi
 
-    {
-        // 1. Ambil siswa dengan relasi kelasnya
-        // Pastikan di Model User sudah ada method studentClass()
-        $per_page = request()->query('per_page', 15); // Ambil dari query param, default 15
-        $students = User::where('role', 'student')
-                        ->with('studentClass') // Eager load relasi biar ringan
-                        ->orderBy('name', 'asc')
-                        ->paginate($per_page); // Pagination, 15 per halaman
-
-        // 2. Ambil daftar kelas untuk dropdown pilihan di form
-        $classes = ClassName::orderBy('name', 'asc')->get();
-
-        return response()->json([
-            'students' => $students,
-            'classes' => $classes
-        ]);
+    // 2. LOGIKA PENCARIAN (Tambahkan Bagian Ini)
+    if ($request->has('search') && $request->search != '') {
+        $searchTerm = '%' . $request->search . '%';
+        
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('name', 'like', $searchTerm)
+              ->orWhere('nis', 'like', $searchTerm)
+              ->orWhere('email', 'like', $searchTerm);
+        });
     }
+
+    // 3. Ambil per_page dari query param (default 15)
+    $per_page = $request->query('per_page', 15);
+
+    // 4. Eksekusi Pagination
+    $students = $query->orderBy('name', 'asc')
+                      ->paginate($per_page);
+
+    // 5. Ambil daftar kelas untuk dropdown
+    $classes = ClassName::orderBy('name', 'asc')->get();
+
+    return response()->json([
+        'students' => $students,
+        'classes' => $classes
+    ]);
+}
                 public function import(Request $request) 
         {
             $request->validate([

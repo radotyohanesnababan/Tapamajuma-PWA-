@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-undef */
 import React, { useState, useEffect } from 'react';
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -86,21 +85,16 @@ export default function StudentManagement() {
     }
   };
 
-  // Effect: Fetch saat page atau search berubah
-  useEffect(() => {
-    // Debounce search agar tidak spam request
+ useEffect(() => {
     const timer = setTimeout(() => {
-        fetchData(pagination.currentPage); 
+        // Jika sedang mencari, paksa ke halaman 1. Jika tidak, pakai halaman saat ini.
+        const targetPage = searchQuery ? 1 : pagination.currentPage;
+        fetchData(targetPage); 
     }, 300);
+
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.currentPage, pagination.perPage, searchQuery]);
-
-  // Reset ke halaman 1 jika search berubah
-  useEffect(() => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-  }, [searchQuery]);
-
+    // Tambahkan searchQuery sebagai pemicu utama
+}, [pagination.currentPage, pagination.perPage, searchQuery]);
 
   // --- CRUD HANDLERS ---
   const handleAdd = () => {
