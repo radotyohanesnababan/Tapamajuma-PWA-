@@ -8,10 +8,13 @@ use App\Models\ClassName; // Pastikan Model ClassName sudah ada
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Carbon\Carbon;
 
-class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets, WIthChunkReading
+class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets, WithChunkReading
 {
     protected $creator_id;
+    
 
     // Kita butuh ID user yang login, jadi kita passing lewat constructor
     public function __construct($creator_id)
@@ -33,6 +36,7 @@ class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets,
     */
 public function model(array $row)
     {
+        $now = Carbon::now('Asia/Jakarta');
         \Illuminate\Support\Facades\Log::info("MEMBACA BARIS EXCEL: ", $row);
 
         if (!isset($row['nama_mapel']) || !isset($row['nama_kelas'])) {

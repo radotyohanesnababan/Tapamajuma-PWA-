@@ -11,32 +11,33 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class QuestionBankController extends Controller
 {
-    public function index(Request $request)
-    {
-        $user = $request->user();
-        
-        // Load Subject DAN targetClass (agar nama kelas muncul: "7A")
-        $query = QuestionBank::with(['creator:id,name', 'subject', 'targetClass']); 
+   public function index(Request $request)
+{
+    $user = $request->user();
+    
+    // Load Subject DAN targetClass
+    $query = QuestionBank::with(['creator:id,name', 'subject', 'targetClass']); 
 
-        if ($user->role !== 'superadmin') {
-            $query->where('creator_id', $user->id);
-        }
+    if ($user->role !== 'superadmin') {
+        $query->where('creator_id', $user->id);
+    }
 
-        if ($request->has('type')) {
+    if ($request->has('type')) {
         $query->where('type', $request->type);
     }
-        
-        // Filter Dropdown Frontend
-        if ($request->has('subject_id')) {
-            $query->where('subject_id', $request->subject_id);
-        }
-        if ($request->has('class_id')) { // Tambah filter kelas
-            $query->where('class_id', $request->class_id);
-        }
-
-        return response()->json($query->latest()->get());
+    
+    if ($request->has('subject_id')) {
+        $query->where('subject_id', $request->subject_id);
+    }
+    
+    if ($request->has('class_id')) { 
+        $query->where('class_id', $request->class_id);
     }
 
+    // Gunakan paginate, misalnya 10 data per halaman
+    // Laravel akan mengembalikan object berisi: data, current_page, last_page, total, dll.
+    return response()->json($query->latest()->paginate(10));
+}
     public function store(Request $request)
     {
         $request->validate([
@@ -64,7 +65,7 @@ class QuestionBankController extends Controller
         // 2. Jika ada file gambar yang diunggah
         if ($request->hasFile('image')) {
             // Simpan ke storage dan masukkan teks path-nya ke array $data
-            $data['image'] = $request->file('image')->store('questions', 'public');
+            $data['image'] = $request->file('image')->store('questions');
         }
 
         // 3. Simpan ke database menggunakan array $data yang sudah bersih
