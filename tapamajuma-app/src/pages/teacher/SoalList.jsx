@@ -85,14 +85,6 @@ const fetchQuestions = async (page = 1) => {
     }
   };
 
-  useEffect(() => {
-    // Bikin jeda 500ms biar nggak spam server
-    const delayDebounceFn = setTimeout(() => {
-      fetchQuestions(1); // Mulai cari dari halaman 1
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
