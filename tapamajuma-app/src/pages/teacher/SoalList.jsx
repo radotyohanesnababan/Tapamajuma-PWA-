@@ -23,27 +23,29 @@ export default function SoalList() {
   const [questions, setQuestions] = useState([]); 
 
   // Fetch data dengan parameter halaman
-  const fetchQuestions = async (page = 1) => {
+const fetchQuestions = async (page = 1) => {
     setIsLoading(true);
     try {
-      // Tambahkan parameter page dan search ke API
       const res = await api.get(`/api/teacher/bank-soal`, {
-        params: {
-          type: filterType,
-          page: page,
-          search: searchQuery // Akan berguna jika di Laravel pakai fitur search
-        }
+        params: { type: filterType, page: page, search: searchQuery }
       });
       
-      // Laravel paginate mengembalikan data di dalam res.data.data
-      setQuestions(res.data.data || []); 
+      const responseData = res.data;
       
-      // Simpan info navigasi halaman
+      // JURUS AMAN: Cek apakah data dari server berupa Array (lama) atau Object (baru)
+      const actualQuestions = Array.isArray(responseData) 
+        ? responseData 
+        : (responseData.data || []);
+      
+      setQuestions(actualQuestions); 
+      
+      // Simpan info navigasi halaman (kalau server masih pakai ->get(), totalnya ngikut jumlah array)
       setPagination({
-        current_page: res.data.current_page || 1,
-        last_page: res.data.last_page || 1,
-        total: res.data.total || 0
+        current_page: responseData.current_page || 1,
+        last_page: responseData.last_page || 1,
+        total: responseData.total || actualQuestions.length
       });
+
     } catch (error) {
       toast.error("Gagal mengambil data soal");
     } finally {
