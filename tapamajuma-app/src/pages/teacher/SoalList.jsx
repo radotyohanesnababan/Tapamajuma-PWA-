@@ -85,10 +85,14 @@ const fetchQuestions = async (page = 1) => {
     }
   };
 
-  // Filter pencarian teks (Client-side untuk halaman aktif saja)
-  const filteredQuestions = questions.filter(q => 
-    q.question_text?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    // Bikin jeda 500ms biar nggak spam server
+    const delayDebounceFn = setTimeout(() => {
+      fetchQuestions(1); // Mulai cari dari halaman 1
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
@@ -135,7 +139,7 @@ const fetchQuestions = async (page = 1) => {
         <div className="grid gap-4">
           {isLoading ? (
             <div className="text-center py-24"><Loader2 className="animate-spin h-10 w-10 mx-auto text-indigo-500"/></div>
-          ) : filteredQuestions.length === 0 ? (
+          ) : questions.length === 0 ? (
              <div className="text-center py-24 bg-white rounded-[2.5rem] shadow-sm">
                 <Database size={48} className="mx-auto text-slate-200 mb-4" />
                 <h3 className="text-base font-black text-slate-800">Data Kosong</h3>
@@ -144,7 +148,7 @@ const fetchQuestions = async (page = 1) => {
           ) : (
             <>
               {/* RENDER LIST SOAL */}
-              {filteredQuestions.map((q) => (
+              {questions.map((q) => (
                 <div key={q.id} className="border-none rounded-[2rem] bg-white shadow-sm hover:shadow-md transition-all overflow-hidden p-6 relative">
                   <div className="absolute left-0 top-0 bottom-0 w-2 bg-indigo-500"></div>
                   <div className="flex justify-between items-start mb-4 pl-2">
@@ -194,7 +198,7 @@ const fetchQuestions = async (page = 1) => {
               <div className="mt-10 mb-6 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="px-4 py-1.5 bg-slate-200/50 rounded-full">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    Menampilkan {filteredQuestions.length} dari {pagination.total} Soal
+                    Menampilkan {questions.length} dari {pagination.total} Soal
                   </p>
                 </div>
 

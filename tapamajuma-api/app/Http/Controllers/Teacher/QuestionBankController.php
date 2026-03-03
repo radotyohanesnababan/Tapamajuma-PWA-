@@ -33,6 +33,10 @@ class QuestionBankController extends Controller
     if ($request->has('class_id')) { 
         $query->where('class_id', $request->class_id);
     }
+    // TAMBAHKAN INI UNTUK PENCARIAN GLOBAL
+    if ($request->has('search') && $request->search != '') {
+        $query->where('question_text', 'LIKE', '%' . $request->search . '%');
+    }
 
     // Gunakan paginate, misalnya 10 data per halaman
     // Laravel akan mengembalikan object berisi: data, current_page, last_page, total, dll.
