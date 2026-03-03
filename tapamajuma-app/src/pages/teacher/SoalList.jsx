@@ -119,14 +119,35 @@ const fetchQuestions = async (page = 1) => {
             <option value="tka">🧠 TKA (HOTS)</option>
           </select>
 
-          <div className="relative flex-1">
+                    <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
             <input 
-              placeholder="Cari pertanyaan..." 
+              placeholder="Ketik soal lalu tekan Enter..." 
               className="w-full pl-11 h-12 rounded-2xl border-none shadow-sm bg-white outline-none focus:ring-2 focus:ring-indigo-400 text-sm font-medium" 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)} 
+              // TAMBAHKAN INI: Server hanya dipanggil saat tombol Enter ditekan
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  fetchQuestions(1); // Mulai cari dari halaman 1
+                }
+              }}
             />
+            
+            {/* Tombol X (Clear) opsional biar UX-nya bagus */}
+            {searchQuery && (
+              <button 
+                onClick={() => {
+                  setSearchQuery("");
+                  // Karena fetchQuestions butuh waktu membaca state baru, 
+                  // kita akali dengan mengirim string kosong langsung ke fungsinya (opsional)
+                  setTimeout(() => fetchQuestions(1), 100); 
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 font-bold"
+              >
+                ✕
+              </button>
+            )}
           </div>
           <button 
             onClick={() => navigate('/teacher/bank-soal/add')} 
