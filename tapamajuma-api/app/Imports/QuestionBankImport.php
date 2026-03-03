@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets
+class QuestionBankImport implements ToModel, WithHeadingRow, WithMultipleSheets, WIthChunkReading
 {
     protected $creator_id;
 
@@ -90,5 +90,16 @@ public function model(array $row)
             ],
             'correct_key'   => strtoupper(trim($row['kunci'])),
         ]);
+    }
+    // 3. TAMBAHKAN FUNGSI INI: Baca Excel per 200 baris
+    public function chunkSize(): int
+    {
+        return 200;
+    }
+
+    // 4. TAMBAHKAN FUNGSI INI: Insert ke Database per 200 baris sekaligus
+    public function batchSize(): int
+    {
+        return 200;
     }
 }

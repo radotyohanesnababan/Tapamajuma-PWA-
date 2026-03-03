@@ -75,6 +75,10 @@ class QuestionBankController extends Controller
 
     public function import(Request $request)
 {
+    // 1. TAMBAHKAN DUA BARIS INI (Wajib untuk data besar)
+    set_time_limit(300); // Izinkan server mikir sampai 5 menit
+    ini_set('memory_limit', '1024M'); // Perbesar jatah RAM sementara
+
     // Validasi file
     $request->validate([
         'file' => 'required|mimes:xlsx,xls,csv',
@@ -82,8 +86,6 @@ class QuestionBankController extends Controller
 
     try {
         // Panggil Excel::import
-        // Parameter 1: Instance Import Class (kita kirim User ID ke sana)
-        // Parameter 2: Filenya
         Excel::import(new QuestionBankImport($request->user()->id), $request->file('file'));
 
         return response()->json([

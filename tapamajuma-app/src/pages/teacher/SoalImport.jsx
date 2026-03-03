@@ -31,23 +31,27 @@ export default function SoalImport() {
     }
   };
 
-  const handleImportSubmit = async (e) => {
+const handleImportSubmit = async (e) => {
     e.preventDefault();
     if (!xlsxFile) return toast.error("File wajib dipilih!");
     setIsSubmitting(true);
 
     const formData = new FormData();
     formData.append("file", xlsxFile);
-    formData.append("type", importType); // Backend Excel Import butuh info type ini
+    formData.append("type", importType); 
 
     try {
+      // TAMBAHKAN CONFIG TIMEOUT DI SINI
       const res = await api.post("/api/teacher/bank-soal/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 300000, // Waktu tunggu 5 Menit (300.000 ms)
+        skipFailover: true // (Opsional) Jika di interceptor kamu ada failover, beri flag ini agar diabaikan
       });
+      
       toast.success(res.data.message || "Berhasil import soal!");
       setXlsxFile(null); // Reset
     } catch (error) {
-      toast.error(error.response?.data?.error || "Gagal melakukan import.");
+      toast.error(error.response?.data?.error || "Gagal melakukan import. Waktu habis atau format salah.");
     } finally {
       setIsSubmitting(false);
     }
