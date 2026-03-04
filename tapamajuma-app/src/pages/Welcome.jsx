@@ -77,9 +77,9 @@ export default function Welcome() {
     }, []);
 
     const slides = [
-        'images/hero1.png',
-        'images/hero2.png',
-        'images/hero3.png',
+        'images/hero1.webp',
+        'images/hero2.webp',
+        'images/hero3.webp',
     ];
 
     const features = [
@@ -111,7 +111,7 @@ export default function Welcome() {
                 <meta property="og:description" content="Pantau aktivitas belajar, literasi, dan numerasi siswa secara real-time." />
                 <meta property="og:title" content="TAPAMAJUMA - Generasi Maju" />
                 <meta property="og:description" content="Platform monitoring pendidikan terintegrasi." />
-                <meta property="og:image" content="https://cdn.tapamajuma-api.my.id/images/iconappp.png" />
+                <meta property="og:image" content="https://cdn.tapamajuma-api.my.id/images/iconappp.webp" />
             </Helmet>
 
             <WelcomeLayout title="Beranda" auth={auth}>
@@ -194,7 +194,7 @@ export default function Welcome() {
                             <div className={`flex justify-center md:justify-end relative transition-all duration-1000 delay-300 ${isMounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                                 <div className="absolute inset-0 bg-sky-400 blur-[100px] opacity-20 rounded-full animate-pulse"></div>
                                 <img
-                                    src={getStorageUrl("images/iconappp.png")}
+                                    src={getStorageUrl("images/iconappp.webp")}
                                     alt="Logo TAPAMAJUMA"
                                     onError={handleImageError}
                                     width="500"

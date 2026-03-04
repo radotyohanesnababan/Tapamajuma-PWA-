@@ -10,24 +10,30 @@ use Illuminate\Support\Facades\Auth;
 class LogActivityMiddleware
 {
     public function handle(Request $request, Closure $next)
-    {
-        $response = $next($request);
+{
+    $response = $next($request);
 
-        // Hanya catat jika user sudah login (Auth)
-        if (Auth::check()) {
+    // Ambil URL dari env
+    $logUrl = env('LOGGER_SERVICE_URL');
+
+    // Hanya kirim jika user login DAN URL log tersedia
+    if (Auth::check() && !empty($logUrl)) {
+        try {
             $user = Auth::user();
-            
-            // Tentukan aksi berdasarkan rute atau method
             $action = "Mengakses " . $request->path() . " [" . $request->method() . "]";
 
-            // Kirim ke service Go secara asynchronous (tanpa menunggu respon agar tidak lambat)
-            Http::withoutVerifying() // Gunakan ini jika ada masalah sertifikat TLS
-                ->post(env('LOGGER_SERVICE_URL'), [
+            Http::withoutVerifying()
+                ->timeout(1)
+                ->connectTimeout(1)
+                ->post($logUrl, [ // Variabel $logUrl dipastikan bukan null di sini
                     'user_id' => $user->id,
                     'action'  => $action,
                 ]);
+        } catch (\Exception $e) {
+            \Log::warning("Logger Go Down atau Error: " . $e->getMessage());
         }
-
-        return $response;
     }
+
+    return $response;
+}
 }
