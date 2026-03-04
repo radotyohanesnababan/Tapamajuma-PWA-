@@ -21,6 +21,7 @@ Route::get('/cek-hantu', function () {
     ];
 });
 
+
 Route::get('/s/{token}', function ($token) {
     
     // 1. Cari Data Gallery

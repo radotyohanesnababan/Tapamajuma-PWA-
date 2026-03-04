@@ -15,19 +15,24 @@ class DailyActivityController extends Controller
      * Cek apakah user sudah mengerjakan tugas hari ini
      */
     public function checkStatus(Request $request)
-    {
-        $user = $request->user();
+{
+    $$user = $request->user();
+    
+    $todayWIB = Carbon::now('Asia/Jakarta')->toDateString();
+    
+    $count = $user->dailyActivities()
+        ->whereDate('created_at', $todayWIB)
+        ->count();
 
-        // Cek apakah ada record di tabel daily_activities milik user ini untuk hari ini
-        $alreadySubmitted = $user->dailyActivities()
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
+    $alreadySubmitted = $count > 0;
 
-        return response()->json([
-            'already_submitted' => $alreadySubmitted,
-            'server_date' => Carbon::today()->toDateString()
-        ]);
-    }
+    return response()->json([
+        'already_submitted' => $alreadySubmitted,
+        'server_date'       => $todayWIB,
+        'user_id'           => $user->id,
+        'count_today'       => $count, // tambah ini
+    ]);
+}
     public function store(Request $request)
     {
         $user = $request->user();
