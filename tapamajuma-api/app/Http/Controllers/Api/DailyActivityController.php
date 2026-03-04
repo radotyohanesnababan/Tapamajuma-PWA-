@@ -16,7 +16,7 @@ class DailyActivityController extends Controller
      */
     public function checkStatus(Request $request)
 {
-    $$user = $request->user();
+    $user = $request->user();
     
     $todayWIB = Carbon::now('Asia/Jakarta')->toDateString();
     
