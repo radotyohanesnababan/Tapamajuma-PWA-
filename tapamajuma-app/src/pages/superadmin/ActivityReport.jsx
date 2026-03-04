@@ -19,8 +19,12 @@ import api from "@/lib/axios";
 export default function ActivityReport() {
   usePageTitle("Laporan Aktivitas");
   const navigate = useNavigate();
+  
   const [reportStartDate, setReportStartDate] = useState("");
   const [reportEndDate, setReportEndDate] = useState("");
+  // Tambah state baru di atas komponen (dekat useState lainnya)
+const [downloadProgress, setDownloadProgress] = useState(0);
+const [downloadStep, setDownloadStep] = useState('');
 
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -84,58 +88,79 @@ export default function ActivityReport() {
   ];
 
   // --- FUNGSI DOWNLOAD ---
-  const handleDownloadFullReport = async () => {
-    setIsDownloading(true);
-    const toastId = toast.loading("Sedang membuat PDF Laporan Lengkap...");
-    
-    try {
-      // Susun parameter URL
-      const params = new URLSearchParams();
-      if (reportStartDate) params.append('start_date', reportStartDate);
-      if (reportEndDate) params.append('end_date', reportEndDate);
-      const queryString = params.toString();
-      // Request ke API Laravel
-      const response = await api.get(`/api/admin/activity-report/pdf?${queryString}`, {
-        responseType: 'blob', // PENTING: Agar dibaca sebagai file, bukan JSON
+const handleDownloadFullReport = async () => {
+  setIsDownloading(true);
+  setDownloadProgress(0);
+  setDownloadStep('Menghubungkan ke server...');
+
+  // Simulasi progress — bergerak pelan sampai 85%, sisanya nunggu response
+  let currentProgress = 0;
+  const steps = [
+    { target: 15, label: 'Mengambil data siswa & aktivitas...', duration: 1500 },
+    { target: 35, label: 'Memproses statistik per kelas...', duration: 2000 },
+    { target: 55, label: 'Meminta analisis AI...', duration: 8000 },  // AI paling lama
+    { target: 75, label: 'Menghasilkan analisis AI...', duration: 8000 },
+    { target: 85, label: 'Menyusun halaman PDF...', duration: 3000 },
+  ];
+
+  // Jalankan simulasi progress di background
+  const runSteps = async () => {
+    for (const step of steps) {
+      setDownloadStep(step.label);
+      const increment = (step.target - currentProgress) / (step.duration / 100);
+      await new Promise(resolve => {
+        const interval = setInterval(() => {
+          currentProgress = Math.min(currentProgress + increment, step.target);
+          setDownloadProgress(Math.round(currentProgress));
+          if (currentProgress >= step.target) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
       });
-
-      // Membuat URL object dari blob data
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      
-      // Membuat element anchor <a> tersembunyi untuk trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Set nama file (opsional, backend biasanya sudah set header juga)
-      link.setAttribute('download', `Laporan_Lengkap_Tapamajuma_${new Date().toISOString().split('T')[0]}.pdf`);
-      
-      document.body.appendChild(link);
-      link.click();
-
-      // Bersihkan memori dan elemen
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast.dismiss(toastId);
-      toast.success("Laporan berhasil diunduh!");
-      
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.dismiss(toastId);
-      toast.error("Gagal mengunduh laporan. Silakan coba lagi.");
-    } finally {
-      setIsDownloading(false);
     }
   };
 
+  // Jalankan simulasi dan request secara paralel
+  runSteps(); // sengaja tidak di-await — jalan di background
 
+  try {
+    const params = new URLSearchParams();
+    if (reportStartDate) params.append('start_date', reportStartDate);
+    if (reportEndDate) params.append('end_date', reportEndDate);
 
-  // Dummy Data untuk Riwayat Download (Supaya page tidak kosong)
-  // const recentDownloads = [
-  //   // { id: 1, name: "Laporan_Bulanan_Januari.pdf", date: "Baru saja", size: "2.4 MB" },
-  //   // { id: 2, name: "Data_Siswa_Kelas_9A.xlsx", date: "2 jam yang lalu", size: "1.1 MB" },
-  //   // { id: 3, name: "Rekap_Sesi_Guru_Minggu_3.pdf", date: "Kemarin", size: "850 KB" },
-  // ];
+    const response = await api.get(`/api/admin/activity-report/pdf?${params.toString()}`, {
+      responseType: 'blob',
+      timeout: 0, // 0 = tidak ada timeout, biarkan selama apapun
+    });
+
+    // Response sudah datang — langsung lompat ke 100%
+    setDownloadProgress(100);
+    setDownloadStep('PDF siap, memulai unduhan...');
+
+    await new Promise(r => setTimeout(r, 600)); // jeda sebentar biar user lihat 100%
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Laporan_Lengkap_Tapamajuma_${new Date().toISOString().split('T')[0]}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Laporan berhasil diunduh!");
+
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.error("Gagal mengunduh laporan. Silakan coba lagi.");
+  } finally {
+    setIsDownloading(false);
+    setDownloadProgress(0);
+    setDownloadStep('');
+  }
+};
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -214,22 +239,41 @@ export default function ActivityReport() {
             </div>
 
             <div className="flex gap-3">
-              <Button 
-                onClick={handleDownloadFullReport}
-                disabled={isDownloading}
-                className="bg-white text-slate-900 hover:bg-slate-100 font-bold min-w-[180px]"
-              >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" /> Export Laporan PDF
-                  </>
-                )}
-              </Button>
-            </div>
+  <Button
+    onClick={handleDownloadFullReport}
+    disabled={isDownloading}
+    className="bg-white text-slate-900 hover:bg-slate-100 font-bold min-w-[220px]"
+  >
+    {isDownloading ? (
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+    ) : (
+      <Download className="mr-2 h-4 w-4" />
+    )}
+    {isDownloading ? 'Memproses...' : 'Export Laporan PDF'}
+  </Button>
+
+  {/* Progress bar — hanya muncul saat loading */}
+  {isDownloading && (
+    <div className="flex flex-col justify-center min-w-[240px] gap-1">
+      {/* Bar */}
+      <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+        <div
+          className="h-2 rounded-full bg-white transition-all duration-300 ease-out"
+          style={{ width: `${downloadProgress}%` }}
+        />
+      </div>
+      {/* Label step + persentase */}
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-slate-400 truncate max-w-[190px]">
+          {downloadStep}
+        </span>
+        <span className="text-xs text-slate-300 font-mono ml-2 flex-shrink-0">
+          {downloadProgress}%
+        </span>
+      </div>
+    </div>
+  )}
+</div>
             
             {/* Dekorasi */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-3xl opacity-50 -mr-16 -mt-16 pointer-events-none"></div>

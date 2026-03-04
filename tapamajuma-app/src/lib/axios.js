@@ -4,15 +4,17 @@ import { toast } from "sonner";
 // =================================================================
 // 1. CONFIG URL
 // =================================================================
-const ENV_URL = import.meta.env.VITE_API_URL; 
+const ENV_URL = "http://127.0.0.1:8000";
 const PROD_URL = "https://tapamajuma-api.my.id"; // Balik ke DomCloud
 const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; // Render
-
-const savedBaseUrl = sessionStorage.getItem("active_base_url");
 const isDevelopment = import.meta.env.DEV;
 
-// Logic awal: prioritaskan session storage (hasil failover sebelumnya)
+const savedBaseUrl = !isDevelopment ? sessionStorage.getItem("active_base_url") : null;
 let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
+
+
+console.log('isDevelopment:', import.meta.env.DEV);
+console.log('currentBaseUrl:', currentBaseUrl);
 
 const api = axios.create({
   baseURL: currentBaseUrl,
@@ -47,43 +49,38 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response ? error.response.status : null;
 
-    // SYARAT FAILOVER:
-    // 1. Kita sedang TIDAK menggunakan Render
-    // 2. Terjadi Network Error (mati total) atau Server Error (5xx)
-    const isUsingBackup = currentBaseUrl === BACKUP_URL;
-    const isServerError = !error.response || (status >= 500 && status <= 599);
+    // Failover hanya di production
+    if (!isDevelopment) {
+      const isUsingBackup = currentBaseUrl === BACKUP_URL;
+      const isServerError = !error.response || (status >= 500 && status <= 599);
 
-    if (!isUsingBackup && isServerError && !originalRequest._retry) {
-      console.warn("🚨 DOMCLOUD GANGGUAN. SWITCHING TO RENDER...");
-
-      originalRequest._retry = true;
-      currentBaseUrl = BACKUP_URL;
-      api.defaults.baseURL = BACKUP_URL;
-      sessionStorage.setItem("active_base_url", BACKUP_URL);
-
-      toast.error("Server Utama gangguan. Dialihkan ke cadangan...", {
-        duration: 10000,
-      });
-
-      // Update URL request yang sedang gagal ini
-      originalRequest.baseURL = BACKUP_URL;
-      if (originalRequest.url.startsWith("http")) {
-        const urlObj = new URL(originalRequest.url);
-        originalRequest.url = urlObj.pathname + urlObj.search;
+      if (!isUsingBackup && isServerError && !originalRequest._retry) {
+        console.warn("🚨 DOMCLOUD GANGGUAN. SWITCHING TO RENDER...");
+        originalRequest._retry = true;
+        currentBaseUrl = BACKUP_URL;
+        api.defaults.baseURL = BACKUP_URL;
+        sessionStorage.setItem("active_base_url", BACKUP_URL);
+        toast.error("Server Utama gangguan. Dialihkan ke cadangan...", { duration: 10000 });
+        originalRequest.baseURL = BACKUP_URL;
+        if (originalRequest.url.startsWith("http")) {
+          const urlObj = new URL(originalRequest.url);
+          originalRequest.url = urlObj.pathname + urlObj.search;
+        }
+        return api(originalRequest);
       }
-
-      return api(originalRequest);
     }
 
-    // Auto Logout 401
+    // Auto logout 401 — tetap jalan di dev maupun prod
     if (status === 401 && window.location.pathname !== '/login') {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user_data");
-        window.location.href = "/login";
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);
   }
 );
+
+
 
 export default api;
