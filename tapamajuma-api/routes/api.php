@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum',)->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/activities', [DailyActivityController::class, 'index']);
     Route::post('/activities', [DailyActivityController::class, 'store']);
+    Route::get('/activities/today-status', [DailyActivityController::class, 'checkStatus']);
     Route::post('/generate-content', [ApiAIController::class, 'generate']);
 
     //Fitur Quiz Numerasi & Literasi

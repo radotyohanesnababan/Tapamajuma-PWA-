@@ -8,6 +8,9 @@ import LiteracyChallengeCard from "@/components/challenge/LiteracyChallengeCard"
 import NumeracyChallengeCard from "@/components/challenge/NumeracyChallengeCard";
 import { toast } from "sonner";
 import TKAChallengeCard from "@/components/challenge/TKAChallengeCard";
+import OffDayPage from "./OffDayPage";
+import { set } from "date-fns";
+
 
 // 1. Definisikan HeaderSection di sini agar tidak hilang
 const HeaderSection = ({ activity }) => {
@@ -51,8 +54,11 @@ const HeaderSection = ({ activity }) => {
 };
 
 export default function ChallengeForm() {
-  const [todayActivity, setTodayActivity] = useState(null);
+ const [todayActivity, setTodayActivity] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false); // State baru
+  const [checkingStatus, setCheckingStatus] = useState(true); // State loading awal
+  
   const [formData, setFormData] = useState({
     subject: "",
     journal: "",
@@ -60,36 +66,94 @@ export default function ChallengeForm() {
   });
 
   useEffect(() => {
-    // Deteksi hari otomatis (0=Minggu, 2=Selasa, 3=Rabu)
+    // 1. Deteksi hari (logika lama kamu)
     const today = new Date().getDay();
     if (today === 1 || today === 2) setTodayActivity("literacy"); 
     else if (today === 3 || today === 4 || today === 5) setTodayActivity("numeracy");
     else if (today === 6) setTodayActivity("tka");
-    else setTodayActivity("off"); // Hari Minggu, tidak ada aktivitas
+    else setTodayActivity("off");
+
+    //setTodayActivity("off");
+    // 2. CEK STATUS KE BACKEND
+    const checkStatus = async () => {
+      try {
+        const response = await api.get("/api/activities/today-status");
+        if (response.data.already_submitted) {
+          setIsCompleted(true);
+        }
+      } catch (err) {
+        console.error("Gagal cek status:", err);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+
+    checkStatus();
   }, []);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    if (!formData.subject || !formData.journal) {
+      toast.error("Mohon lengkapi semua data.");
+      return;
+    }
 
-  // VALIDASI MANUAL SEBELUM KIRIM
-  if (!formData.subject || !formData.journal) {
-    toast.error("Mohon lengkapi semua data sebelum menyimpan.");
-    return;
+    setLoading(true);
+    try {
+      await api.post("/api/activities", { ...formData, type: todayActivity });
+      toast.success("Aktivitas berhasil dicatat!");
+      setIsCompleted(true); // <--- LANGSUNG KUNCI SETELAH BERHASIL
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Gagal menyimpan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- LOGIKA RENDERING ---
+
+  // 1. Jika sedang mengecek ke server
+  if (checkingStatus) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+         <p className="mt-4 text-slate-500 font-medium">Memeriksa status harian...</p>
+      </div>
+    );
   }
 
-  setLoading(true);
-  try {
-    await api.post("/api/activities", { ...formData, type: todayActivity });
-    toast.success("Aktivitas berhasil dicatat!");
-    // Reset form setelah sukses
-    setFormData({ subject: "", journal: "", confidence_level: 3, score: "", reading_content: "" });
-  } catch (err) {
-    console.error(err);
-    toast.error("Gagal menyimpan. Periksa kembali isian Anda.");
-  } finally {
-    setLoading(false);
+  // 2. Jika hari libur (Minggu)
+  if (todayActivity === 'off') {
+    return <OffDayPage />; 
   }
-};
+
+  // 3. JIKA SUDAH MENGERJAKAN (Tampilan Sukses)
+  if (isCompleted) {
+    return (
+      <div className="p-6 space-y-6 max-w-2xl mx-auto animate-in fade-in zoom-in duration-500">
+        <HeaderSection activity={todayActivity} />
+        <div className="bg-white border-2 border-dashed border-slate-200 p-10 rounded-[2.5rem] text-center">
+          <div className="w-20 h-20 bg-emerald-100 text-sky-600 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
+            <Sparkles size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Misi Selesai!</h2>
+          <p className="text-slate-500 mb-8 leading-relaxed">
+            Kamu sudah menyelesaikan tantangan <b className="uppercase">{todayActivity}</b> untuk hari ini. <br/>
+            Istirahat sejenak, dan siap-siap untuk tantangan seru berikutnya di esok hari!
+          </p>
+          <Link 
+            to="/student" 
+            className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
+          >
+            <ArrowLeft size={18} />
+            Kembali ke Beranda
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. JIKA BELUM MENGERJAKAN (Tampilkan Form Normal)
 
   return (
     <div className="p-6 space-y-6 max-w-2xl mx-auto">
@@ -160,59 +224,6 @@ export default function ChallengeForm() {
     )}
 
 
-
-
-
-{todayActivity === 'off' && (
-  <div className="flex flex-col items-center justify-center py-20 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    
-    {/* Ilustrasi Utama */}
-    <div className="relative mb-10">
-      {/* Efek Lingkaran Cahaya Mentari */}
-      <div className="absolute inset-0 bg-amber-200 blur-[80px] opacity-40 rounded-full animate-pulse"></div>
-      
-      <div className="relative bg-white p-10 rounded-[3rem] shadow-2xl shadow-amber-100 border border-amber-50 flex items-center justify-center">
-        <div className="absolute -top-4 -right-4 bg-amber-500 text-white p-3 rounded-2xl shadow-lg rotate-12">
-          <Sun size={24} className="animate-spin-slow" />
-        </div>
-        <Coffee size={80} className="text-amber-600" />
-      </div>
-    </div>
-
-    {/* Konten Teks */}
-    <div className="text-center max-w-lg">
-      <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-        <BatteryCharging size={14} />
-        Weekend Mode: On
-      </div>
-      
-      <h2 className="text-4xl font-black text-slate-800 tracking-tight mb-4">
-        Selamat Hari Minggu! 
-      </h2>
-      
-      <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10">
-        Hari ini tidak ada aktivitas belajar formal di sistem. <br className="hidden md:block" />
-        Waktunya beristirahat dan mengisi energi untuk esok hari.
-      </p>
-    </div>
-
-    {/* Navigasi */}
-    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm sm:max-w-none justify-center">
-      <Link
-        to="/student"
-        className="group flex items-center justify-center gap-3 bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 transition-all active:scale-95"
-      >
-        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-        Kembali ke Beranda
-      </Link>
-    </div>
-
-    {/* Pesan Kecil di Bawah */}
-    <p className="mt-16 text-sm font-bold text-slate-400 italic">
-      "Istirahat yang cukup adalah bagian dari strategi belajar yang hebat."
-    </p>
-  </div>
-)}
   </div>
   );
 }

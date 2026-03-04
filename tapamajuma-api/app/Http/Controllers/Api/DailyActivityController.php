@@ -6,13 +6,37 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SimpanAktivitasSiswa;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class DailyActivityController extends Controller
 {
+    /**
+     * Cek apakah user sudah mengerjakan tugas hari ini
+     */
+    public function checkStatus(Request $request)
+    {
+        $user = $request->user();
+
+        // Cek apakah ada record di tabel daily_activities milik user ini untuk hari ini
+        $alreadySubmitted = $user->dailyActivities()
+            ->whereDate('created_at', Carbon::today())
+            ->exists();
+
+        return response()->json([
+            'already_submitted' => $alreadySubmitted,
+            'server_date' => Carbon::today()->toDateString()
+        ]);
+    }
     public function store(Request $request)
     {
         $user = $request->user();
+        $alreadySubmitted = $user->dailyActivities()
+            ->whereDate('created_at', Carbon::today())
+            ->exists();
+        if ($alreadySubmitted) {
+            return response()->json(['error' => 'Anda sudah mengerjakan tugas hari ini'], 400);
+        }
         
         // 1. VALIDASI DINAMIS
         $rules = [
