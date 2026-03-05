@@ -19,7 +19,7 @@ return [
 
 'allowed_methods' => ['*'],
 
-'allowed_origins' => [ 'http://localhost:5173' , 'http://localhost:3000','https://tapamajuma-pwa.vercel.app','https://tapamajuma.my.id','https://tapamajuma-pwa.onrender.com' ,'*'],
+'allowed_origins' => [ 'http://localhost:5173' , 'http://localhost:3000','https://tapamajuma-pwa.vercel.app','https://tapamajuma.my.id','https://tapamajuma-pwa.onrender.com' ,'https://tapamajuma.smpn1siborongborong.sch.id','https://www.tapamajuma.smpn1siborongborong.sch.id','*'],
 
 'allowed_origins_patterns' => [],
 
