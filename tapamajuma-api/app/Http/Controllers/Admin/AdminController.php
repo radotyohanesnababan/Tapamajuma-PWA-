@@ -37,7 +37,7 @@ class AdminController extends Controller
                         'subject' => $activity->subject, // Mapel terkait
                         'score' => $activity->score,
                         'avatar' => $activity->user->avatar ?? null,
-                        'time_ago' => $activity->created_at->diffForHumans(),
+                        'time_ago' => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),
                     ];
                 });
 
