@@ -13,7 +13,7 @@
       "destination": "https://tapamajuma.smpn1siborongborong.sch.id/:path*",
       "permanent": true,
       "has": [
-        { "type": "host", "value": "tapamajuma.vercel.app" }
+        { "type": "host", "value": "tapamajuma-pwa.vercel.app" }
       ]
     }
   ],
