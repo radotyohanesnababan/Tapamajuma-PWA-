@@ -1,4 +1,22 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://tapamajuma.smpn1siborongborong.sch.id/$1",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "tapamajuma.my.id" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://tapamajuma.smpn1siborongborong.sch.id/$1",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "tapamajuma.vercel.app" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

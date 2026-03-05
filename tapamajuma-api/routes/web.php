@@ -19,6 +19,8 @@ Route::get('/cek-hantu', function () {
         'FRONTEND_URL_LENGTH' => strlen($frontend),
         
     ];
+
+    
 });
 
 
