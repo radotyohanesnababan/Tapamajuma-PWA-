@@ -112,7 +112,7 @@ class ReportController extends Controller
         // tidak lagi load semua siswa ke RAM lalu filter Collection
         // --------------------------------------------------------
                 $topPerAngkatan = [];
-        $gradeMap = ['Kelas 7' => 'VII', 'Kelas 8' => 'VIII', 'Kelas 9' => 'IX'];
+        $gradeMap = ['Kelas 7' => 'VII-', 'Kelas 8' => 'VIII-', 'Kelas 9' => 'IX-'];
 
         foreach ($gradeMap as $label => $roman) {
             $baseQuery = fn() => User::where('users.role', 'student')
