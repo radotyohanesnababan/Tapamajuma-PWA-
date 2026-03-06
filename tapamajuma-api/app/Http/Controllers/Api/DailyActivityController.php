@@ -8,26 +8,31 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\SimpanAktivitasSiswa;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use App\Models\DailyActivity;
 
 class DailyActivityController extends Controller
 {
     /**
      * Cek apakah user sudah mengerjakan tugas hari ini
      */
-    public function checkStatus(Request $request)
-    {
-        $user = $request->user();
+public function checkStatus(Request $request)
+{
+    $user = $request->user();
+    
+    $cacheKey = "submitted_{$user->id}_" . Carbon::now('Asia/Jakarta')->toDateString();
 
-        // Cek apakah ada record di tabel daily_activities milik user ini untuk hari ini
-        $alreadySubmitted = $user->dailyActivities()
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
+    $hasCache = \Cache::has($cacheKey);
+    $hasDb = $user->dailyActivities()
+        ->whereDate('created_at', Carbon::now('Asia/Jakarta')->toDateString())
+        ->exists();
 
-        return response()->json([
-            'already_submitted' => $alreadySubmitted,
-            'server_date' => Carbon::today()->toDateString()
-        ]);
-    }
+    return response()->json([
+        'already_submitted' => $hasCache || $hasDb,
+        'has_cache'         => $hasCache,
+        'has_db'            => $hasDb,
+        'server_date'       => Carbon::now('Asia/Jakarta')->toDateString(),
+    ]);
+}
     public function store(Request $request)
     {
         $user = $request->user();

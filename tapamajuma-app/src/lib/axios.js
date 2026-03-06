@@ -13,8 +13,7 @@ const savedBaseUrl = !isDevelopment ? sessionStorage.getItem("active_base_url") 
 let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
 
 
-console.log('isDevelopment:', import.meta.env.DEV);
-console.log('currentBaseUrl:', currentBaseUrl);
+
 
 const api = axios.create({
   baseURL: currentBaseUrl,

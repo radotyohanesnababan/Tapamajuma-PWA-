@@ -1,5 +1,27 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://tapamajuma.smpn1siborongborong.sch.id/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "tapamajuma.my.id" }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://tapamajuma.smpn1siborongborong.sch.id/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "tapamajuma-pwa.vercel.app" }
+      ]
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
