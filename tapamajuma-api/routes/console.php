@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -12,9 +13,11 @@ Artisan::command('inspire', function () {
 Schedule::command('report:weekly')
         ->weeklyOn(5, '17:00')
         ->timezone('Asia/Jakarta');
+
 Schedule::call(function () {
-    \DB::table('cache')->where('expiration', '<', now()->timestamp)->delete();
+    DB::table('cache')->where('expiration', '<', now()->timestamp)->delete();
 })->daily()->timezone('Asia/Jakarta');
+
 
 //Schedule::command('report:weekly')->everyMinute()->withoutOverlapping();;
 //Schedule::command('test:cron')->everyMinute();

@@ -100,7 +100,7 @@ export default function StudentDashboard() {
                 <CardTitle className="text-[10px] font-bold uppercase text-slate-400">Poin XP</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-1">
-                <p className="text-3xl font-black text-slate-800">{activities.reduce((acc, curr) => acc + curr.score, 0)}</p>
+                <p className="text-3xl font-black text-slate-800">{user?.xp_points ?? 0}</p>
                 <div className="flex items-center text-[9px] text-amber-500 font-bold mt-1">
                 </div>
             </CardContent>

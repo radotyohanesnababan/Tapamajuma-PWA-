@@ -96,6 +96,12 @@ public function classes()
 }
 
 
+public function xpLogs()
+{
+    return $this->hasMany(\App\Models\XpLog::class);
+}
+
+
     /**
      * Get the reflections associated with the user.
      *

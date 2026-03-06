@@ -128,12 +128,11 @@ class ReportController extends Controller
                     ->limit(5)
                     ->get(),
 
-                'tertinggi' => $baseQuery()
-                    ->withSum(['dailyActivities as total_skor' => fn($q) =>
-                        $q->whereBetween('created_at', [$startDate, $endDate])], 'score')
-                    ->orderByDesc('total_skor')
-                    ->limit(5)
-                    ->get(),
+                            'tertinggi' => $baseQuery()
+                ->addSelect(DB::raw('(SELECT COALESCE(SUM(xp), 0) FROM xp_logs WHERE xp_logs.user_id = users.id AND xp_logs.created_at BETWEEN "' . $startDate . '" AND "' . $endDate . '") as xp_periode'))
+                ->orderByDesc('xp_periode')
+                ->limit(5)
+                ->get(),
 
                 'teraktif_pagi' => $baseQuery()
                     ->withCount(['attendances as total_sesi_pagi' => fn($q) =>
@@ -149,21 +148,15 @@ class ReportController extends Controller
         // BAGIAN 6: SISWA TELADAN (Top 5 Global)
         // Query langsung dengan sorting di DB
         // --------------------------------------------------------
-        $siswaTeladan = User::where('role', 'student')
-            ->join('class_names', 'users.class_id', '=', 'class_names.id')
-            ->select('users.id', 'users.name', 'class_names.name as class_name')
-            ->withSum(['dailyActivities as total_skor' => fn($q) =>
-                $q->whereBetween('created_at', [$startDate, $endDate])], 'score')
-            ->withCount(['dailyActivities as total_keaktifan' => fn($q) =>
-                $q->whereBetween('created_at', [$startDate, $endDate])])
-            ->withCount(['attendances as total_sesi_pagi' => fn($q) =>
-                $q->where('is_active', 1)->whereBetween('created_at', [$startDate, $endDate])])
-            ->having(DB::raw('(total_keaktifan + total_sesi_pagi)'), '>', 0)
-            ->orderByDesc('total_skor')
-            ->orderByDesc('total_sesi_pagi')
-            ->orderByDesc('total_keaktifan')
-            ->limit(5)
-            ->get();
+            $siswaTeladan = User::where('role', 'student')
+        ->join('class_names', 'users.class_id', '=', 'class_names.id')
+        ->select(
+            'users.id', 'users.name', 'class_names.name as class_name',
+            DB::raw('(SELECT COALESCE(SUM(xp), 0) FROM xp_logs WHERE xp_logs.user_id = users.id AND xp_logs.created_at BETWEEN "' . $startDate . '" AND "' . $endDate . '") as xp_periode')
+        )
+        ->orderByDesc('xp_periode')
+        ->limit(5)
+        ->get();
 
         // --------------------------------------------------------
         // BAGIAN 7: MINAT SISWA PER ANGKATAN

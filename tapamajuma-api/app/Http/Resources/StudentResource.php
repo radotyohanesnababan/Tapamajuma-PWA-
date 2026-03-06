@@ -30,6 +30,8 @@ class StudentResource extends JsonResource
             // Level siswa.
             'level' => $this->level,
 
+            'xp_points' => $this->xp_points,
+
             // Jumlah total aktivitas harian yang diselesaikan siswa.
             // Jika siswa telah melakukan aktivitas harian, maka jumlah aktivitas
             // yang diselesaikan akan dikembalikan. Jika tidak, maka null akan

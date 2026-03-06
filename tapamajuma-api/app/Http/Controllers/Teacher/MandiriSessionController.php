@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\ClassName;
 use App\Models\SelfStudySession;
 use App\Models\SessionAttendance;
+use App\Services\XpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -145,6 +146,16 @@ class MandiriSessionController extends Controller
             if (!empty($attendanceData)) {
                 SessionAttendance::insert($attendanceData);
             }
+            foreach ($request->students as $studentData) {
+        if ($studentData['active'] === true) {
+            XpService::award(
+                userId:   $studentData['id'],
+                xp:       XpService::XP_ATTENDANCE,  
+                source:   'attendance',
+                sourceId: $session->id,
+            );
+        }
+    }
 
             DB::commit();
             return response()->json(['message' => 'Presensi berhasil disimpan!'], 201);

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\XpService;
 
 class GalleryController extends Controller
 {
@@ -74,10 +75,18 @@ class GalleryController extends Controller
     {
         $gallery = Gallery::findOrFail($id);
 
+        XpService::deduct(
+        userId:   $gallery->user_id,
+        xp:       XpService::XP_GALLERY,
+        source:   'gallery',
+        sourceId: $gallery->id,
+    );
+
         // PERBAIKAN: Hapus dari disk default (R2) jika tipe adalah file
         if ($gallery->file_type !== 'link' && $gallery->file_path) {
             Storage::delete($gallery->file_path);
         }
+        
 
         $gallery->delete();
         return response()->json(['message' => 'Karya berhasil dihapus']);
@@ -172,11 +181,18 @@ class GalleryController extends Controller
             'file_type'    => $fileType,
             'is_published' => true, 
         ]);
+      
+        XpService::award(
+            userId:   Auth::id(),
+            xp:       XpService::XP_GALLERY,   
+            source:   'gallery',
+            sourceId: $gallery->id,
+        );
 
         return response()->json([
             'message' => 'Karya berhasil dipublikasikan!',
             'data'    => $gallery,
-            'url'     => $this->formatGalleryUrl($gallery) // Berikan URL matang ke React
+            'url'     => $this->formatGalleryUrl($gallery) 
         ], 201);
     }
 }
