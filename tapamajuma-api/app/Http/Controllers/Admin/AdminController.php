@@ -10,51 +10,53 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     public function getStudentSummary()
-    {
-        try {
-            // 1. Ambil Statistik Utama
-            $totalStudents = User::where('role', 'student')->count();
-            $totalXP = DailyActivity::sum('score');
+{
+    try {
+        $totalStudents = User::where('role', 'student')->count();
+        
+        // ✅ Ambil dari sum xp_points, bukan sum score
+        $totalXP = User::where('role', 'student')->sum('xp_points');
 
-            // 2. Ambil Sebaran Aktivitas per Mata Pelajaran (Keterlibatan Lintas Mapel)
-            // Ini membuktikan poin "Mengaktifkan keterlibatan guru lintas mata pelajaran"
-            $subjectDistribution = DailyActivity::select('subject', DB::raw('count(*) as total'))
-                ->whereNotNull('subject')
-                ->groupBy('subject')
-                ->orderBy('total', 'desc')
-                ->get();
+        $subjectDistribution = DailyActivity::select('subject', DB::raw('count(*) as total'))
+            ->whereNotNull('subject')
+            ->groupBy('subject')
+            ->orderBy('total', 'desc')
+            ->get();
 
-            // 3. Ambil 5 Aktivitas Terbaru (Log Autentik)
-            // tambah sementara di controller
-              \Illuminate\Support\Facades\Log::info('DB timezone: ' . config('database.connections.mysql.timezone'));
-            $recentActivities = DailyActivity::with('user')
-                ->latest()
-                ->limit(5)
-                ->get()
-                ->map(function($activity) {
-                    return [
-                        'id' => $activity->id,
-                        'student_name' => $activity->user->name ?? 'Siswa',
-                        'type' => $activity->type, // literasi atau numeracy
-                        'subject' => $activity->subject, // Mapel terkait
-                        'score' => $activity->score,
-                        'avatar' => $activity->user->avatar ?? null,
-                        'time_ago' => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),                
-                        ];
-              
-                });
+        $recentActivities = DailyActivity::with('user')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function($activity) {
+                // ✅ Ambil XP dari xp_logs
+                $xp = DB::table('xp_logs')
+                    ->where('source', 'daily_activity')
+                    ->where('source_id', $activity->id)
+                    ->value('xp') ?? 0;
 
-            return response()->json([
-                'total_students' => $totalStudents,
-                'total_xp' => $totalXP,
-                'subject_stats' => $subjectDistribution, // Data untuk grafik mapel
-                'recent_activities' => $recentActivities
-            ]);
+                return [
+                    'id'           => $activity->id,
+                    'student_name' => $activity->user->name ?? 'Siswa',
+                    'type'         => $activity->type,
+                    'subject'      => $activity->subject,
+                    'score'        => $activity->score,
+                    'xp'           => $xp, // ✅ tambah ini
+                    'avatar'       => $activity->user->avatar ?? null,
+                    'time_ago'     => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),
+                ];
+            });
 
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return response()->json([
+            'total_students'   => $totalStudents,
+            'total_xp'         => $totalXP,
+            'subject_stats'    => $subjectDistribution,
+            'recent_activities' => $recentActivities
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
 
 }
