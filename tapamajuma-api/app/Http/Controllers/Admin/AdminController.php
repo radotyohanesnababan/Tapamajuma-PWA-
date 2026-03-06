@@ -25,6 +25,8 @@ class AdminController extends Controller
                 ->get();
 
             // 3. Ambil 5 Aktivitas Terbaru (Log Autentik)
+            // tambah sementara di controller
+              \Illuminate\Support\Facades\Log::info('DB timezone: ' . config('database.connections.mysql.timezone'));
             $recentActivities = DailyActivity::with('user')
                 ->latest()
                 ->limit(5)
@@ -37,8 +39,9 @@ class AdminController extends Controller
                         'subject' => $activity->subject, // Mapel terkait
                         'score' => $activity->score,
                         'avatar' => $activity->user->avatar ?? null,
-                        'time_ago' => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),
-                    ];
+                        'time_ago' => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),                
+                        ];
+              
                 });
 
             return response()->json([
