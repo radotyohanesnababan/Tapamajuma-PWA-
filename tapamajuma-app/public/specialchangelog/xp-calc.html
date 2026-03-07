@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog Sistem XP · Tapamajuma</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8fafc;
+    --white: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --indigo: #6366f1;
+    --indigo-light: #eef2ff;
+    --indigo-mid: #c7d2fe;
+    --amber: #f59e0b;
+    --amber-light: #fffbeb;
+    --amber-mid: #fef3c7;
+    --green: #10b981;
+    --green-light: #ecfdf5;
+    --green-mid: #d1fae5;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --red-mid: #fecaca;
+    --blue: #3b82f6;
+    --blue-mid: #dbeafe;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--slate-800);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  .hero {
+    background: var(--slate-900);
+    padding: 60px 24px 52px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99,102,241,0.12), transparent);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 999px;
+    margin-bottom: 22px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hero h1 {
+    font-size: clamp(24px, 4.5vw, 40px);
+    font-weight: 800; color: #f1f5f9;
+    line-height: 1.15; margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero h1 em { font-style: normal; color: #a5b4fc; }
+  .hero p { color: #64748b; font-size: 14px; max-width: 460px; margin: 0 auto; line-height: 1.7; }
+
+  .container { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  /* VERSION PILLS */
+  .version-row {
+    display: flex; align-items: center; gap: 0;
+    margin: 44px 0 36px;
+  }
+
+  .ver-pill {
+    flex: 1; background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 18px 20px;
+  }
+
+  .ver-pill.v1 { border-left: 4px solid var(--slate-300); }
+  .ver-pill.v2 { border-left: 4px solid var(--indigo); }
+
+  .vp-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 5px;
+  }
+
+  .v1 .vp-tag { color: var(--slate-400); }
+  .v2 .vp-tag { color: var(--indigo); }
+
+  .ver-pill h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .ver-pill p { font-size: 11.5px; color: var(--slate-500); line-height: 1.5; }
+
+  .ver-arrow {
+    width: 44px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-300); font-size: 18px;
+  }
+
+  /* SECTION */
+  .section { margin-bottom: 44px; }
+
+  .sh {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .sh-num {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--slate-800); color: white;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+  }
+
+  .sh h2 { font-size: 15px; font-weight: 700; }
+  .sh span { font-size: 11px; color: var(--slate-400); }
+
+  /* COMPARISON */
+  .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .comp-grid { grid-template-columns: 1fr; } }
+
+  .cc {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 20px;
+  }
+
+  .cc-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+    padding: 3px 9px; border-radius: 5px;
+    display: inline-block; margin-bottom: 12px;
+  }
+
+  .cc.v1 .cc-tag { background: var(--slate-100); color: var(--slate-500); }
+  .cc.v2 .cc-tag { background: var(--indigo-light); color: var(--indigo); }
+
+  .cc h4 { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+
+  .cc-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid var(--slate-100);
+    font-size: 12px; color: var(--slate-600); line-height: 1.5;
+  }
+
+  .cc-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .cc-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .v1 .cc-dot { background: var(--slate-300); }
+  .v2 .cc-dot { background: var(--indigo); }
+
+  /* FORMULA GRID */
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .fg { grid-template-columns: 1fr; } }
+
+  .fc {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 20px;
+  }
+
+  .fc-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+    padding: 3px 9px; border-radius: 5px;
+    display: inline-block; margin-bottom: 14px;
+  }
+
+  .fc.v1 .fc-tag { background: var(--slate-100); color: var(--slate-500); }
+  .fc.v2 .fc-tag { background: var(--indigo-light); color: var(--indigo); }
+
+  .fc h4 { font-size: 11px; font-weight: 700; color: var(--slate-400); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .fbox {
+    border-radius: 8px; padding: 13px 15px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; font-weight: 600;
+    margin-bottom: 12px; line-height: 1.7;
+  }
+
+  .fc.v1 .fbox { background: var(--slate-100); color: var(--slate-700); }
+  .fc.v2 .fbox { background: var(--indigo-light); color: var(--indigo); }
+  .fc.v2 .fbox em { font-style: normal; color: var(--slate-700); }
+
+  .fdesc { font-size: 11.5px; color: var(--slate-500); line-height: 1.6; list-style: none; }
+  .fdesc li { padding: 3px 0 3px 12px; position: relative; }
+  .fdesc li::before { content: '–'; position: absolute; left: 0; color: var(--slate-300); }
+
+  /* MULTIPLIER TABLE */
+  .mtable {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+  }
+
+  .mrow {
+    display: grid; grid-template-columns: 70px 80px 1fr 110px;
+    border-bottom: 1px solid var(--slate-100);
+    font-size: 12px; align-items: center;
+  }
+
+  .mrow:last-child { border-bottom: none; }
+
+  .mrow.mhead {
+    background: var(--slate-50);
+    font-size: 9px; font-weight: 700; color: var(--slate-400);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mcell { padding: 10px 12px; }
+
+  .cbadge {
+    width: 26px; height: 26px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mval { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; }
+
+  .bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .bar { height: 5px; border-radius: 999px; }
+  .bar-label { font-size: 11px; color: var(--slate-400); }
+
+  .xchip {
+    display: inline-block; padding: 3px 9px; border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px;
+  }
+
+  .xg { background: var(--green-mid); color: #065f46; }
+  .xb { background: var(--blue-mid); color: #1e40af; }
+  .xs { background: var(--slate-100); color: var(--slate-600); }
+  .xr { background: var(--red-light); color: #991b1b; }
+  .xa { background: var(--amber-mid); color: #92400e; }
+
+  .tbox {
+    background: #fef9f9; border: 1px solid var(--red-mid);
+    border-radius: 10px; padding: 14px 18px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+
+  .tbox-icon { font-size: 18px; flex-shrink: 0; }
+  .tbox p { font-size: 12px; color: #7f1d1d; line-height: 1.6; }
+  .tbox strong { color: var(--red); }
+
+  /* EXAMPLE */
+  .etable {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: 12px; overflow: hidden;
+  }
+
+  .erow {
+    display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--slate-100);
+    font-size: 12px; align-items: center;
+  }
+
+  .erow:last-child { border-bottom: none; }
+
+  .erow.ehead {
+    background: var(--slate-50);
+    font-size: 9px; font-weight: 700; color: var(--slate-400);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ecell { padding: 11px 13px; }
+  .ecell.tc { text-align: center; }
+
+  .sc { display: flex; align-items: center; gap: 8px; }
+  .si { font-size: 17px; flex-shrink: 0; }
+
+  .nbadge {
+    font-size: 8px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 5px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    display: inline-block; margin-left: 4px;
+  }
+
+  .np { background: var(--red-light); color: var(--red); }
+  .nb { background: var(--green-mid); color: #065f46; }
+
+  /* SOURCES */
+  .sgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 560px) { .sgrid { grid-template-columns: 1fr; } }
+
+  .scard {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 20px 16px; text-align: center;
+  }
+
+  .scard .si2 { font-size: 26px; margin-bottom: 8px; display: block; }
+  .scard h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .scard .sv { font-size: 19px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; }
+  .scard p { font-size: 11px; color: var(--slate-500); line-height: 1.6; }
+
+  /* FOOTER */
+  .ftr {
+    background: var(--slate-900); border-radius: 14px;
+    padding: 26px 30px; text-align: center; margin-top: 44px;
+  }
+
+  .ftr p { font-size: 13px; color: #64748b; line-height: 1.8; }
+  .ftr strong { color: #cbd5e1; }
+
+  @media (max-width: 560px) {
+    .erow { grid-template-columns: 2fr 1fr 1fr 1fr; }
+    .erow .ecell:nth-child(4) { display: none; }
+    .mrow { grid-template-columns: 60px 70px 1fr 90px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">⚡ Changelog · Sistem XP · Tapamajuma</div>
+  <h1>Pembaruan <em>Sistem Poin XP</em></h1>
+  <p>Dokumentasi perubahan cara perhitungan XP siswa — mencakup lebih banyak aspek kontribusi belajar.</p>
+</div>
+
+<div class="container">
+
+  <div class="version-row">
+    <div class="ver-pill v1">
+      <div class="vp-tag">Sistem Sebelumnya</div>
+      <h3>Berbasis Skor Tugas</h3>
+      <p>XP dihitung dari akumulasi skor tugas harian ditambah bonus literasi.</p>
+    </div>
+    <div class="ver-arrow">→</div>
+    <div class="ver-pill v2">
+      <div class="vp-tag">Update Terbaru</div>
+      <h3>Berbasis Kontribusi Menyeluruh</h3>
+      <p>XP mencakup tugas, karya galeri, dan kehadiran sesi dengan bobot keyakinan.</p>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="section">
+    <div class="sh">
+      <div class="sh-num">1</div>
+      <h2>Perubahan Umum</h2>
+      <span>Ringkasan</span>
+    </div>
+    <div class="comp-grid">
+      <div class="cc v1">
+        <div class="cc-tag">v1 · Sebelumnya</div>
+        <h4>Cara Kerja Sistem Lama</h4>
+        <div class="cc-row"><div class="cc-dot"></div><span>XP = total skor pengerjaan</span></div>
+        <div class="cc-row"><div class="cc-dot"></div><span>Galeri dan kehadiran tidak dihitung</span></div>
+        
+      </div>
+      <div class="cc v2">
+        <div class="cc-tag">v2 · Sekarang</div>
+        <h4>Cara Kerja Sistem Baru</h4>
+        <div class="cc-row"><div class="cc-dot"></div><span>XP tugas = skor × multiplier tingkat keyakinan</span></div>
+        <div class="cc-row"><div class="cc-dot"></div><span>Upload karya galeri = +50 XP per karya</span></div>
+        <div class="cc-row"><div class="cc-dot"></div><span>Hadir sesi belajar mandiri = +50 XP per sesi</span></div>
+        <div class="cc-row"><div class="cc-dot"></div><span>Skor di bawah 60 tidak dapat bonus keyakinan</span></div>
+        <div class="cc-row"><div class="cc-dot"></div><span>Semua XP tercatat di log dengan sumber lengkap</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="section">
+    <div class="sh">
+      <div class="sh-num">2</div>
+      <h2>Formula Perhitungan XP Tugas</h2>
+      <span>Daily Activity</span>
+    </div>
+    <div class="fg">
+      <div class="fc v1">
+        <div class="fc-tag">v1 · Sebelumnya</div>
+        <h4>Rumus</h4>
+        <div class="fbox">totalXP = Σ score<br>+ (jumlah_literasi × 10)</div>
+        <ul class="fdesc">
+          <li>Semua skor tugas dijumlahkan langsung</li>
+          <li>Bonus flat 10 XP khusus tugas literasi</li>
+          <li>Tingkat keyakinan tidak berpengaruh</li>
+        </ul>
+      </div>
+      <div class="fc v2">
+        <div class="fc-tag">v2 · Sekarang</div>
+        <h4>Rumus</h4>
+        <div class="fbox">XP = <em>skor</em> × multiplier_keyakinan<br><span style="font-size:10px;opacity:0.7">(berlaku jika skor ≥ 60)</span></div>
+        <ul class="fdesc">
+          <li>Setiap tugas dihitung individual</li>
+          <li>Bobot keyakinan mendorong kejujuran diri</li>
+          <li>Skor di bawah 60 mendapat penalti ×0.8</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="section">
+    <div class="sh">
+      <div class="sh-num">3</div>
+      <h2>Tabel Multiplier Keyakinan</h2>
+      <span>Hanya berlaku di v2</span>
+    </div>
+
+    <div class="mtable">
+      <div class="mrow mhead">
+        <div class="mcell">Keyakinan</div>
+        <div class="mcell">Nilai</div>
+        <div class="mcell">Proporsi</div>
+        <div class="mcell">Contoh (Skor 80)</div>
+      </div>
+      <div class="mrow">
+        <div class="mcell"><span class="cbadge" style="background:#fee2e2;color:#dc2626">1</span></div>
+        <div class="mcell"><span class="mval" style="color:#dc2626">×0.8</span></div>
+        <div class="mcell"><div class="bar-wrap"><div class="bar" style="width:38%;background:#fca5a5"></div><span class="bar-label">Tidak yakin</span></div></div>
+        <div class="mcell"><span class="xchip xr">64 XP</span></div>
+      </div>
+      <div class="mrow">
+        <div class="mcell"><span class="cbadge" style="background:#fee2e2;color:#dc2626">2</span></div>
+        <div class="mcell"><span class="mval" style="color:#dc2626">×0.8</span></div>
+        <div class="mcell"><div class="bar-wrap"><div class="bar" style="width:38%;background:#fca5a5"></div><span class="bar-label">Kurang yakin</span></div></div>
+        <div class="mcell"><span class="xchip xr">64 XP</span></div>
+      </div>
+      <div class="mrow">
+        <div class="mcell"><span class="cbadge" style="background:#f1f5f9;color:#475569">3</span></div>
+        <div class="mcell"><span class="mval" style="color:#475569">×1.0</span></div>
+        <div class="mcell"><div class="bar-wrap"><div class="bar" style="width:55%;background:#cbd5e1"></div><span class="bar-label">Cukup yakin</span></div></div>
+        <div class="mcell"><span class="xchip xs">80 XP</span></div>
+      </div>
+      <div class="mrow">
+        <div class="mcell"><span class="cbadge" style="background:#d1fae5;color:#059669">4</span></div>
+        <div class="mcell"><span class="mval" style="color:#059669">×1.2</span></div>
+        <div class="mcell"><div class="bar-wrap"><div class="bar" style="width:72%;background:#6ee7b7"></div><span class="bar-label">Yakin</span></div></div>
+        <div class="mcell"><span class="xchip xg">96 XP</span></div>
+      </div>
+      <div class="mrow">
+        <div class="mcell"><span class="cbadge" style="background:#fef3c7;color:#d97706">5</span></div>
+        <div class="mcell"><span class="mval" style="color:#d97706">×1.5</span></div>
+        <div class="mcell"><div class="bar-wrap"><div class="bar" style="width:100%;background:#fcd34d"></div><span class="bar-label">Sangat yakin</span></div></div>
+        <div class="mcell"><span class="xchip xa">120 XP</span></div>
+      </div>
+    </div>
+
+    <div class="tbox">
+      <div class="tbox-icon">⚠️</div>
+      <p><strong>Aturan Skor Minimum:</strong> Jika skor di bawah 60, multiplier keyakinan tidak diperhitungkan dan langsung dikalikan <strong>×0.8</strong>. Ini memastikan bonus keyakinan hanya bermakna jika dibarengi pemahaman yang baik.</p>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="section">
+    <div class="sh">
+      <div class="sh-num">4</div>
+      <h2>Contoh Perhitungan</h2>
+      <span>Skenario nyata</span>
+    </div>
+
+    <div class="etable">
+      <div class="erow ehead">
+        <div class="ecell">Skenario</div>
+        <div class="ecell tc">Skor</div>
+        <div class="ecell tc">Keyakinan</div>
+        <div class="ecell tc">Multiplier</div>
+        <div class="ecell tc">XP</div>
+      </div>
+      <div class="erow">
+        <div class="ecell"><div class="sc"><span class="si">🏆</span><span>Skor tinggi, sangat yakin<span class="nbadge nb">MAX</span></span></div></div>
+        <div class="ecell tc">90</div>
+        <div class="ecell tc">5</div>
+        <div class="ecell tc"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#d97706">×1.5</span></div>
+        <div class="ecell tc"><span class="xchip xa">135 XP</span></div>
+      </div>
+      <div class="erow">
+        <div class="ecell"><div class="sc"><span class="si">✅</span><span>Skor baik, yakin</span></div></div>
+        <div class="ecell tc">80</div>
+        <div class="ecell tc">4</div>
+        <div class="ecell tc"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#059669">×1.2</span></div>
+        <div class="ecell tc"><span class="xchip xg">96 XP</span></div>
+      </div>
+      <div class="erow">
+        <div class="ecell"><div class="sc"><span class="si">📝</span><span>Skor lumayan, cukup yakin</span></div></div>
+        <div class="ecell tc">70</div>
+        <div class="ecell tc">3</div>
+        <div class="ecell tc"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#475569">×1.0</span></div>
+        <div class="ecell tc"><span class="xchip xs">70 XP</span></div>
+      </div>
+      <div class="erow">
+        <div class="ecell"><div class="sc"><span class="si">😔</span><span>Skor rendah, jujur tidak yakin</span></div></div>
+        <div class="ecell tc">40</div>
+        <div class="ecell tc">1</div>
+        <div class="ecell tc"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626">×0.8</span></div>
+        <div class="ecell tc"><span class="xchip xr">32 XP</span></div>
+      </div>
+      <div class="erow" style="background:#fefcfc">
+        <div class="ecell"><div class="sc"><span class="si">🚫</span><span>Skor rendah, pilih keyakinan tinggi<span class="nbadge np">SAMA SAJA</span></span></div></div>
+        <div class="ecell tc">40</div>
+        <div class="ecell tc">5</div>
+        <div class="ecell tc"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626">×0.8</span></div>
+        <div class="ecell tc"><span class="xchip xr">32 XP</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="section">
+    <div class="sh">
+      <div class="sh-num">5</div>
+      <h2>Sumber XP Tambahan di v2</h2>
+      <span>Galeri & Kehadiran</span>
+    </div>
+    <div class="sgrid">
+      <div class="scard">
+        <span class="si2">📝</span>
+        <h4>Mengerjakan Tugas</h4>
+        <div class="sv" style="color:var(--indigo)">Variatif</div>
+        <p>Dihitung per tugas berdasarkan skor dan tingkat keyakinan.</p>
+      </div>
+      <div class="scard">
+        <span class="si2">🖼️</span>
+        <h4>Upload Karya Galeri</h4>
+        <div class="sv" style="color:var(--amber)">+50 XP</div>
+        <p>Per karya yang diunggah. Jika dihapus guru, XP ikut berkurang otomatis.</p>
+      </div>
+      <div class="scard">
+        <span class="si2">🌅</span>
+        <h4>Hadir Sesi Belajar</h4>
+        <div class="sv" style="color:var(--green)">+50 XP</div>
+        <p>Per sesi belajar mandiri yang tercatat kehadirannya oleh guru.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ftr">
+    <p>Pembaruan ini menjadikan XP sebagai cerminan <strong>kontribusi menyeluruh siswa</strong> — mencakup kualitas pengerjaan tugas, karya yang dihasilkan, dan kehadiran dalam proses belajar.</p>
+  </div>
+
+</div>
+</body>
+</html>

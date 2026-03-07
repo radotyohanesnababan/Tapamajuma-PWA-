@@ -22,25 +22,28 @@ class ChangelogController extends Controller
 }
     public function store(Request $request)
 {
-    // 1. Validasi Input
     $validated = $request->validate([
-        'version'      => 'required|string|max:20', // contoh: 1.1.0
-        'title'        => 'required|string|max:255',
-        'release_date' => 'required|date',
-        'changes'      => 'required|array|min:1', // Harus array
-        'changes.*.type' => 'required|in:new,fix,improve', // Validasi tipe
-        'changes.*.text' => 'required|string', // Validasi teks per item
+        'version'        => 'required|string|max:20',
+        'title'          => 'required|string|max:255',
+        'release_date'   => 'required|date',
+        'changes'        => 'required|array|min:1',
+        'changes.*.type' => 'required|in:new,fix,improve',
+        'changes.*.text' => 'required|string',
     ]);
 
-    // 2. Simpan ke Database
-    // Karena di Model sudah ada casts 'changes' => 'array', 
-    // Laravel otomatis mengubah Array PHP menjadi JSON saat disimpan.
+    // Sanitasi HTML di setiap item changes
+    $purifier = new \HTMLPurifier();
+    $validated['changes'] = array_map(function($change) use ($purifier) {
+        $change['text'] = $purifier->purify($change['text']);
+        return $change;
+    }, $validated['changes']);
+
     $changelog = Changelog::create($validated);
 
     return response()->json([
-        'status' => 'success',
+        'status'  => 'success',
         'message' => 'Changelog berhasil diterbitkan!',
-        'data' => $changelog
+        'data'    => $changelog
     ]);
 }
     public function latest()
