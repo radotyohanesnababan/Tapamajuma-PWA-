@@ -120,9 +120,10 @@ export default function ChangelogModal() {
                                 <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-fit mb-1 ${style.bg} ${style.text}`}>
                                     {style.label}
                                 </div>
-                                <p className="text-sm text-slate-600 leading-relaxed">
-                                    {item.text}
-                                </p>
+                                    <p 
+                                    className="text-sm text-slate-600 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: item.text }}
+                                />
                             </div>
                         </div>
                     )

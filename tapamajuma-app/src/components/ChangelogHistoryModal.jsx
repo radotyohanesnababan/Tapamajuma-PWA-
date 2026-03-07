@@ -117,9 +117,10 @@ export default function ChangelogHistoryModal() {
                                                         <div className={`mt-0.5 shrink-0 w-5 h-5 flex items-center justify-center rounded-full ${style.bg} ${style.text}`}>
                                                             {style.icon}
                                                         </div>
-                                                        <span className="text-slate-600 leading-snug">
-                                                            {change.text}
-                                                        </span>
+                                                                                                            <span 
+                                                            className="text-slate-600 leading-snug"
+                                                            dangerouslySetInnerHTML={{ __html: change.text }}
+                                                        />
                                                     </div>
                                                 );
                                             })}
