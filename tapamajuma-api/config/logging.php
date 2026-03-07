@@ -126,6 +126,12 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'whatsapp' => [
+        'driver' => 'daily',
+        'path'   => storage_path('logs/whatsapp.log'),
+        'level'  => 'debug',
+        'days'   => 14, // simpan 14 hari
+    ],
 
     ],
 

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\User; 
 use App\Models\DailyActivity; 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SendWeeklyReport extends Command
 {
@@ -123,7 +124,8 @@ class SendWeeklyReport extends Command
                         "💡 Status: {$status}\n" .
                         "💬 _{$pesanSemangat}_\n\n" .
                         
-                        "_*Tapamajuma* - Pemantauan Aktivitas Siswa_";
+                        "_*Tapamajuma* - Pemantauan Aktivitas Siswa_\n" .
+                        "SMP Negeri 1 Siborongborong";
 
             // --- D. KIRIM KE WABLAS ---
             try {
@@ -148,8 +150,18 @@ class SendWeeklyReport extends Command
 
                 if ($response->successful() && ($res['status'] ?? false) == true) {
                     $this->info("✅ Terkirim ke {$user->name}");
+                    Log::channel('whatsapp')->info("✅ Terkirim", [
+        'name'  => $user->name,
+        'phone' => $user->phone_number,
+        'res'   => $res,
+    ]);
                 } else {
                     $this->error("⚠️ Gagal ke {$user->name}: " . json_encode($res));
+                    Log::channel('whatsapp')->error("⚠️ Gagal", [
+        'name'  => $user->name,
+        'phone' => $user->phone_number,
+        'res'   => $res,
+    ]);
                 }
                 
                 sleep(2); // Jeda aman agar tidak diblokir WA
