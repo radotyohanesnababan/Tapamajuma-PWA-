@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -98,6 +98,7 @@ export default function QuizEngine() {
   const [confidence, setConfidence] = useState(3);
   const [journal, setJournal] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
 
   // --- 1. LOAD MAPEL (MENU AWAL) ---
   useEffect(() => {
@@ -181,6 +182,13 @@ export default function QuizEngine() {
       submitQuiz();
     }
   }, [gameState]);
+  // Penyesuaian skor berdasarkan tingkat kepercayaan diri
+  const adjustedScore = useMemo(() => {
+  const multipliers = { 1: 0.8, 2: 0.8, 3: 1.0, 4: 1.2, 5: 1.5 };
+  if (finalScore < 60) return Math.round(finalScore * 0.8);
+  const multiplier = multipliers[confidence] ?? 1.0;
+  return Math.round(finalScore * multiplier);
+}, [finalScore, confidence]);
 
   // --- 5. FINAL SUBMIT (JURNAL) ---
   const submitReflection = async (e) => {
@@ -188,7 +196,7 @@ export default function QuizEngine() {
     if (!journal.trim()) return toast.error("Isi jurnal dulu ya!");
 
     setIsSubmitting(true);
-    try {
+   try {
       await api.post("/api/activities", {
         type: mode,
         subject: selectedSubject.name,
@@ -199,7 +207,20 @@ export default function QuizEngine() {
       });
 
       toast.success("Latihan selesai! Hebat!");
-      setTimeout(() => navigate("/"), 1500);
+      setIsRevealed(true);
+
+      let countdown = 5;
+      toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
+      const interval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
+        } else {
+          clearInterval(interval);
+          toast.dismiss("redirect-toast");
+          navigate("/");
+        }
+      }, 1000);
     } catch (error) {
       toast.error("Gagal menyimpan jurnal.");
     } finally {
@@ -327,14 +348,55 @@ export default function QuizEngine() {
       <div className={`min-h-screen p-6 flex flex-col items-center py-10 bg-slate-50`}>
         <div className="w-full max-w-md space-y-6 animate-in slide-in-from-bottom-8 duration-500">
           
-          <div className="text-center space-y-2">
-            <div className="inline-block p-4 bg-white rounded-full shadow-xl mb-2">
-              <Trophy size={48} className={finalScore >= 70 ? "text-yellow-500" : "text-slate-400"} />
-            </div>
-            <h1 className="text-2xl font-black text-slate-800">Selesai!</h1>
-            <p className="text-slate-500 text-sm">Skor {activeTheme.title} Kamu</p>
-            <div className={`text-6xl font-black tracking-tighter ${activeTheme.colors.text}`}>{finalScore}</div>
+                <div className="text-center space-y-2">
+        <div className="inline-block p-4 bg-white rounded-full shadow-xl mb-2">
+          <Trophy size={48} className={
+            isRevealed 
+              ? (adjustedScore >= 70 ? "text-yellow-500" : "text-slate-400") 
+              : "text-slate-300"
+          } />
+        </div>
+        <h1 className="text-2xl font-black text-slate-800">Selesai!</h1>
+
+        {!isRevealed ? (
+          /* HIDDEN STATE */
+          <div className="space-y-1">
+            <p className="text-slate-400 text-sm">Isi keyakinanmu dulu untuk reveal skor</p>
+            <div className="text-7xl font-black tracking-tighter text-slate-200 select-none">?</div>
           </div>
+        ) : (
+          /* REVEALED STATE */
+          <div className="space-y-1 animate-in zoom-in-75 duration-500">
+                      <p className="text-slate-400 text-xs">Skor</p>
+            <div className="text-2xl font-bold text-slate-400">{finalScore}</div>
+
+            {/* XP */}
+            <p className="text-slate-500 text-sm mt-2">XP Didapat</p>
+            <div className={`text-6xl font-black tracking-tighter ${activeTheme.colors.text}`}>
+              +{adjustedScore} XP
+            </div>
+
+            {/* Badge */}
+            <div className={`inline-block text-xs font-bold px-3 py-1 rounded-full 
+              ${adjustedScore > finalScore ? 'bg-green-100 text-green-600' : 
+                adjustedScore < finalScore ? 'bg-red-100 text-red-600' : 
+                'bg-slate-100 text-slate-500'}`}>
+              {adjustedScore > finalScore ? `+${adjustedScore - finalScore} bonus` :
+              adjustedScore < finalScore ? `${adjustedScore - finalScore} penalti` :
+              'Netral'}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Slider & jurnal hanya tampil kalau belum reveal */}
+      {!isRevealed && (
+        <Card className="rounded-[32px] border-none shadow-xl bg-white">
+          <CardContent className="p-6 space-y-8">
+            {/* ... slider + textarea + button simpan ... */}
+          </CardContent>
+        </Card>
+      )}
 
           <Card className="rounded-[32px] border-none shadow-xl bg-white">
             <CardContent className="p-6 space-y-8">
