@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share2, Check, MessageCircle, Copy } from 'lucide-react';
+import { Check, MessageCircle, Copy } from 'lucide-react';
 import api from "@/lib/axios";
 import { toast } from 'sonner'; 
 
@@ -7,39 +7,14 @@ const ShareButton = ({ galleryId, title }) => {
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // --- HELPER SAKTI: Ubah Link Frontend jadi Link API ---
-    const convertToApiUrl = (originalUrl) => {
-        try {
-            // Asumsi originalUrl bentuknya: https://tapamajuma.my.id/s/TOKEN
-            // Kita ambil bagian terakhir (TOKEN)
-            const parts = originalUrl.split('/');
-            const token = parts[parts.length - 1]; // Ambil token di ujung
-
-            // Kita rakit ulang pakai domain API (Pancingan Laravel)
-            return `https://tapamajuma-api.my.id/s/${token}`;
-        } catch (e) {
-            // Kalau formatnya aneh, balikin aja aslinya
-            return originalUrl;
-        }
-    };
-
     const handleShare = async () => {
         setLoading(true);
         try {
-            // 1. Minta Backend generate Link (biasanya dikasih link FE)
             const res = await api.post(`/api/galleries/${galleryId}/share`);
-            
-            // 2. KITA UBAH JADI LINK API
-            const finalLink = convertToApiUrl(res.data.url);
-
-            // 3. Salin Link API tersebut
-            await navigator.clipboard.writeText(finalLink);
-            
+            await navigator.clipboard.writeText(res.data.url);
             setCopied(true);
             toast.success("Link berhasil disalin!");
-            
             setTimeout(() => setCopied(false), 2000);
-
         } catch (err) {
             console.error(err);
             toast.error("Gagal mengambil link share.");
@@ -51,14 +26,8 @@ const ShareButton = ({ galleryId, title }) => {
     const shareToWA = async () => {
         setLoading(true);
         try {
-            // 1. Minta Backend generate Link
             const res = await api.post(`/api/galleries/${galleryId}/share`);
-            
-            // 2. KITA UBAH JADI LINK API
-            const finalLink = convertToApiUrl(res.data.url);
-
-            // 3. Buka WA dengan Link API
-            const text = `Cek karya "${title}" di Tapamajuma! 🚀\n${finalLink}`;
+            const text = `Cek karya "${title}" di Tapamajuma! 🚀\n${res.data.url}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         } catch {
             toast.error("Gagal membuka WhatsApp");
