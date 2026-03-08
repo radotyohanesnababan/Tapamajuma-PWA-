@@ -30,12 +30,13 @@ Route::get('/s/{token}', function ($token) {
     $userAgent = strtolower(request()->userAgent() ?? '');
     $bots = ['whatsapp', 'facebookexternalhit', 'twitterbot', 'telegrambot', 'linkedinbot', 'slackbot'];
     $isBot = collect($bots)->contains(fn($b) => str_contains($userAgent, $b));
+    $destinationUrl = env('app.frontend_url') . '/s/' . $token; // URL tujuan FE, tetap sama untuk semua
 
     // 1. Cari Data Gallery
     $gallery = \App\Models\Gallery::where('share_token', $token)->first();
 
     if (!$gallery) {
-        return redirect('https://tapamajuma.my.id'); 
+        return redirect('https://tapamajuma.smpn1siborongborong.sch.id'); // Redirect ke homepage jika token tidak valid
     }
 
     // ... semua logic thumbnail kamu tetap sama ...
