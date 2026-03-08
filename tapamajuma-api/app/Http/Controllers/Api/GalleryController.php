@@ -108,7 +108,7 @@ class GalleryController extends Controller
 
         // 2. Return URL Frontend yang siap dicopy
         // Pastikan FRONTEND_URL ada di .env (misal: https://tapamajuma.my.id)
-        $shareUrl = env('FRONTEND_URL') . '/s/' . $gallery->share_token;
+        $shareUrl = env('app.frontend_url') . '/s/' . $gallery->share_token;
 
         return response()->json([
             'message' => 'Link siap dibagikan!',
