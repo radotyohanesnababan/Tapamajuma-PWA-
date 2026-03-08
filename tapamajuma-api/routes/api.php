@@ -47,6 +47,70 @@ Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 
 
+
+/*
+|--------------------------------------------------------------------------
+| Share Routes (Bisa diakses tanpa login, untuk keperluan share karya siswa)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/share-og/{token}', function ($token) {
+    $gallery = \App\Models\Gallery::with('user')
+        ->where('share_token', $token)
+        ->where('is_published', true)
+        ->first();
+
+    if (!$gallery) {
+        return response()->json([
+            'title'       => 'TAPAMAJUMA',
+            'description' => 'Platform pemantauan aktivitas belajar siswa.',
+            'image'       => 'https://cdn.tapamajuma-api.my.id/images/iconappp.png',
+            'url'         => 'https://tapamajuma.smpn1siborongborong.sch.id',
+        ]);
+    }
+
+    $ownerName = $gallery->user->name ?? 'Siswa';
+    $urlOrPath = $gallery->file_path;
+
+    $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/iconappp.png';
+
+    if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $urlOrPath, $matches)) {
+        $imageUrl = "https://img.youtube.com/vi/{$matches[1]}/hqdefault.jpg";
+    } elseif (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([-\w]+)/', $urlOrPath, $matches)) {
+        $imageUrl = "https://lh3.googleusercontent.com/d/{$matches[1]}=w1200";
+    } elseif (strpos($urlOrPath, 'instagram.com') !== false) {
+        $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/ig-pld.png';
+    } elseif (strpos($urlOrPath, 'facebook.com') !== false || strpos($urlOrPath, 'fb.watch') !== false) {
+        $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/fb-pld.png';
+    } elseif (strpos($urlOrPath, 'tiktok.com') !== false) {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)
+                ->get('https://www.tiktok.com/oembed?url=' . $urlOrPath);
+            $imageUrl = $response->successful()
+                ? ($response->json()['thumbnail_url'] ?? 'https://cdn.tapamajuma-api.my.id/images/tiktok-pld.png')
+                : 'https://cdn.tapamajuma-api.my.id/images/tiktok-pld.png';
+        } catch (\Exception $e) {
+            $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/tiktok-pld.png';
+        }
+    } elseif (in_array($gallery->file_type, ['image']) || preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $urlOrPath)) {
+        $imageUrl = str_starts_with($urlOrPath, 'http')
+            ? $urlOrPath
+            : 'https://cdn.tapamajuma-api.my.id/' . $urlOrPath;
+    } elseif ($gallery->file_type === 'pdf') {
+        $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/pdf-pld.png';
+    } elseif ($gallery->file_type === 'audio') {
+        $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/audio-pld.png';
+    }
+
+    return response()->json([
+        'title'       => $gallery->title . ' | TAPAMAJUMA',
+        'description' => "Lihat karya kreatif dari {$ownerName} di platform TAPAMAJUMA.",
+        'image'       => $imageUrl,
+        'url'         => "https://tapamajuma.smpn1siborongborong.sch.id/s/{$token}",
+    ]);
+});
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
