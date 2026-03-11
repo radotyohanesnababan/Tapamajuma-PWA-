@@ -24,19 +24,20 @@ class GalleryController extends Controller
         return $gallery->file_path ? Storage::url($gallery->file_path) : null;
     }
 
-    public function index()
-    {
-        $galleries = Gallery::with('user:id,name,class_id')
-            ->where('is_published', true)
-            ->latest()
-            ->get()
-            ->map(function($item) {
-               $item->file_url = $this->formatGalleryUrl($item);
-            return $item;
-            });
+   public function index(Request $request)
+{
+    $galleries = Gallery::with('user:id,name,class_id')
+        ->where('is_published', true)
+        ->latest()
+        ->paginate(10);
 
-        return response()->json($galleries);
-    }
+    $galleries->getCollection()->transform(function($item) {
+        $item->file_url = $this->formatGalleryUrl($item);
+        return $item;
+    });
+
+    return response()->json($galleries);
+}
 
     public function indexfortc(Request $request)
     {

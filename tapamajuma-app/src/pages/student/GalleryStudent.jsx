@@ -14,9 +14,7 @@ import { InstagramEmbed, FacebookEmbed } from 'react-social-media-embed';
 import ShareButton from '@/components/ShareButton';
 
 export default function GalleryStudent() {
-  const [items, setItems] = useState([]);
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
   const [tiktokEmbedFailed, setTiktokEmbedFailed] = useState(false);
@@ -40,16 +38,28 @@ export default function GalleryStudent() {
     fetchGalleries();
   }, []);
 
-  const fetchGalleries = async () => {
-    try {
-      const res = await api.get('/api/galleries');
-      setItems(res.data);
-    } catch {
-      toast.error("Gagal memuat galeri");
-    } finally {
-      setLoading(false);
+  //State Pagination
+  const [items, setItems] = useState([]);
+const [currentPage, setCurrentPage] = useState(1);
+const [lastPage, setLastPage] = useState(1);
+const [loading, setLoading] = useState(false);
+
+const fetchGalleries = async (page = 1) => {
+    setLoading(true);
+    const res = await api.get(`/api/galleries?page=${page}`);
+    if (page === 1) {
+        setItems(res.data.data);
+    } else {
+        setItems(prev => [...prev, ...res.data.data]); // load more style
     }
-  };
+    setCurrentPage(res.data.current_page);
+    setLastPage(res.data.last_page);
+    setLoading(false);
+};
+
+useEffect(() => {
+    fetchGalleries(1);
+}, []);
 
   useEffect(() => {
   if (selectedItem?.file_path?.includes('tiktok.com')) {
@@ -551,20 +561,32 @@ return (
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="all" className="grid grid-cols-2 gap-4 mt-6">
-        {items.map((item) => (
-          <Card key={item.id} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white hover:scale-105 transition-transform group" onClick={() => handleOpenPreview(item)}>
+<TabsContent value="all" className="grid grid-cols-2 gap-4 mt-6">
+    {items.map((item) => (
+        <Card key={item.id} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white hover:scale-105 transition-transform group" onClick={() => handleOpenPreview(item)}>
             <div className="aspect-square flex items-center justify-center overflow-hidden relative">
-              {renderPreview(item)}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                {renderPreview(item)}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
             <CardContent className="p-3">
-              <p className="text-[11px] font-black text-slate-800 truncate mb-0.5">{item.title}</p>
-              <p className="text-[9px] text-slate-400 font-bold">Oleh {item.user?.name.split(' ')[0]}</p>
+                <p className="text-[11px] font-black text-slate-800 truncate mb-0.5">{item.title}</p>
+                <p className="text-[9px] text-slate-400 font-bold">Oleh {item.user?.name.split(' ')[0]}</p>
             </CardContent>
-          </Card>
-        ))}
-      </TabsContent>
+        </Card>
+    ))}
+
+    {currentPage < lastPage && (
+        <div className="col-span-2 flex justify-center mt-2">
+            <button
+                onClick={() => fetchGalleries(currentPage + 1)}
+                disabled={loading}
+                className="text-[11px] font-bold text-indigo-500 py-2 px-6 rounded-full border border-indigo-200 hover:bg-indigo-50 transition"
+            >
+                {loading ? 'Memuat...' : 'Muat lebih banyak'}
+            </button>
+        </div>
+    )}
+</TabsContent>
 
       <TabsContent value="mine" className="grid grid-cols-2 gap-4 mt-6">
         {items.filter(i => i.user_id === user?.id).map((item) => (
