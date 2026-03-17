@@ -132,10 +132,10 @@ export default function WelcomeLayout({ title, children, auth }) {
 
                                 <div className="wl-footer-heading" style={{ marginTop: '1.75rem' }}>Sosial Media</div>
                                 <div style={{ display: 'flex', gap: '0.6rem' }}>
-                                    <a href="#" aria-label="Facebook Sekolah" className="wl-social-btn">
+                                    <a href="https://www.facebook.com/rujukan.rujukan.54" aria-label="Facebook Sekolah" className="wl-social-btn">
                                         <IconBrandFacebook size={18} />
                                     </a>
-                                    <a href="#" aria-label="Website Sekolah" className="wl-social-btn">
+                                    <a href="https://smpn1siborongborong.sch.id" aria-label="Website Sekolah" className="wl-social-btn">
                                         <IconLink size={18} />
                                     </a>
                                 </div>
