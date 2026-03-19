@@ -33,14 +33,19 @@ class StudentQuizController extends Controller
         }
 
         // Query ke tabel question_banks
-        $questions = QuestionBank::query()
-            ->where('subject_id', $subjectId)     
-            ->where('class_id', $user->class_id)  
-            ->where('type', $type)                // 2. TAMBAHKAN FILTER TYPE INI!
-            ->inRandomOrder()                     
-            ->limit(10)                           
-            ->get()
-            ->makeHidden(['correct_key']);        
+        // Ambil random IDs dulu (ringan)
+$randomIds = QuestionBank::query()
+    ->where('subject_id', $subjectId)
+    ->where('class_id', $user->class_id)
+    ->where('type', $type)
+    ->pluck('id')
+    ->shuffle()
+    ->take(10);
+
+// Baru ambil full data
+$questions = QuestionBank::whereIn('id', $randomIds)
+    ->get()
+    ->makeHidden(['correct_key']);        
 
         // Cek ketersediaan soal
         if ($questions->isEmpty()) {
