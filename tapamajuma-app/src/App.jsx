@@ -4,6 +4,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
 
+
+
+
 // ==========================================
 // 1. IMPORT SINKRON (Critical Load)
 // ==========================================
@@ -15,6 +18,7 @@ import SuperadminLayout from "./layouts/SuperadminLayout";
 import Welcome from "./pages/Welcome";
 import GuestGuard from './components/GuestGuard';
 import SharedGallery from './pages/SharedGallery';
+import CBTManager from './pages/student/CBTManager';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
@@ -51,6 +55,7 @@ const SoalAdd = lazy(() => import("./pages/teacher/SoalAdd"));
 const SoalImport = lazy(() => import("./pages/teacher/SoalImport"));
 const MediaBank = lazy(() => import("./pages/teacher/MediaBank"));
 const OtherMenuTc = lazy(() => import("./pages/teacher/OtherMenuTc"));
+const CBTCenter = lazy(() => import("./pages/teacher/CBTCenter"));
 
 // -- Superadmin --
 const SuperadminDashboard = lazy(() => import("./pages/superadmin/Dashboard"));
@@ -73,6 +78,11 @@ const MorningSessionStudent = lazy(() => import("./pages/superadmin/MorningSessi
 // -- Games --
 const MathGame = lazy(() => import("./components/games/MathGame"));
 
+
+
+// -- CBT (Ujian Resmi) --
+const CBTStart = lazy(() => import("./pages/student/CBTStart"));
+const CBTExam = lazy(() => import("./pages/student/CBTExam"));
 
 // ==========================================
 // KOMPONEN LOADING
@@ -161,6 +171,9 @@ function App() {
               <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
               <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
               <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
+
+              {/* GRUP 2.3: CBT */}
+              <Route path="cbt-center" element={<div className="p-4"><CBTCenter /></div>} />
             </Route>
 
             {/* GRUP 3: GAME */}
@@ -201,6 +214,15 @@ function App() {
               <Route path="activity-report/teachers" element={<TeacherSummary />} />
               <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
             </Route>
+            {/* CBT SYSTEM: SINGLE ENDPOINT */}
+            <Route 
+              path="/cbt" 
+              element={
+                <AuthGuard>
+                  <CBTManager />
+                </AuthGuard>
+              } 
+            />
 
           </Routes>
         </Suspense>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FASE 0 — Pembuatan Paket Ujian | CBT TAPAMAJUMA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --black-2: #111111;
+    --black-3: #1a1a1a;
+    --black-4: #222222;
+    --orange: #FF6B00;
+    --orange-bright: #FF8C00;
+    --orange-pale: #FF6B0022;
+    --orange-dim: #FF6B0011;
+    --white: #f5f0e8;
+    --white-dim: #c8c2b6;
+    --white-faint: #ffffff08;
+    --accent-line: #FF6B0055;
+    --warn-bg: #1f1100;
+    --warn-border: #FF6B0088;
+    --radius: 4px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--accent-line);
+    padding: 0 clamp(16px, 5vw, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--orange);
+  }
+
+  .brand span {
+    color: var(--white-dim);
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    margin-left: 10px;
+    vertical-align: middle;
+    text-transform: uppercase;
+  }
+
+  .phase-badge {
+    background: var(--orange);
+    color: var(--black);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    letter-spacing: 0.1em;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    padding: clamp(48px, 8vw, 100px) clamp(16px, 5vw, 80px) clamp(40px, 6vw, 80px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: 'F0';
+    position: absolute;
+    right: -0.05em;
+    top: -0.1em;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(180px, 30vw, 340px);
+    color: var(--white-faint);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--orange);
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 92px);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    color: var(--white);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 em {
+    color: var(--orange);
+    font-style: normal;
+    display: block;
+  }
+
+  .hero-desc {
+    max-width: 560px;
+    color: var(--white-dim);
+    font-weight: 300;
+    font-size: 15px;
+    border-left: 3px solid var(--orange);
+    padding-left: 16px;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
+    margin: 0 clamp(16px, 5vw, 80px);
+    opacity: 0.35;
+  }
+
+  /* ─── MAIN CONTENT ─── */
+  main {
+    padding: clamp(32px, 5vw, 64px) clamp(16px, 5vw, 80px);
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 48px;
+  }
+
+  /* ─── SECTION TITLE ─── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .section-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--orange);
+    min-width: 32px;
+  }
+
+  .section-info h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 0.05em;
+    color: var(--white);
+    line-height: 1.1;
+  }
+
+  .section-info p {
+    font-size: 12px;
+    color: var(--white-dim);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  /* ─── STEP CARD ─── */
+  .steps-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .step-card {
+    background: var(--black-2);
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid var(--orange);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 16px;
+    align-items: start;
+    transition: background 0.2s, border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .step-card:hover {
+    background: var(--black-3);
+    border-color: var(--orange);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--orange);
+    font-weight: 700;
+    padding-top: 2px;
+  }
+
+  .step-content strong {
+    display: block;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .step-content p {
+    color: var(--white-dim);
+    font-weight: 300;
+    font-size: 14px;
+  }
+
+  /* ─── IDENTITAS FORM PREVIEW ─── */
+  .form-preview {
+    background: var(--black-3);
+    border: 1px solid #2a2a2a;
+    padding: 24px;
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid #1f1f1f;
+    padding-bottom: 12px;
+  }
+
+  .form-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .form-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .form-val {
+    font-size: 13px;
+    color: var(--white-dim);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .form-val em {
+    color: var(--white);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  /* ─── METHOD TABS ─── */
+  .method-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 700px) {
+    .method-container { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  .method-card {
+    border: 1px solid #2a2a2a;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .method-card:nth-child(2) { animation-delay: 0.1s; }
+
+  .method-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .method-card.manual .method-header { background: #0f0f0f; border-bottom: 2px solid var(--orange); }
+  .method-card.random .method-header { background: #0f0f0f; border-bottom: 2px solid #FF8C00; }
+
+  .method-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+  }
+
+  .method-card.manual .method-tag { color: var(--orange); }
+  .method-card.random .method-tag { color: var(--orange-bright); }
+
+  .method-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .badge-a { background: var(--orange); color: #000; }
+  .badge-b { background: var(--orange-bright); color: #000; }
+
+  .method-body {
+    padding: 16px 20px;
+    background: var(--black-2);
+  }
+
+  .method-desc {
+    font-size: 12px;
+    color: var(--white-dim);
+    font-weight: 300;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1f1f1f;
+    font-style: italic;
+  }
+
+  .method-steps {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+
+  .method-steps li {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--white-dim);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .method-steps li .ms-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--orange);
+    min-width: 18px;
+    padding-top: 3px;
+  }
+
+  .method-card.random .method-steps li .ms-num { color: var(--orange-bright); }
+
+  .icon-chip {
+    display: inline-flex;
+    align-items: center;
+    background: var(--orange-pale);
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .use-case-tag {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 12px;
+    background: var(--orange-dim);
+    border-left: 2px solid var(--orange);
+    font-size: 11px;
+    color: var(--white-dim);
+    font-weight: 400;
+  }
+
+  .use-case-tag strong { color: var(--orange); }
+
+  /* ─── WARNING SECTION ─── */
+  .warning-section {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    padding: 28px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .warning-section::before {
+    content: '⚠';
+    position: absolute;
+    right: -0.05em;
+    top: -0.1em;
+    font-size: 180px;
+    color: #FF6B0008;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .warning-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--warn-border);
+  }
+
+  .warning-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  }
+
+  .warning-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    color: var(--orange);
+  }
+
+  .warning-header p {
+    font-size: 12px;
+    color: var(--white-dim);
+    font-weight: 300;
+  }
+
+  .warning-items {
+    display: grid;
+    gap: 16px;
+  }
+
+  .warn-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #2a1500;
+    transition: border-color 0.2s;
+  }
+
+  .warn-item:hover { border-color: var(--warn-border); }
+
+  .warn-num {
+    width: 28px;
+    height: 28px;
+    background: var(--orange);
+    color: var(--black);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .warn-body strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 5px;
+  }
+
+  .warn-body p {
+    font-size: 13px;
+    color: var(--white-dim);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .warn-body p strong { display: inline; font-size: 13px; color: var(--orange); }
+
+  .tag-fatal {
+    display: inline-block;
+    background: #8b0000;
+    border: 1px solid #cc0000;
+    color: #ffaaaa;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    letter-spacing: 0.08em;
+    margin-left: 6px;
+    vertical-align: middle;
+    text-transform: uppercase;
+  }
+
+  /* ─── STATUS SECTION ─── */
+  .status-card {
+    background: var(--black-2);
+    border: 1px solid #2a2a2a;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .status-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border: 2px solid #555;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .status-pill::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid #333;
+  }
+
+  .status-text strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .status-text p {
+    font-size: 13px;
+    color: var(--white-dim);
+    font-weight: 300;
+  }
+
+  .status-text p .highlight {
+    color: var(--orange);
+    font-weight: 500;
+  }
+
+  /* ─── COMPARISON TABLE ─── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .compare-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--orange);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--orange);
+    background: #0f0f0f;
+  }
+
+  .compare-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #1f1f1f;
+    color: var(--white-dim);
+    font-weight: 300;
+    vertical-align: top;
+  }
+
+  .compare-table tr:hover td { background: #141414; }
+
+  .compare-table td:first-child {
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    margin-top: 60px;
+    border-top: 1px solid #1f1f1f;
+    padding: 24px clamp(16px, 5vw, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--orange);
+    letter-spacing: 0.1em;
+  }
+
+  .footer-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── STAGGER ANIMATIONS ─── */
+  .step-card:nth-child(1) { animation-delay: 0.05s; }
+  .step-card:nth-child(2) { animation-delay: 0.1s; }
+  .step-card:nth-child(3) { animation-delay: 0.15s; }
+  .step-card:nth-child(4) { animation-delay: 0.2s; }
+  .step-card:nth-child(5) { animation-delay: 0.25s; }
+
+  .warn-item:nth-child(1) { animation: fadeUp 0.5s 0.05s ease both; }
+  .warn-item:nth-child(2) { animation: fadeUp 0.5s 0.12s ease both; }
+  .warn-item:nth-child(3) { animation: fadeUp 0.5s 0.19s ease both; }
+  .warn-item:nth-child(4) { animation: fadeUp 0.5s 0.26s ease both; }
+  .warn-item:nth-child(5) { animation: fadeUp 0.5s 0.33s ease both; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">CBT TAPAMAJUMA <span>Control Center</span></div>
+  <div class="phase-badge">FASE 0</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Panduan Guru · Manajemen Ujian</div>
+  <h1>Pembuatan<em>Paket Ujian</em></h1>
+  <p class="hero-desc">
+    Langkah-langkah lengkap untuk merakit dan menyusun soal menjadi satu kesatuan paket ujian yang siap digunakan siswa.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<main>
+
+  <!-- LANGKAH 1: LANGKAH DASAR -->
+  <section>
+    <div class="section-label">
+      <div class="section-num">01</div>
+      <div class="section-info">
+        <h2>Langkah Dasar Memulai</h2>
+        <p>Akses menu dan isi identitas paket ujian</p>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">①</div>
+        <div class="step-content">
+          <strong>Masuk ke CBT Control Center</strong>
+          <p>Buka menu <span class="icon-chip">Dasbor Guru</span> melalui panel navigasi utama sistem CBT.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">②</div>
+        <div class="step-content">
+          <strong>Buat Paket Baru</strong>
+          <p>Klik tombol <span class="icon-chip">⊕ Buat Paket Baru</span> yang terletak di bagian atas halaman Control Center.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">③</div>
+        <div class="step-content">
+          <strong>Isi Identitas Ujian</strong>
+          <p>Lengkapi formulir identitas paket ujian sesuai dengan informasi di bawah ini:</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-preview">
+      <div class="form-row">
+        <div class="form-label">Judul Paket</div>
+        <div class="form-val">Nama yang jelas &mdash; contoh: <em>Penilaian Tengah Semester Ganjil - Matematika</em></div>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Mata Pelajaran</div>
+        <div class="form-val">Pilih dari daftar mata pelajaran yang Anda ampu</div>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Target Kelas</div>
+        <div class="form-val">Pilih kelas yang akan mengikuti ujian &mdash; contoh: <em>Kelas 7</em> atau <em>Semua Kelas</em></div>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Durasi Waktu</div>
+        <div class="form-val">Dalam satuan menit &mdash; contoh: <em>90 menit</em></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH 2: MODE PENGAMBILAN SOAL -->
+  <section>
+    <div class="section-label">
+      <div class="section-num">02</div>
+      <div class="section-info">
+        <h2>Mode Pengambilan Soal</h2>
+        <p>Dua metode canggih untuk menyusun soal dari Bank Soal</p>
+      </div>
+    </div>
+
+    <div class="method-container">
+
+      <!-- METODE A -->
+      <div class="method-card manual">
+        <div class="method-header">
+          <span class="method-badge badge-a">Metode A</span>
+          <span class="method-tag">Pemilihan Manual</span>
+        </div>
+        <div class="method-body">
+          <p class="method-desc">Guru memilih sendiri soal-soal spesifik yang keluar di ujian. Sangat cocok untuk Ulangan Harian atau Ujian Akhir Semester yang butuh presisi tinggi.</p>
+          <ol class="method-steps">
+            <li>
+              <span class="ms-num">01</span>
+              <span>Pada opsi Mode Pemilihan, pilih <span class="icon-chip">MANUAL</span></span>
+            </li>
+            <li>
+              <span class="ms-num">02</span>
+              <span>Sistem menampilkan seluruh daftar soal dari Bank Soal sesuai Mata Pelajaran yang dipilih</span>
+            </li>
+            <li>
+              <span class="ms-num">03</span>
+              <span>Baca ringkasan soal dan centang <strong style="color:var(--white)">☑</strong> kotak di samping soal yang ingin dimasukkan ke dalam paket</span>
+            </li>
+            <li>
+              <span class="ms-num">04</span>
+              <span>Indikator di layar menunjukkan jumlah soal yang sudah dipilih — contoh: <em style="color:var(--white)">Telah memilih 40 soal</em></span>
+            </li>
+            <li>
+              <span class="ms-num">05</span>
+              <span>Setelah jumlahnya pas, klik <span class="icon-chip">Simpan Paket</span></span>
+            </li>
+          </ol>
+          <div class="use-case-tag"><strong>Cocok untuk:</strong> Ulangan Harian · Ujian Akhir Semester</div>
+        </div>
+      </div>
+
+      <!-- METODE B -->
+      <div class="method-card random">
+        <div class="method-header">
+          <span class="method-badge badge-b">Metode B</span>
+          <span class="method-tag">Acak / Random</span>
+        </div>
+        <div class="method-body">
+          <p class="method-desc">Sistem mengambil soal secara acak (gacha) dari Bank Soal secara otomatis. Praktis dan hemat waktu.</p>
+          <ol class="method-steps">
+            <li>
+              <span class="ms-num">01</span>
+              <span>Pada opsi Mode Pemilihan, pilih <span class="icon-chip" style="color:var(--orange-bright);border-color:var(--orange-bright);background:rgba(255,140,0,0.1)">ACAK (RANDOM)</span></span>
+            </li>
+            <li>
+              <span class="ms-num">02</span>
+              <span>Masukkan jumlah soal yang ingin ditarik — contoh: <em style="color:var(--white)">50 soal</em></span>
+            </li>
+            <li>
+              <span class="ms-num">03</span>
+              <span><em style="color:var(--white-dim)">(Opsional)</em> Terapkan filter: hanya dari Bab tertentu, atau tingkat kesulitan tertentu</span>
+            </li>
+            <li>
+              <span class="ms-num">04</span>
+              <span>Klik <span class="icon-chip" style="color:var(--orange-bright);border-color:var(--orange-bright);background:rgba(255,140,0,0.1)">Generate / Tarik Soal</span> — sistem merakit soal secara instan</span>
+            </li>
+            <li>
+              <span class="ms-num">05</span>
+              <span>Klik <span class="icon-chip" style="color:var(--orange-bright);border-color:var(--orange-bright);background:rgba(255,140,0,0.1)">Simpan Paket</span></span>
+            </li>
+          </ol>
+          <div class="use-case-tag" style="border-color:var(--orange-bright)"><strong style="color:var(--orange-bright)">Cocok untuk:</strong> Try Out · Latihan Soal · Kuis Cepat</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PERBEDAAN PENTING -->
+    <table class="compare-table" style="margin-top:20px">
+      <thead>
+        <tr>
+          <th>Istilah</th>
+          <th>Penjelasan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Paket Random</td>
+          <td>Sistem memilihkan sejumlah soal dari total soal di bank secara otomatis. Setiap paket bisa berbeda soalnya.</td>
+        </tr>
+        <tr>
+          <td>Acak Urutan Soal Siswa</td>
+          <td>Meskipun soal yang diujikan sama persis, nomor urut soal di layar Ani berbeda dengan Budi. Fitur anti-contek bawaan sistem.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- WARNING SECTION -->
+  <section class="warning-section">
+    <div class="warning-header">
+      <div class="warning-icon">⚠</div>
+      <div>
+        <h2>Hal-Hal Penting yang Wajib Diperhatikan</h2>
+        <p>Pastikan poin-poin ini terpenuhi agar ujian berjalan lancar tanpa error</p>
+      </div>
+    </div>
+
+    <div class="warning-items">
+
+      <div class="warn-item">
+        <div class="warn-num">1</div>
+        <div class="warn-body">
+          <strong>Syarat Utama: Bank Soal Harus Terisi Dulu</strong>
+          <p>Paket ujian <strong>tidak bisa dibuat</strong> jika Bank Soal untuk mata pelajaran tersebut masih kosong. Pastikan soal sudah diinput (ketik manual atau import Excel) ke menu <strong>Bank Soal</strong> sebelum membuat Paket Ujian.</p>
+        </div>
+      </div>
+
+      <div class="warn-item">
+        <div class="warn-num">2</div>
+        <div class="warn-body">
+          <strong>Kecukupan Jumlah Soal — Khusus Mode Acak</strong>
+          <p>Jika mode ACAK meminta 40 soal, maka Bank Soal <strong>harus tersedia minimal 40 soal</strong> (lebih banyak lebih baik). Jika di Bank Soal hanya ada 30 soal, sistem akan menolak atau mengalami error.</p>
+        </div>
+      </div>
+
+      <div class="warn-item">
+        <div class="warn-num">3</div>
+        <div class="warn-body">
+          <strong>Pengecekan Kunci Jawaban <span class="tag-fatal">Sangat Fatal</span></strong>
+          <p>Nilai CBT dihitung otomatis. Jika kunci jawaban salah terinput (misal: seharusnya <strong>A</strong>, tapi terinput <strong>B</strong>), seluruh siswa yang menjawab benar akan disalahkan sistem. Selalu gunakan fitur <strong>Pratinjau (Preview)</strong> setelah paket dibuat untuk memeriksa kunci jawaban (ditandai ikon centang hijau).</p>
+        </div>
+      </div>
+
+      <div class="warn-item">
+        <div class="warn-num">4</div>
+        <div class="warn-body">
+          <strong>Bedakan "Paket Random" vs "Acak Urutan Soal Siswa"</strong>
+          <p><strong>Paket Random:</strong> Sistem memilihkan soal dari bank secara acak. &nbsp;|&nbsp; <strong>Acak Urutan:</strong> Fitur anti-contek bawaan — soal yang diujikan sama, tapi nomor urut di layar tiap siswa berbeda otomatis.</p>
+        </div>
+      </div>
+
+      <div class="warn-item">
+        <div class="warn-num">5</div>
+        <div class="warn-body">
+          <strong>Status Paket Ujian Baru</strong>
+          <p>Setiap paket baru berstatus <strong>DRAFT</strong> — siswa tidak bisa melihat atau mengakses ujian ini sampai Guru menekan tombol <strong>Rilis Token</strong> di hari-H ujian.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- STATUS INFO -->
+  <section>
+    <div class="section-label">
+      <div class="section-num">—</div>
+      <div class="section-info">
+        <h2>Status Paket Ujian</h2>
+        <p>Siklus status dari pembuatan hingga pelaksanaan</p>
+      </div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-pill">DRAFT</div>
+      <div class="status-text">
+        <strong>Status Awal Setelah Dibuat</strong>
+        <p>Paket dalam status ini <span class="highlight">tidak terlihat oleh siswa</span>. Guru dapat memeriksa, mengedit, dan memvalidasi paket terlebih dahulu sebelum ujian berlangsung. Aktifkan paket dengan menekan <span class="highlight">Rilis Token</span> di hari-H ujian.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-brand">CBT TAPAMAJUMA</div>
+  <div class="footer-note">FASE 0 · PANDUAN PEMBUATAN PAKET UJIAN · DASBOR GURU</div>
+</footer>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, PieChart, UserCircle, LogOut, BookCheck, School2Icon, FileQuestion, CircleQuestionMark } from "lucide-react";
+import { LayoutDashboard, PieChart, UserCircle, LogOut, BookCheck, School2Icon, FileQuestion, CircleQuestionMark, FileQuestionMark } from "lucide-react";
 import ClassImprovement from "@/pages/teacher/ClassImprovement";
 import ChangelogModal from '@/components/ChangelogModal';
 // import api from "@/lib/axios";
@@ -33,6 +33,7 @@ export default function TeacherLayout() {
     { label: "Beranda", path: "/teacher", icon: <LayoutDashboard size={20} /> },
     { label: "Perkemb. Kls", path: "/teacher/class-improvement", icon: <School2Icon size={20} /> },
     { label: "Bank Soal", path: "/teacher/bank-soal", icon: <CircleQuestionMark size={20} /> },
+    { label: "CBT", path: "/teacher/cbt-center", icon: <FileQuestionMark size={20} /> },
     { label: "Profil", path: "/teacher/profile", icon: <UserCircle size={20} /> },
   ];
 

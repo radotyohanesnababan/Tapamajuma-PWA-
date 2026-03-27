@@ -163,6 +163,7 @@ export default function QuestionBankManagement() {
             <option value="numeracy">🔢 Numerasi</option>
             <option value="literacy">📚 Literasi</option>
             <option value="tka">🧠 TKA (HOTS)</option>
+            <option value="official">📝 Soal Resmi</option>
           </select>
 
           <select 

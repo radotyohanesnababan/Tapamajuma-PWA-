@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\StudentMgmtController;
 use App\Http\Controllers\Admin\SubjectMgmtController;
 use App\Http\Controllers\Admin\TeacherMgmtController as AdminTeacherMgmtController;
 use App\Http\Controllers\Api\AIController as ApiAIController;
+use App\Http\Controllers\Api\CBTController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Teacher\QuestionBankController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Teacher\CBTAdminController;
 use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 
 
@@ -157,6 +159,11 @@ Route::middleware('auth:sanctum',)->group(function () {
     Route::post('/galleries', [GalleryController::class, 'store']);
     Route::post('/galleries/{id}/share', [GalleryController::class, 'share']);
 
+    Route::post('cbt/start', [CBTController::class, 'startExam']);
+    Route::post('cbt/update-answer', [CBTController::class, 'updateAnswer']);
+    Route::post('cbt/submit', [CBTController::class, 'submitExam']);
+    Route::post('cbt/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
+
     // --- OTHER MENU & PROFILE (Aksi C.2) ---
     // Route ini digunakan siswa untuk edit mandiri dan melihat ringkasan presentasi
     Route::get('/summary', [ProfileController::class, 'getSummary']);
@@ -178,8 +185,16 @@ Route::middleware('auth:sanctum',)->group(function () {
         Route::get('/reflections', [ReflectionController::class, 'getStudentReflections']);
         Route::post('/reflections/{id}/feedback', [ReflectionController::class, 'giveFeedback']);
 
-
-        
+            Route::get('cbt/exams', [CBTAdminController::class, 'index']); // Daftar paket
+            Route::post('cbt/exams', [CBTAdminController::class, 'store']); // Buat paket baru
+            Route::delete('cbt/exams/{id}', [CBTAdminController::class, 'destroy']); // Hapus paket
+            Route::get('cbt/options', [CBTAdminController::class, 'getOptions']);
+            Route::get('cbt/question-bank', [CBTAdminController::class, 'getQuestionBank']);
+            Route::get('cbt/exams/{id}/preview', [CBTAdminController::class, 'getPreview']);
+            ROute ::get('cbt/exams/{id}/results', [CBTAdminController::class, 'getResults']);
+            // Action khusus token & status
+            Route::post('cbt/exams/{id}/release-token', [CBTAdminController::class, 'releaseToken']);
+            Route::post('cbt/exams/{id}/close', [CBTAdminController::class, 'closeExam']);
 
         // Fleksibilitas: Guru/Admin bisa mengedit profil siswa jika diperlukan
         Route::put('/user-update/{id}', [ProfileController::class, 'update']);

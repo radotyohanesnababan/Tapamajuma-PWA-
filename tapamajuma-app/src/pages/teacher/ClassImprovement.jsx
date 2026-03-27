@@ -10,7 +10,8 @@ import {
   Heart,
   Sparkles,
   ScooterIcon,
-  Star
+  Star,
+  BarChart3Icon
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -57,7 +58,7 @@ export default function ClassImprovement() {
       color: "green",
       accentIcon: <Star size={14} className="fill-current" />,
       tags: ["Publikasi", "Karya Kreatif"]
-    }
+    },
   ];
 
   const colorConfig = {

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Guru — CBT TAPAMAJUMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --cream: #ede7d5;
+    --accent: #c94b1e;
+    --accent2: #1e6bc9;
+    --gold: #c9921e;
+    --green: #1e8a4a;
+    --muted: #6b6457;
+    --border: #d4c9b0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family:  Georgia, serif;
+    font-size: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    background: var(--ink);
+    color: var(--paper);
+    overflow: hidden;
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 64px 48px 56px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  h1 span { color: var(--accent); font-style: italic; }
+
+  .header-sub {
+    font-style: italic;
+    font-size: 1.05rem;
+    color: #a09484;
+    max-width: 540px;
+  }
+
+  .header-deco {
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 380px; height: 380px;
+    border: 60px solid rgba(201,75,30,0.08);
+    border-radius: 50%;
+  }
+
+  .header-deco2 {
+    position: absolute;
+    right: 60px; bottom: -80px;
+    width: 200px; height: 200px;
+    border: 30px solid rgba(201,146,30,0.1);
+    border-radius: 50%;
+  }
+
+  /* NAV */
+  .phase-nav {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .phase-nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .phase-nav a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--muted);
+    padding: 18px 24px;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .phase-nav a:hover { color: var(--ink); }
+  .phase-nav a.p1:hover { border-bottom-color: var(--accent); color: var(--accent); }
+  .phase-nav a.p2:hover { border-bottom-color: var(--accent2); color: var(--accent2); }
+  .phase-nav a.p3:hover { border-bottom-color: var(--green); color: var(--green); }
+  .phase-nav a.pd:hover { border-bottom-color: var(--accent); color: var(--accent); }
+
+  /* INTRO */
+  .intro-strip {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px 48px;
+  }
+
+  .intro-strip-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .fase-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .chip-red  { background: rgba(201,75,30,0.2);  color: #ff8b6a; border: 1px solid rgba(201,75,30,0.4); }
+  .chip-blue { background: rgba(30,107,201,0.2); color: #7eb4ff; border: 1px solid rgba(30,107,201,0.4); }
+  .chip-green{ background: rgba(30,138,74,0.2);  color: #6bdc9a; border: 1px solid rgba(30,138,74,0.4); }
+
+  .intro-strip p {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #908070;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  /* MAIN */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px 80px;
+  }
+
+  /* PHASE BLOCK */
+  .phase-block { margin-top: 72px; }
+
+  .phase-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-number {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 5rem;
+    line-height: 1;
+    opacity: 0.08;
+    flex-shrink: 0;
+    margin-top: -8px;
+  }
+
+  .phase-meta { flex: 1; }
+
+  .phase-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .phase-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 2px;
+  }
+
+  .tag-red   { color: var(--accent); }
+  .tag-red::before   { background: var(--accent); }
+  .tag-blue  { color: var(--accent2); }
+  .tag-blue::before  { background: var(--accent2); }
+  .tag-green { color: var(--green); }
+  .tag-green::before { background: var(--green); }
+
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .phase-desc {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 0.93rem;
+  }
+
+  /* STEP CARDS */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .step-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .step-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  .step-card-head {
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .num-red   { background: rgba(201,75,30,0.1);  color: var(--accent);  border: 1px solid rgba(201,75,30,0.3); }
+  .num-blue  { background: rgba(30,107,201,0.1); color: var(--accent2); border: 1px solid rgba(30,107,201,0.3); }
+  .num-green { background: rgba(30,138,74,0.1);  color: var(--green);   border: 1px solid rgba(30,138,74,0.3); }
+
+  .step-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .step-card-body { padding: 24px 28px; }
+
+  .step-card-body p {
+    color: #3a342a;
+    font-size: 0.93rem;
+    margin-bottom: 14px;
+  }
+
+  .step-card-body p:last-child { margin-bottom: 0; }
+
+  /* LISTS */
+  .step-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 14px 0;
+  }
+
+  .step-list li {
+    font-size: 0.91rem;
+    color: #3a342a;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .step-list li::before {
+    content: '→';
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  .list-red li::before   { color: var(--accent); }
+  .list-blue li::before  { color: var(--accent2); }
+  .list-green li::before { color: var(--green); }
+
+  /* CODE & BADGE */
+  code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    letter-spacing: 0.04em;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-draft  { background: #ede7d5; color: #6b6457; border: 1px solid #d4c9b0; }
+  .badge-active { background: rgba(30,107,201,0.1); color: var(--accent2); border: 1px solid rgba(30,107,201,0.3); }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 0.87rem;
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    line-height: 1.6;
+  }
+
+  .callout-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+  .callout-note { background: rgba(201,146,30,0.08); border: 1px solid rgba(201,146,30,0.25); color: #7a5a10; }
+  .callout-warn { background: rgba(201,75,30,0.07);  border: 1px solid rgba(201,75,30,0.25);  color: #7a2e10; }
+  .callout-tip  { background: rgba(30,138,74,0.07);  border: 1px solid rgba(30,138,74,0.25);  color: #0e5229; }
+
+  /* UI SNIPPETS */
+  .ui-snippet {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-mock {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 13px;
+    border-radius: 5px;
+    letter-spacing: 0.03em;
+    cursor: default;
+  }
+
+  .btn-red   { background: var(--accent);  color: #fff; }
+  .btn-blue  { background: var(--accent2); color: #fff; }
+  .btn-green { background: var(--green);   color: #fff; }
+  .btn-dark  { background: var(--ink);     color: #fff; }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+
+  /* TABLE */
+  .table-mock {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .table-mock th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    text-align: left;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  .table-mock td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: #3a342a;
+  }
+
+  .table-mock tr:last-child td { border-bottom: none; }
+  .table-mock tr:nth-child(even) td { background: var(--cream); }
+
+  .score-good { color: var(--green); font-weight: 600; }
+  .score-bad  { color: var(--accent); font-weight: 600; }
+
+  /* DANGER */
+  .danger-zone {
+    margin-top: 72px;
+    background: #1a0a05;
+    border: 1px solid rgba(201,75,30,0.3);
+    border-radius: 10px;
+    padding: 36px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .danger-zone::before {
+    content: '⚠';
+    position: absolute;
+    right: -10px; top: -20px;
+    font-size: 120px;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  .danger-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: #ff7a5a;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .danger-zone p { color: #c09080; font-size: 0.9rem; line-height: 1.7; }
+  .danger-zone strong { color: #ff9070; }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: #504540;
+    text-align: center;
+    padding: 32px 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  footer span { color: var(--accent); }
+
+  .section-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 56px 0 0;
+  }
+
+  /* REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 680px) {
+    .header-inner, main { padding-left: 20px; padding-right: 20px; }
+    .phase-nav-inner { padding: 0 20px; }
+    .intro-strip { padding: 16px 20px; }
+    h1 { font-size: 2rem; }
+    .phase-number { font-size: 3rem; }
+    .danger-zone { padding: 24px 20px; }
+    .step-card-head, .step-card-body { padding-left: 18px; padding-right: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-deco"></div>
+  <div class="header-deco2"></div>
+  <div class="header-inner">
+    <div class="header-eyebrow">📚 Dokumentasi Sistem</div>
+    <h1>Panduan Guru<br><span>CBT TAPAMAJUMA</span></h1>
+    <p class="header-sub">Manajemen Ujian Digital &amp; Pelaporan Real-time — Panduan Lengkap 3 Fase</p>
+  </div>
+</header>
+
+<nav class="phase-nav">
+  <div class="phase-nav-inner">
+    <a href="#fase1" class="p1">01 · Persiapan</a>
+    <a href="#fase2" class="p2">02 · Pelaksanaan</a>
+    <a href="#fase3" class="p3">03 · Pasca Ujian</a>
+    <a href="#hapus" class="pd">⚠ Penghapusan</a>
+  </div>
+</nav>
+
+<div class="intro-strip">
+  <div class="intro-strip-inner">
+    <span class="fase-chip chip-red">Fase 1: Persiapan</span>
+    <span class="fase-chip chip-blue">Fase 2: Pelaksanaan</span>
+    <span class="fase-chip chip-green">Fase 3: Pelaporan</span>
+    <p>Sistem CBT terbagi menjadi 3 fase utama yang harus dilakukan secara berurutan.</p>
+  </div>
+</div>
+
+<main>
+
+  <!-- FASE 1 -->
+  <section id="fase1" class="phase-block reveal">
+    <div class="phase-header">
+      <div class="phase-number">01</div>
+      <div class="phase-meta">
+        <div class="phase-tag tag-red">Fase Pertama</div>
+        <h2 class="phase-title">Persiapan Ujian</h2>
+        <p class="phase-desc">Memeriksa &amp; memvalidasi paket soal sebelum ujian dimulai</p>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-red">1.1</div>
+          <div class="step-card-title">Membuka Daftar Paket Ujian</div>
+        </div>
+        <div class="step-card-body">
+          <p>Masuk ke menu <strong>CBT / Daftar Ujian</strong> untuk melihat seluruh paket ujian yang tersedia dalam tabel lengkap.</p>
+
+          <table class="table-mock">
+            <thead>
+              <tr>
+                <th>Judul Ujian</th>
+                <th>Mata Pelajaran</th>
+                <th>Soal</th>
+                <th>Durasi</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>UTS Matematika Kelas 7</td>
+                <td>Matematika</td>
+                <td>50</td>
+                <td>90 mnt</td>
+                <td><span class="badge badge-draft">DRAFT</span></td>
+              </tr>
+              <tr>
+                <td>Ulangan IPA Bab 3</td>
+                <td>IPA</td>
+                <td>40</td>
+                <td>60 mnt</td>
+                <td><span class="badge badge-draft">DRAFT</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">💡</span>
+            <span>Ujian yang belum dimulai akan berstatus <code>DRAFT</code>. Pastikan semua informasi sudah benar sebelum melanjutkan ke langkah berikutnya.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-red">1.2</div>
+          <div class="step-card-title">Melakukan Pratinjau (Preview) Soal</div>
+        </div>
+        <div class="step-card-body">
+          <p>Di kolom <strong>Aksi</strong>, klik tombol ikon <strong>Mata (Eye)</strong> pada paket ujian yang dipilih untuk membuka pratinjau soal.</p>
+
+          <div class="ui-snippet">
+            Kolom Aksi:
+            <span class="btn-mock btn-ghost">👁 Preview</span>
+            <span class="btn-mock btn-blue">▶ Rilis Token</span>
+            <span class="btn-mock" style="background:transparent;color:var(--accent);border:1px solid rgba(201,75,30,0.3);">🗑 Hapus</span>
+          </div>
+
+          <p style="margin-top:16px;">Jendela pop-up menampilkan seluruh soal. Periksa hal-hal berikut:</p>
+
+          <ul class="step-list list-red">
+            <li>Teks pertanyaan — pastikan tidak ada <em>typo</em> atau konten yang hilang</li>
+            <li>Pilihan ganda (A, B, C, D, E) — terbaca dengan benar</li>
+            <li>Kunci Jawaban — ditandai <strong style="color:var(--green)">warna hijau + ikon ✓</strong></li>
+            <li>Gambar atau media pendukung — pastikan tidak ada yang rusak</li>
+          </ul>
+
+          <div class="callout callout-tip">
+            <span class="callout-icon">✅</span>
+            <span>Lakukan pratinjau sebelum ujian dibagikan ke siswa untuk menghindari kesalahan fatal yang tidak bisa diperbaiki di tengah ujian.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- FASE 2 -->
+  <section id="fase2" class="phase-block reveal">
+    <div class="phase-header">
+      <div class="phase-number">02</div>
+      <div class="phase-meta">
+        <div class="phase-tag tag-blue">Fase Kedua</div>
+        <h2 class="phase-title">Pelaksanaan Ujian</h2>
+        <p class="phase-desc">Mengontrol kelas dan memonitor siswa secara langsung (live)</p>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-blue">2.1</div>
+          <div class="step-card-title">Merilis Token Ujian (Membuka Akses)</div>
+        </div>
+        <div class="step-card-body">
+          <p>Lakukan sesaat sebelum siswa mulai mengerjakan, saat pengawas sudah berada di dalam kelas.</p>
+
+          <ul class="step-list list-blue">
+            <li>Klik tombol biru <strong>▶ RILIS TOKEN</strong> pada baris ujian yang ingin diaktifkan</li>
+            <li>Sistem memproses dan mengaktifkan ujian tersebut</li>
+            <li>Status berubah dari <code>DRAFT</code> → <code>ACTIVE</code></li>
+          </ul>
+
+          <div class="ui-snippet" style="gap:16px;">
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+              <span style="font-size:10px;color:var(--muted);">Sebelum</span>
+              <span class="btn-mock btn-blue">▶ Rilis Token</span>
+              <span class="badge badge-draft">DRAFT</span>
+            </div>
+            <span style="font-size:1.4rem;color:var(--muted);">→</span>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+              <span style="font-size:10px;color:var(--muted);">Sesudah</span>
+              <span class="btn-mock btn-green">🖥️ Monitor Live</span>
+              <span class="badge badge-active">ACTIVE</span>
+            </div>
+          </div>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">📋</span>
+            <span><strong>Catatan Pengawas:</strong> Token ujian (kombinasi huruf/angka) otomatis ter-generate. Tulis di papan tulis atau tampilkan di proyektor agar siswa bisa masuk.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-blue">2.2</div>
+          <div class="step-card-title">Memonitor Ujian Berlangsung (Live Control)</div>
+        </div>
+        <div class="step-card-body">
+          <p>Setelah ujian berstatus <code>ACTIVE</code>, tombol berubah menjadi <strong style="color:var(--green)">🖥️ MONITOR LIVE</strong>. Klik untuk membuka panel pemantauan.</p>
+
+          <p>Fitur yang tersedia di panel Live Control:</p>
+
+          <ul class="step-list list-blue">
+            <li>Melihat daftar siswa yang sedang <em>online</em> mengerjakan soal secara real-time</li>
+            <li>Memantau sisa waktu ujian masing-masing siswa</li>
+            <li>Me-reset sesi jika komputer siswa mengalami masalah teknis mendadak</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- FASE 3 -->
+  <section id="fase3" class="phase-block reveal">
+    <div class="phase-header">
+      <div class="phase-number">03</div>
+      <div class="phase-meta">
+        <div class="phase-tag tag-green">Fase Ketiga</div>
+        <h2 class="phase-title">Pasca Ujian</h2>
+        <p class="phase-desc">Laporan otomatis, nilai real-time &amp; cetak PDF tanpa koreksi manual</p>
+      </div>
+    </div>
+
+    <div class="callout callout-tip reveal" style="margin-bottom:28px;">
+      <span class="callout-icon">⚡</span>
+      <span>Ini adalah <strong>fitur unggulan</strong> CBT TAPAMAJUMA. Begitu siswa menekan tombol "SELESAI", nilainya langsung masuk ke server <em>detik itu juga</em>. Tidak perlu koreksi manual sama sekali.</span>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-green">3.1</div>
+          <div class="step-card-title">Membuka Laporan Nilai</div>
+        </div>
+        <div class="step-card-body">
+          <p>Pada daftar ujian, klik ikon <strong>Grafik Batang (BarChart)</strong> pada ujian yang sudah selesai untuk membuka halaman laporan.</p>
+          <div class="ui-snippet">
+            Kolom Aksi:
+            <span class="btn-mock btn-ghost">👁 Preview</span>
+            <span class="btn-mock btn-green">📊/home/radotnababan/Downloads/fase0-paket-ujian.html Laporan</span>
+          </div>
+          <p style="margin-top:12px;">Layar akan berpindah ke halaman <strong>Laporan Hasil Ujian</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-green">3.2</div>
+          <div class="step-card-title">Membaca Data Hasil Ujian</div>
+        </div>
+        <div class="step-card-body">
+          <p>Tabel otomatis menampilkan peringkat siswa dari nilai tertinggi ke terendah.</p>
+
+          <table class="table-mock">
+            <thead>
+              <tr>
+                <th>#</th><th>Nama Siswa</th><th>Kelas</th><th>Benar</th><th>Salah</th><th>Skor</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td><td>Andi Pratama</td><td>7A</td>
+                <td class="score-good">47</td><td class="score-bad">3</td><td><strong>94</strong></td>
+                <td><span class="badge" style="background:rgba(30,138,74,0.1);color:var(--green);border:1px solid rgba(30,138,74,0.3)">Tuntas</span></td>
+              </tr>
+              <tr>
+                <td>2</td><td>Budi Santoso</td><td>7B</td>
+                <td class="score-good">38</td><td class="score-bad">12</td><td><strong>76</strong></td>
+                <td><span class="badge" style="background:rgba(30,138,74,0.1);color:var(--green);border:1px solid rgba(30,138,74,0.3)">Tuntas</span></td>
+              </tr>
+              <tr>
+                <td>3</td><td>Citra Dewi</td><td>7A</td>
+                <td class="score-bad">32</td><td class="score-bad">18</td><td><strong style="color:var(--accent)">64</strong></td>
+                <td><span class="badge" style="background:rgba(201,75,30,0.1);color:var(--accent);border:1px solid rgba(201,75,30,0.3)">Remedial</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout callout-tip">
+            <span class="callout-icon">🎯</span>
+            <span>Sistem otomatis memberi label <strong style="color:var(--green)">Tuntas</strong> (skor ≥ 75) dan <strong style="color:var(--accent)">Remedial</strong> (skor &lt; 75).</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-green">3.3</div>
+          <div class="step-card-title">Mencari &amp; Memfilter Data</div>
+        </div>
+        <div class="step-card-body">
+          <p>Sangat berguna untuk ujian paralel yang melibatkan banyak kelas sekaligus.</p>
+
+          <div class="ui-snippet" style="flex-direction:column;align-items:flex-start;gap:14px;">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">Filter Kelas</div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                <span class="btn-mock btn-dark" style="font-size:10px;padding:5px 12px;">Semua Kelas</span>
+                <span class="btn-mock btn-ghost" style="font-size:10px;padding:5px 12px;">Kelas 7A</span>
+                <span class="btn-mock btn-ghost" style="font-size:10px;padding:5px 12px;">Kelas 7B</span>
+                <span class="btn-mock btn-ghost" style="font-size:10px;padding:5px 12px;">Kelas 7C</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">Pencarian Nama</div>
+              <div style="background:#fff;border:1px solid var(--border);border-radius:4px;padding:7px 12px;font-size:11px;color:var(--muted);max-width:280px;">🔍 Cari nama siswa...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card reveal">
+        <div class="step-card-head">
+          <div class="step-num num-green">3.4</div>
+          <div class="step-card-title">Mencetak Berita Acara / Laporan Nilai (PDF)</div>
+        </div>
+        <div class="step-card-body">
+          <p>Klik tombol di pojok kanan atas halaman laporan untuk menghasilkan dokumen siap cetak.</p>
+
+          <div class="ui-snippet">
+            <span class="btn-mock btn-dark">🖨️ Cetak PDF</span>
+          </div>
+
+          <p style="margin-top:16px;">Sistem secara otomatis akan:</p>
+
+          <ul class="step-list list-green">
+            <li>Menyembunyikan tombol pencarian, filter, dan navigasi yang tidak perlu</li>
+            <li>Mengubah tampilan menjadi format kertas <strong>A4</strong> yang rapi (hitam-putih/warna)</li>
+            <li>Menambahkan <strong>Header Resmi</strong> — "LAPORAN HASIL UJIAN CBT" beserta detail mata pelajaran &amp; kelas yang difilter</li>
+          </ul>
+
+          <div class="callout callout-tip">
+            <span class="callout-icon">🖨</span>
+            <span>Guru cukup menekan <strong>"Print"</strong> di browser — cetak ke printer fisik atau simpan sebagai file PDF langsung dari tampilan tersebut.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DANGER ZONE -->
+  <section id="hapus" class="danger-zone reveal">
+    <div class="danger-title">⚠&nbsp; Info Tambahan: Menghapus Ujian</div>
+    <p>
+      Jika paket ujian sudah tidak terpakai atau terdapat kesalahan fatal, Guru dapat menghapusnya dengan menekan
+      tombol <strong>Tempat Sampah (Trash)</strong> berwarna merah di kolom Aksi.
+    </p>
+    <p style="margin-top:14px;">
+      <strong>PERINGATAN KRITIS:</strong> Menghapus paket ujian akan menghapus
+      <strong>seluruh data nilai siswa</strong> yang terkait secara permanen dan tidak dapat dikembalikan.
+      Sistem akan menampilkan dialog konfirmasi terlebih dahulu — baca dengan teliti sebelum melanjutkan.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <span>CBT TAPAMAJUMA</span> &nbsp;·&nbsp; Sistem Ujian Digital &copy; 2026
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 55);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.06 });
+  reveals.forEach(el => obs.observe(el));
+
+  const sections = document.querySelectorAll('[id]');
+  const links = document.querySelectorAll('.phase-nav a');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 130) cur = s.id; });
+    links.forEach(a => {
+      const active = a.getAttribute('href') === '#' + cur;
+      a.style.opacity = active ? '1' : '0.5';
+      a.style.borderBottomColor = active ? 'currentColor' : 'transparent';
+    });
+  }, { passive: true });
+</script>
+
+</body>
+</html>
