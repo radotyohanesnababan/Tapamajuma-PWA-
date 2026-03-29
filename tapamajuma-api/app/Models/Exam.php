@@ -18,9 +18,9 @@ class Exam extends Model
         'question_ids',
         'token_released_at', 
         'token',
-        'status',          // <--- Tambahkan ini
-        'selection_mode',  // <--- Tambahkan ini
-        'allowed_classes', // <--- Tambahkan ini (kalau ada di DB)
+        'status',         
+        'selection_mode',  
+        'allowed_classes', 
     ];
 
     protected $casts = [

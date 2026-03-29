@@ -218,7 +218,7 @@ function App() {
             <Route 
               path="/cbt" 
               element={
-                <AuthGuard>
+                <AuthGuard roleRequired="student">
                   <CBTManager />
                 </AuthGuard>
               } 

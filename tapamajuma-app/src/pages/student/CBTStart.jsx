@@ -15,8 +15,26 @@ const CBTStart = ({ onVerified }) => {
   const { id } = useParams();
   
   // Data State
-  const [studentInfo, setStudentInfo] = useState({ name: "Radot Nababan", nisn: "009827361" });
-  const [examDetails, setExamDetails] = useState(null);
+  const [studentInfo, setStudentInfo] = useState({ name: "Memuat...", nisn: "-" });
+    const [examDetails, setExamDetails] = useState(null);
+
+useEffect(() => {
+  // 2. Ambil data user yang sudah di-save oleh AuthGuard
+  const savedUserData = localStorage.getItem("user_data");
+
+  if (savedUserData) {
+    const user = JSON.parse(savedUserData);
+    
+    // 3. Masukkan data asli dari database ke dalam state
+    setStudentInfo({
+      name: user.name,
+      // Gunakan fallback "Belum Diatur" jika kolom nisn di database ternyata kosong (null)
+      nisn: user.nisn || "Belum Diatur" 
+    });
+  }
+}, []); // 
+
+
 
   // 1. Fungsi Cek Token
 const handleCheckToken = async (e) => {
@@ -71,8 +89,8 @@ const handleCheckToken = async (e) => {
                        <ShieldCheck size={28} className="text-emerald-400" />
                     </div>
                     <div>
-                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">ID Perangkat</p>
-                       <p className="text-sm font-mono text-slate-300">LAPTOP-RN-2026</p>
+                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">NISN</p>
+                       <p className="text-sm font-mono text-slate-300">{studentInfo.nisn}</p>
                     </div>
                  </div>
               </div>

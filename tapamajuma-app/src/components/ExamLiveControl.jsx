@@ -90,18 +90,7 @@ const ExamLiveControl = ({ exam, setView }) => {
       {/* 2. PANEL MONITORING GURU */}
       <div className="space-y-6">
         {/* Live Status Card */}
-        <div className="bg-emerald-500 text-white rounded-[2.5rem] p-8 shadow-xl shadow-emerald-100 flex flex-col justify-between h-48 relative overflow-hidden group">
-          <div className="flex justify-between items-start z-10">
-            <Users size={40} strokeWidth={2.5} />
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full">
-                <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-                <span className="text-xs font-black uppercase">Monitoring Live</span>
-            </div>
-          </div>
-          <div className="z-10">
-            <div className="text-5xl font-black tracking-tighter">0</div>
-            <div className="text-sm font-bold opacity-80 uppercase tracking-widest">Siswa Mengerjakan</div>
-          </div>
+        <div className=" hidden group relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
           {/* Abstract background */}
           <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
         </div>
