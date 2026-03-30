@@ -159,10 +159,16 @@ Route::middleware('auth:sanctum',)->group(function () {
     Route::post('/galleries', [GalleryController::class, 'store']);
     Route::post('/galleries/{id}/share', [GalleryController::class, 'share']);
 
-    Route::post('cbt/start', [CBTController::class, 'startExam']);
-    Route::post('cbt/update-answer', [CBTController::class, 'updateAnswer']);
-    Route::post('cbt/submit', [CBTController::class, 'submitExam']);
-    Route::post('cbt/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
+   
+    Route::middleware(['auth:sanctum', 'check.seb'])->group(function () {
+        
+        Route::post('cbt/start', [CBTController::class, 'startExam']);
+        Route::post('cbt/update-answer', [CBTController::class, 'updateAnswer']);
+        Route::post('cbt/submit', [CBTController::class, 'submitExam']);
+        Route::post('cbt/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
+        
+        // Tambahkan rute CBT lainnya yang butuh keamanan tinggi di sini
+    });
 
     // --- OTHER MENU & PROFILE (Aksi C.2) ---
     // Route ini digunakan siswa untuk edit mandiri dan melihat ringkasan presentasi

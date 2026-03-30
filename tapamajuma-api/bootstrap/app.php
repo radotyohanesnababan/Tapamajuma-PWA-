@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \App\Http\Middleware\ForceJsonResponse::class, // Paksa return JSON
             \App\Http\Middleware\LogActivityMiddleware::class, // Pastikan nama class & file ini SAMA
+            
+        ]);
+        $middleware->alias([
+        'check.seb' => \App\Http\Middleware\CheckSafeExamBrowser::class,
         ]);
 
         // 2. Setting CORS (Agar domain frontend diizinkan)

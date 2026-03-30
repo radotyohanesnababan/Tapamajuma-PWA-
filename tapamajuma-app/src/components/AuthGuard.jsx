@@ -1,36 +1,30 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner"; // <--- Jangan lupa import ini!
+import { useNavigate, useLocation } from "react-router-dom"; // TAMBAHKAN useLocation
+import { toast } from "sonner";
 import api from "@/lib/axios";
 
 export default function AuthGuard({ children, roleRequired }) {
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation(); // TAMBAHKAN INI (untuk rekam jejak URL)
 
   useEffect(() => {
-    let isMounted = true; // Mencegah update state jika komponen sudah unmount
+    let isMounted = true;
 
     const checkAuth = async () => {
       try {
         const res = await api.get("/api/user");
-        
-        // Jaga-jaga kalau Laravel bungkus pake { data: ... }
-        // Kadang response itu res.data, kadang res.data.data tergantung API Resource
         const user = res.data.data ? res.data.data : res.data; 
         const userRole = user.role;
 
-        // Update localStorage biar GuestGuard sinkron sama data terbaru
         localStorage.setItem("user_data", JSON.stringify(user));
 
-        // 1. CEK ONBOARDING
         if (!userRole) {
-          console.warn("Role kosong, lempar ke onboarding");
           navigate("/social-callback?needs_onboarding=true", { replace: true });
           return;
         }
 
-        // 2. CEK ROLE SPESIFIK
         if (roleRequired && userRole !== roleRequired) {
           let dashboardTujuan = "/student";
           if (userRole === "superadmin") dashboardTujuan = "/superadmin";
@@ -40,33 +34,32 @@ export default function AuthGuard({ children, roleRequired }) {
           return;
         }
 
-        // Jika semua aman
         if (isMounted) setAuthorized(true);
 
       } catch (err) {
         console.error("AuthGuard Error:", err);
         
         if (err.response?.status === 401 || err.response?.status === 403) {
-          // Bersihkan semua sisa token
           localStorage.removeItem("auth_token");
           localStorage.removeItem("user_data");
           localStorage.removeItem("onboarding_data");
           
-          navigate("/login", { replace: true });
+          // UBAH BARIS INI: Titipkan lokasi asal ke state
+          navigate("/login", { 
+            replace: true, 
+            state: { from: location } // <-- INI KUNCINYA
+          });
         } else {
-          // Error jaringan/server (bukan error auth)
           toast.error("Gagal terhubung ke server.");
         }
       } finally {
-        // PENTING: Matikan loading apapun yang terjadi!
         if (isMounted) setLoading(false);
       }
     };
 
     checkAuth();
-
     return () => { isMounted = false; };
-  }, [navigate, roleRequired]);
+  }, [navigate, roleRequired]); // Tambahkan location di dependency
 
   if (loading) {
     return (
@@ -79,6 +72,5 @@ export default function AuthGuard({ children, roleRequired }) {
     );
   }
 
-  // Jika authorized true, render halaman. Jika tidak, render null (tunggu redirect)
   return authorized ? children : null;
 }

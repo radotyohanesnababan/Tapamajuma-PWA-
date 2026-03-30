@@ -69,7 +69,7 @@ class QuestionBankController extends Controller
         // 2. Jika ada file gambar yang diunggah
         if ($request->hasFile('image')) {
             // Simpan ke storage dan masukkan teks path-nya ke array $data
-            $data['image'] = $request->file('image')->store('questions');
+            $data['image'] = $request->file('image')->store('questions', 'public');
         }
 
         // 3. Simpan ke database menggunakan array $data yang sudah bersih

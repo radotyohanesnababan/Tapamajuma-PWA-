@@ -161,7 +161,34 @@ export default function WelcomeLayout({ title, children, auth }) {
                         </nav>
 
                         {/* Auth Button */}
-                        <div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            {/* Tombol Khusus Buka SEB (Deep Link) */}
+                                            <button 
+                        onClick={() => {
+                            // 1. Ambil URL dari .env (Hasilnya: "http://192.168.1.7:8000")
+                            const rawUrl = import.meta.env.VITE_API_BASE_URL;
+                            
+                            // 2. Buang "http://" atau "https://" menggunakan Regex
+                            // Hasilnya jadi bersih: "192.168.1.7:8000"
+                            const cleanHost = rawUrl.replace(/^https?:\/\//, '');
+                            
+                            // 3. Gabungkan dengan path konfigurasi SEB kamu
+                            const alamatBersih = `${cleanHost}/configs/EXAMSMP1SBB_V1.seb`;
+                            
+                            // 4. Eksekusi protokol SEB
+                            // Jika sedang di local (HTTP) pakai seb://, kalau di DomCloud (HTTPS) pakai sebs://
+                            const isLocal = import.meta.env.DEV;
+                            const protocol = isLocal ? "seb://" : "sebs://";
+                            
+                            window.location.href = `${protocol}${alamatBersih}`;
+                        }}
+                        className="wl-btn-cta bg-emerald-700 hover:bg-emerald-800 border-none text-white flex items-center gap-2"
+                        aria-label="Buka Ujian dengan SEB"
+                    >
+                        Buka Ruang Ujian (SEB)
+                    </button>
+
+                            {/* Tombol Auth Standar (Login/Dashboard) */}
                             {auth ? (
                                 <Link to="/teacher" className="wl-btn-cta" aria-label="Buka Dashboard">
                                     Dashboard
@@ -175,6 +202,7 @@ export default function WelcomeLayout({ title, children, auth }) {
                                 </Link>
                             )}
                         </div>
+                        
                     </div>
                 </header>
 

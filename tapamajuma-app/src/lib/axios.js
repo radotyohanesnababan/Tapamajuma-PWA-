@@ -4,15 +4,20 @@ import { toast } from "sonner";
 // =================================================================
 // 1. CONFIG URL
 // =================================================================
-const ENV_URL = "http://127.0.0.1:8000";
-const PROD_URL = "https://tapamajuma-api.my.id"; // Balik ke DomCloud
-const BACKUP_URL = "https://tapamajuma-pwa.onrender.com"; // Render
+const currentHostname = window.location.hostname; 
+
+// Jika di local, pakai hostname saat ini (192.168.x.x atau localhost)
+const ENV_URL = `http://${currentHostname}:8000`; 
+
+const PROD_URL = "https://tapamajuma-api.my.id";
+const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
 const isDevelopment = import.meta.env.DEV;
 
 const savedBaseUrl = !isDevelopment ? sessionStorage.getItem("active_base_url") : null;
 let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
 
-
+// Log untuk memastikan IP mana yang ditembak
+console.log("🚀 API Base URL:", currentBaseUrl);
 
 
 const api = axios.create({
@@ -21,7 +26,7 @@ const api = axios.create({
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
-  timeout: 15000, 
+  timeout: 30000, 
 });
 
 // =================================================================
@@ -73,7 +78,7 @@ api.interceptors.response.use(
     if (status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
-      window.location.href = "/login";
+      //window.location.href = "/login";
     }
 
     return Promise.reject(error);

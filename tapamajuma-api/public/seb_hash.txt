@@ -1,0 +1,12 @@
+=== WAKTU: 01:30:00 ===
+URL di Laravel   : http://192.168.46.82:8000/api/cbt/verify-token-only
+BEK di Laravel   : 44d01d5089f84fadc7cc0039753980a184806222afc7be04a3e718c2f748bbac
+Hash bawaan SEB  : fe03b566c717cdf827e967a66f02148cc821c1f1d543b4d6690625695cec23a2
+Hash dari Laravel: 6458334ec89ad15a79283a3c9174f1b979487bfb7f32663a304fe3b497a398e2
+----------------------------------------
+=== WAKTU: 01:30:05 ===
+URL di Laravel   : http://192.168.46.82:8000/api/cbt/verify-token-only
+BEK di Laravel   : 44d01d5089f84fadc7cc0039753980a184806222afc7be04a3e718c2f748bbac
+Hash bawaan SEB  : fe03b566c717cdf827e967a66f02148cc821c1f1d543b4d6690625695cec23a2
+Hash dari Laravel: 6458334ec89ad15a79283a3c9174f1b979487bfb7f32663a304fe3b497a398e2
+----------------------------------------
