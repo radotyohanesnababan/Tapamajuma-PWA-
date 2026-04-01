@@ -419,7 +419,7 @@ export default function StudentManagement() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">NIS</label>
                   <Input 
-                    required 
+                    
                     value={formData.nis} 
                     onChange={e => setFormData({...formData, nis: e.target.value})}
                     placeholder="Nomor Induk"

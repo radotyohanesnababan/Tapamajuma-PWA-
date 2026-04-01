@@ -162,42 +162,44 @@ export default function WelcomeLayout({ title, children, auth }) {
 
                         {/* Auth Button */}
                         <div className="flex flex-col sm:flex-row gap-3">
-                            {/* Tombol Khusus Buka SEB (Deep Link) */}
-                                                    <button 
-                                onClick={() => {
-                                    // Ambil domain frontend Vercel (bukan ambil dari .env API)
-                                    const frontendHost = window.location.host; 
-                                    
-                                    // Gabungkan dengan path file .seb
-                                    const alamatBersih = `${frontendHost}/configs/EXAMSMP1SBB_V1.seb`;
-                                    
-                                    // Pengecekan protocol
-                                    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                                    const protocol = isLocal ? "seb://" : "sebs://";
-                                    
-                                    // Eksekusi!
-                                    window.location.href = `${protocol}${alamatBersih}`;
-                                }}
-                                className="wl-btn-cta bg-emerald-700 hover:bg-emerald-800 border-none text-white flex items-center gap-2"
-                                aria-label="Buka Ujian dengan SEB"
-                            >
-                                Buka Ruang Ujian (SEB)
-                            </button>
+<div className="flex flex-col sm:flex-row gap-3">
+    
+    {/* 2. PENJAGA KHUSUS SEB: Cuma tombol ini yang disembunyikan di HP (hidden) */}
+    <div className="hidden md:block">
+        <button 
+            onClick={() => {
+                const frontendHost = window.location.host; 
+                const alamatBersih = `${frontendHost}/configs/EXAMSMP1SBB_V1.seb`;
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const protocol = isLocal ? "seb://" : "sebs://";
+                window.location.href = `${protocol}${alamatBersih}`;
+            }}
+            className="flex wl-btn-cta bg-emerald-700 hover:bg-emerald-800 border-none text-white items-center gap-2 w-full sm:w-auto"
+            aria-label="Buka Ujian dengan SEB"
+        >
+            Buka Ruang Ujian (SEB)
+        </button>
+    </div>
 
-                            {/* Tombol Auth Standar (Login/Dashboard) */}
-                            {auth ? (
-                                <Link to="/teacher" className="wl-btn-cta" aria-label="Buka Dashboard">
-                                    Dashboard
-                                </Link>
-                            ) : (
-                                <Link to="/login" className="wl-btn-cta" aria-label="Masuk ke Akun">
-                                    Masuk
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path d="M5 12h14M12 5l7 7-7 7" />
-                                    </svg>
-                                </Link>
-                            )}
-                        </div>
+    {/* 3. TOMBOL LOGIN: Berada di luar penjaga 'hidden', jadi akan selalu muncul di semua perangkat */}
+    {auth ? (
+        <Link to="/teacher" className="wl-btn-cta w-full sm:w-auto text-center" aria-label="Buka Dashboard">
+            Dashboard
+        </Link>
+    ) : (
+        <Link to="/login" className="wl-btn-cta w-full sm:w-auto justify-center" aria-label="Masuk ke Akun">
+            Masuk
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+        </Link>
+    )}
+    
+</div>
+
+    {/* Tombol Auth Standar (Login/Dashboard) */}
+    
+</div>
                         
                     </div>
                 </header>

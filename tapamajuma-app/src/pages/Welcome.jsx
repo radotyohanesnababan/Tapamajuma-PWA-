@@ -166,14 +166,6 @@ export default function Welcome() {
                                     </p>
                                 </div>
 
-                                <div className={`fade-up ${isMounted ? 'visible' : ''}`} style={{ transitionDelay: '380ms' }}>
-                                    <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                                        <span className="stat-pill">✦ Literasi &amp; Numerasi</span>
-                                        <span className="stat-pill">✦ Real-time</span>
-                                        <span className="stat-pill">✦ Notif WhatsApp</span>
-                                    </div>
-                                </div>
-
                                 <div className={`fade-up ${isMounted ? 'visible' : ''}`} style={{ transitionDelay: '480ms' }}>
                                     <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                         <Link to="/login" className="btn-primary">
@@ -364,7 +356,7 @@ export default function Welcome() {
                                         <div>
                                             <h4 className="font-display" style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.88rem', margin: '0 0 0.2rem' }}>Notifikasi WhatsApp</h4>
                                             <p className="font-body" style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                                                Orang tua menerima pembaruan mingguan otomatis terkait rekam jejak anak.
+                                                Orang tua menerima informasi bulanan otomatis terkait rekam jejak anak.
                                             </p>
                                         </div>
                                     </div>

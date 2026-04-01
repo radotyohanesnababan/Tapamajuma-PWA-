@@ -12,7 +12,8 @@ import {
   Lock, 
   Save, 
   AlertCircle,
-  Home 
+  Home, 
+  IdCard
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -31,6 +32,7 @@ export default function EditProfileStandalone() {
     name: '',
     email: '',
     phone_number: '',
+    nis: '',
     password: '',
     password_confirmation: '',
     role: user?.role
@@ -44,6 +46,7 @@ export default function EditProfileStandalone() {
         email: user.email || '',
         phone_number: user.phone_number || '',
         password: '',
+        nis: user.nis || '',
         role: user.role || 'student',
         password_confirmation: ''
       });
@@ -59,26 +62,47 @@ export default function EditProfileStandalone() {
     }
   };
 
-  const handleSave = async (e) => {
+const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    // 1. Buat objek FormData
     const data = new FormData();
     data.append('name', formData.name);
     data.append('email', formData.email);
-    if (selectedFile) data.append('avatar', selectedFile);
+    
+    // TAMBAHKAN BARIS INI: Kirim NISN dan Phone Number
+    data.append('phone_number', formData.phone_number);
+    data.append('nis', formData.nis);
+
+    // Kirim Avatar jika ada file baru yang dipilih
+    if (selectedFile) {
+      data.append('avatar', selectedFile);
+    }
+
+    // Kirim Password jika user mengisinya
     if (formData.password) {
       data.append('password', formData.password);
       data.append('password_confirmation', formData.password_confirmation);
     }
 
     try {
+      // 2. Kirim ke API
       const response = await api.post('/api/user/profile-update', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          // Jika menggunakan Laravel, terkadang perlu method spoofing:
+          // 'X-HTTP-Method-Override': 'PUT' 
+        }
       });
+
       setUser(response.data.user);
       toast.success("Profil berhasil diperbarui!");
-    } catch(err)  {
+      
+      // Reset field password setelah sukses
+      setFormData(prev => ({ ...prev, password: '', password_confirmation: '' }));
+      
+    } catch(err) {
       console.error("Detail Error:", err);
       toast.error("Gagal: " + (err.response?.data?.message || err.message));
     } finally {
@@ -178,8 +202,19 @@ export default function EditProfileStandalone() {
                         </div>
                     </div>
                     {formData.role === 'student' && (
-    <div className="space-y-2 animate-in fade-in duration-300">
-        <Label>Nomor HP Orangtua (Khusus SISWA)</Label>
+    <div className="space-y-2 animate-in fade-in duration-300 ease-in-out">
+        <Label>NISN</Label>
+        <div className="relative">
+            <IdCard className="absolute left-3 top-3 text-slate-400" size={18} />
+            <Input 
+                value={formData.nis}
+                onChange={(e) => setFormData({...formData, nis: e.target.value})}
+                className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                placeholder="Contoh: 0012345678"
+                required // Tambahkan required di sini karena ini khusus siswa
+            />
+        </div>
+        <Label>Nomor HP Orangtua</Label>
         <div className="relative">
             <User className="absolute left-3 top-3 text-slate-400" size={18} />
             <Input 

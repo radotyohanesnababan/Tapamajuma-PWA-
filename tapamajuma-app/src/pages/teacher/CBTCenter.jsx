@@ -19,6 +19,9 @@ const CBTCenter = () => {
           <h1 className="text-3xl font-bold text-slate-800">CBT Control Center</h1>
           <p className="text-slate-500">Sistem Ujian Berbasis Komputer</p>
         </div>
+        <div>
+          <h1></h1>
+        </div>
         
         <div className="flex bg-white rounded-full p-1 border border-slate-200 shadow-sm">
           <button 

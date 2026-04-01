@@ -25,6 +25,7 @@ class RegisteredUserController extends Controller
         'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'phone_number' => ['nullable', 'string', 'max:20'],
+        'nis' => ['nullable', 'string', 'max:20'],
         'role' => ['required', 'string', 'in:student,teacher'],
         'class_id' => ['nullable'], 
     ]);
@@ -47,6 +48,7 @@ class RegisteredUserController extends Controller
         'role' => $request->role,
         'phone_number' => $request->phone_number,
         'class_id' => $request->class_id,
+        'nis' => $request->nis,
         'accessible_classes' => $accessibleClasses, // <--- Simpan di sini
     ]);
 

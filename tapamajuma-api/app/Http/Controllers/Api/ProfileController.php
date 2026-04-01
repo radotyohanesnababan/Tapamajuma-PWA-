@@ -14,52 +14,57 @@ use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-    public function update(Request $request)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+   public function update(Request $request)
+{
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:4086',
-            'password' => ['nullable', 'confirmed', 'min:8'],
-        ]);
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+        'nis' => ['nullable', 'string', 'max:20'],
+        'phone_number' => ['nullable', 'string', 'max:20'],
+        'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:4086',
+        'password' => ['nullable', 'confirmed', 'min:8'],
+    ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+    // --- BAGIAN YANG HARUS DITAMBAHKAN ---
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->nis = $request->nis; // Tambahkan ini
+    $user->phone_number = $request->phone_number; // Tambahkan ini
+    // -------------------------------------
 
-        if ($request->hasFile('avatar')) {
-            
-            if ($user->avatar && Storage::exists($user->avatar)) {
-                Storage::delete($user->avatar);
-            }
-
-            // PERBAIKAN: Hapus 'public', biarkan mengikuti FILESYSTEM_DISK di .env
-            $path = $request->file('avatar')->store('avatars'); 
-            $user->avatar = $path;
+    if ($request->hasFile('avatar')) {
+        if ($user->avatar && Storage::exists($user->avatar)) {
+            Storage::delete($user->avatar);
         }
-
-        if ($request->has('avatar_color')) {
-            $user->avatar_color = $request->avatar_color;
-        }
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
-
-        return response()->json([
-            'message' => 'Profil kamu berhasil diperbarui',
-            'user' => [
-                'name' => $user->name,
-                // PERBAIKAN: Gunakan Storage::url agar link-nya otomatis ke Cloudflare
-                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
-                'avatar_color' => $user->avatar_color,
-            ]
-        ], 200);
+        $path = $request->file('avatar')->store('avatars'); 
+        $user->avatar = $path;
     }
+
+    if ($request->has('avatar_color')) {
+        $user->avatar_color = $request->avatar_color;
+    }
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return response()->json([
+        'message' => 'Profil kamu berhasil diperbarui',
+        'user' => [
+            'name' => $user->name,
+            'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+            'avatar_color' => $user->avatar_color,
+            'email' => $user->email,
+            'nis' => $user->nis,
+            'phone_number' => $user->phone_number,
+        ]
+    ], 200);
+}
 
    public function getSummary()
    {
