@@ -16,9 +16,6 @@ const isDevelopment = import.meta.env.DEV;
 const savedBaseUrl = !isDevelopment ? sessionStorage.getItem("active_base_url") : null;
 let currentBaseUrl = savedBaseUrl || (isDevelopment ? ENV_URL : PROD_URL);
 
-// Log untuk memastikan IP mana yang ditembak
-console.log("🚀 API Base URL:", currentBaseUrl);
-
 
 const api = axios.create({
   baseURL: currentBaseUrl,

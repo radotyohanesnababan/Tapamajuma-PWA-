@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { HelmetProvider } from 'react-helmet-async'
 import * as Sentry from '@sentry/react'
+import 'virtual:pwa-register'
 
 
 // --- TAMBAHKAN INI (Import registerSW) ---
