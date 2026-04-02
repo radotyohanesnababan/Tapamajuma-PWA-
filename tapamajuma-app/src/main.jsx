@@ -11,6 +11,30 @@ import 'virtual:pwa-register'
 // --- TAMBAHKAN INI (Import registerSW) ---
 import { registerSW } from 'virtual:pwa-register'
 
+// Letakkan ini di baris Paling Atas main.jsx
+
+// 1. Cek apakah pengguna berada di domain yang lama
+const currentHostname = window.location.hostname;
+const oldDomains = [
+  'tapamajuma.my.id', 
+  'tapamajuma-pwa.vercel.app'
+];
+
+if (oldDomains.includes(currentHostname)) {
+  // 2. Jika ya, bunuh Service Worker yang nyangkut di domain lama ini
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+
+  // 3. Paksa pindah ke domain resmi beserta path-nya (misal: /login atau /dashboard)
+  const newDomain = 'https://tapamajuma.smpn1siborongborong.sch.id';
+  window.location.replace(newDomain + window.location.pathname + window.location.search);
+}
+
 // --- TAMBAHKAN INI (Jalankan register) ---
 // intervalMS: cek update setiap 1 jam (opsional)
 const updateSW = registerSW({
