@@ -49,6 +49,10 @@ Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 
 
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error in Laravel!');
+});
+
 
 /*
 |--------------------------------------------------------------------------

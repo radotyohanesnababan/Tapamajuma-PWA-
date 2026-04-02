@@ -5,6 +5,17 @@ import { IconBrandFacebook, IconLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { getStorageUrl } from '@/lib/utils';
 
+function BreakAppButton() {
+  return (
+    <button 
+      onClick={() => { throw new Error("My first Sentry error in React!"); }}
+      style={{ padding: '10px', background: 'red', color: 'white' }}
+    >
+      Test Sentry React
+    </button>
+  );
+}
+
 export default function WelcomeLayout({ title, children, auth }) {
     const defaultTitle = 'TAPAMAJUMA - Monitoring Siswa SMP Negeri 1 Siborongborong';
     const pageTitle = title ? `${title} | TAPAMAJUMA` : defaultTitle;
@@ -18,6 +29,8 @@ export default function WelcomeLayout({ title, children, auth }) {
 
     return (
         <>
+
+        
             <Helmet>
                 {/* Primary Meta Tags */}
                 <title>{pageTitle}</title>
