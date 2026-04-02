@@ -257,6 +257,7 @@ Route::middleware('auth:sanctum',)->group(function () {
         Route::get('/activity-report/student', [ReportController::class, 'studentLog']);
         Route::get('/activity-report/student-details/{id}', [ReportController::class, 'studentActivityDetails']);
         Route::get('/activity-report/class-summary', [ReportController::class, 'classSummary']);
+        Route::get('/activity-report/class-ranking/{classId}', [ReportController::class, 'classRanking']);
         Route::get('/activity-report/teacher-summary', [ReportController::class, 'teacherSummary']);
         Route::get('/activity-report/pdf/', [ReportController::class, 'downloadFullReport']);
         Route::get('/activity-report/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);

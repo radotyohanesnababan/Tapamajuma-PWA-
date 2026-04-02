@@ -421,6 +421,36 @@ class ReportController extends Controller
         return response()->json(['data' => $classStats]);
     }
 
+    // Tambahkan di dalam Controller yang sama
+    public function classRanking($classId)
+    {
+        $studentRankings = DB::table('users')
+            ->leftJoin('daily_activities', 'users.id', '=', 'daily_activities.user_id')
+            ->where('users.class_id', $classId)
+            ->where('users.role', 'student')
+            ->select(
+                'users.id',
+                'users.name',
+                // Gunakan COALESCE agar jika belum ada aktivitas, nilainya 0 bukan NULL
+                DB::raw('COALESCE(ROUND(AVG(daily_activities.score), 1), 0) as score'),
+                DB::raw('COUNT(daily_activities.id) as total_activities')
+            )
+            ->groupBy('users.id', 'users.name')
+            // Urutkan dari nilai tertinggi ke terendah
+            ->orderBy('score', 'desc') 
+            // Opsional: Jika nilai sama, urutkan berdasarkan aktivitas terbanyak
+            ->orderBy('total_activities', 'desc') 
+            ->get();
+
+        // Tambahkan nomor urut (rank) secara dinamis
+        $rank = 1;
+        foreach ($studentRankings as $student) {
+            $student->rank = $rank++;
+        }
+
+        return response()->json(['data' => $studentRankings]);
+    }
+
     public function teacherSummary()
     {
         $teachers = User::where('role', 'teacher')

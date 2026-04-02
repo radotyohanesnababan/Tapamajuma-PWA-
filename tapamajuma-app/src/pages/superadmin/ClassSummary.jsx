@@ -6,10 +6,14 @@ import api from "@/lib/axios";
 export default function ClassSummary() {
   const [classesData, setClassesData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rankingData, setRankingData] = useState([]);
+  const [isLoadingRanking, setIsLoadingRanking] = useState(false);
 
   // State Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  
 
   useEffect(() => {
     api.get('/api/admin/activity-report/class-summary')
@@ -29,12 +33,28 @@ export default function ClassSummary() {
 
   const openClassModal = (cls) => {
     setSelectedClass({ ...cls, rank: getRank(cls.id) });
+    setIsRankingModalOpen(false);
     setIsModalOpen(true);
   };
 
-  if (isLoading) {
-    return <div className="p-8 text-center text-slate-500">Memuat data kelas...</div>;
-  }
+const openRankingModal = async (cls) => {
+    setSelectedClass({ ...cls, rank: getRank(cls.id) });
+    setIsModalOpen(false);
+    setIsRankingModalOpen(true);
+    
+    // Mulai proses loading & kosongkan data sebelumnya
+    setIsLoadingRanking(true);
+    setRankingData([]); 
+
+    try {
+      const res = await api.get(`/api/admin/activity-report/class-ranking/${cls.id}`);
+      setRankingData(res.data.data || []);
+    } catch (err) {
+      console.error("Gagal mengambil data ranking siswa:", err);
+    } finally {
+      setIsLoadingRanking(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -59,8 +79,7 @@ export default function ClassSummary() {
           return (
             <Card 
               key={cls.id} 
-              onClick={() => openClassModal(cls)}
-              className="border-none shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1"
+                className="border-none shadow-sm"
             >
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-bold text-slate-700">
@@ -115,10 +134,18 @@ export default function ClassSummary() {
                 </div>
                 
                 {/* Petunjuk Interaksi */}
-                <div className="mt-6 text-center text-xs text-indigo-500 font-medium flex items-center justify-center gap-1 opacity-80">
-                  <span>Lihat Rincian Skor & Ranking</span>
-                  <span>&rarr;</span>
-                </div>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {/* Tombol 1: Ringkasan Skor */}
+              <button onClick={()=>openClassModal(cls)} className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1">
+                <span>Lihat Ringkasan Skor</span>
+              </button>
+
+              {/* Tombol 2: Detail Ranking */}
+              <button onClick={() => openRankingModal(cls)} className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                <span>Detail Ranking Siswa</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
               </CardContent>
             </Card>
           );
@@ -207,6 +234,95 @@ export default function ClassSummary() {
           </div>
         </div>
       )}
+
+
+      {/* MODAL RANKING SISWA KELAS */}
+{isRankingModalOpen && selectedClass && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col transform transition-all">
+      
+      {/* Modal Header */}
+      <div className="bg-indigo-600 p-6 flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Ranking Siswa</h2>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-indigo-100 bg-indigo-500/50 px-3 py-1 rounded-full text-sm font-medium">
+              Kelas {selectedClass.class_name}
+            </span>
+          </div>
+        </div>
+        <button 
+          onClick={() => setIsRankingModalOpen(false)} 
+          className="text-white/70 hover:text-white text-3xl font-bold leading-none"
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Modal Body: List Ranking Siswa */}
+      <div className="p-6 space-y-4">
+        <h3 className="font-semibold text-slate-800 border-b pb-2 flex justify-between">
+          <span>Nama Siswa</span>
+          <span>Skor Akhir</span>
+        </h3>
+        
+        {/* Container list dengan scroll */}
+        <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+          
+          {isLoadingRanking ? (
+            <div className="text-center py-8 text-slate-500">
+              <span className="animate-pulse">Memuat data ranking...</span>
+            </div>
+          ) : rankingData.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              Belum ada data siswa atau aktivitas di kelas ini.
+            </div>
+          ) : (
+            rankingData.map((student) => {
+              // Styling khusus untuk Top 3
+              let rankColor = "bg-slate-100 text-slate-600";
+              if (student.rank === 1) rankColor = "bg-amber-100 text-amber-600 border-amber-200";
+              if (student.rank === 2) rankColor = "bg-slate-200 text-slate-700 border-slate-300";
+              if (student.rank === 3) rankColor = "bg-orange-100 text-orange-700 border-orange-200";
+
+              return (
+                <div 
+                  key={student.id} 
+                  className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Badge Angka Ranking */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border ${rankColor} flex-shrink-0`}>
+                      {student.rank}
+                    </div>
+                    
+                    {/* Info Siswa */}
+                    <div>
+                      <p className="font-semibold text-slate-700 text-sm md:text-base line-clamp-1">
+                        {student.name}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {student.total_activities} Aktivitas
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Skor */}
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-indigo-600">
+                      {student.score}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
