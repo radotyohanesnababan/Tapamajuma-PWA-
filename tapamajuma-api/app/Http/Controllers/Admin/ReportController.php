@@ -432,14 +432,12 @@ class ReportController extends Controller
                 'users.id',
                 'users.name',
                 // Gunakan COALESCE agar jika belum ada aktivitas, nilainya 0 bukan NULL
-                DB::raw('COALESCE(ROUND(AVG(daily_activities.score), 1), 0) as score'),
+                DB::raw('COALESCE(ROUND(SUM(daily_activities.score), 1), 0) as score'),
                 DB::raw('COUNT(daily_activities.id) as total_activities')
             )
             ->groupBy('users.id', 'users.name')
             // Urutkan dari nilai tertinggi ke terendah
-            ->orderBy('score', 'desc') 
-            // Opsional: Jika nilai sama, urutkan berdasarkan aktivitas terbanyak
-            ->orderBy('total_activities', 'desc') 
+            ->orderBy('score', 'desc')  
             ->get();
 
         // Tambahkan nomor urut (rank) secara dinamis
