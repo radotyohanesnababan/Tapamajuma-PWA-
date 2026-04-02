@@ -6,14 +6,10 @@ import { AuthProvider } from './context/AuthContext'
 import { HelmetProvider } from 'react-helmet-async'
 import * as Sentry from '@sentry/react'
 import 'virtual:pwa-register'
-
-
 // --- TAMBAHKAN INI (Import registerSW) ---
 import { registerSW } from 'virtual:pwa-register'
 
-// Letakkan ini di baris Paling Atas main.jsx
 
-// 1. Cek apakah pengguna berada di domain yang lama
 const currentHostname = window.location.hostname;
 const oldDomains = [
   'tapamajuma.my.id', 
@@ -21,18 +17,45 @@ const oldDomains = [
 ];
 
 if (oldDomains.includes(currentHostname)) {
-  // 2. Jika ya, bunuh Service Worker yang nyangkut di domain lama ini
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (let registration of registrations) {
-        registration.unregister();
+  
+  // Gunakan Async/Await agar dieksekusi berurutan
+  const nukeAndRedirect = async () => {
+    // A. Tunggu sampai semua Service Worker dicabut
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+      } catch (e) {
+        console.error("Gagal cabut SW:", e);
       }
-    });
-  }
+    }
 
-  // 3. Paksa pindah ke domain resmi beserta path-nya (misal: /login atau /dashboard)
-  const newDomain = 'https://tapamajuma.smpn1siborongborong.sch.id';
-  window.location.replace(newDomain + window.location.pathname + window.location.search);
+    // B. Hancurkan semua Cache Storage PWA di HP pengguna
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        for (let cacheName of cacheNames) {
+          await caches.delete(cacheName);
+        }
+      } catch (e) {
+        console.error("Gagal hapus cache:", e);
+      }
+    }
+
+    // C. Pindah ke domain baru dengan Cache Buster (memaksa server memberi file baru)
+    const newDomain = 'https://tapamajuma.smpn1siborongborong.sch.id';
+    const timestamp = new Date().getTime(); // Hasilkan angka acak
+    
+    // Format redirect: https://domainbaru.sch.id/path?t=123456789
+    const targetUrl = `${newDomain}${window.location.pathname}?t=${timestamp}`;
+    
+    window.location.replace(targetUrl);
+  };
+
+  // Eksekusi fungsi pembunuhnya
+  nukeAndRedirect();
 }
 
 // --- TAMBAHKAN INI (Jalankan register) ---
