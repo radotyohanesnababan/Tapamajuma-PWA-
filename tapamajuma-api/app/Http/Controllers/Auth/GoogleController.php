@@ -28,7 +28,7 @@ class GoogleController extends Controller
 {
     try {
         $googleUser = Socialite::driver('google')->stateless()->user();
-        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.my.id');
+        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.smpn1siborongborong.sch.id'); // Ganti dengan URL frontend Anda
         
         // 1. Cari user berdasarkan email
         $user = User::where('email', $googleUser->getEmail())->first();

@@ -69,7 +69,7 @@ export default function Welcome() {
                 <title>TAPAMAJUMA | Platform Monitoring Siswa</title>
                 <meta name="description" content="Pantau aktivitas belajar, literasi, dan numerasi siswa secara real-time." />
                 <meta property="og:type"        content="website" />
-                <meta property="og:url"         content="https://tapamajuma.my.id/" />
+                <meta property="og:url"         content="https://tapamajuma.smpn1siborongborong.sch.id/" />
                 <meta property="og:title"       content="TAPAMAJUMA - Monitoring Belajar Terintegrasi" />
                 <meta property="og:description" content="Pantau aktivitas belajar, literasi, dan numerasi siswa secara real-time." />
                 <meta property="og:image"       content="https://cdn.tapamajuma-api.my.id/images/iconappp.webp" />
