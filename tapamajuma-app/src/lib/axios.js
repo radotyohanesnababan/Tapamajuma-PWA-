@@ -45,6 +45,15 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // ← TAMBAHKAN INI: cache buster untuk GET request saja
+    if (config.method === 'get') {
+      config.params = {
+        ...config.params,
+        _t: Date.now()
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

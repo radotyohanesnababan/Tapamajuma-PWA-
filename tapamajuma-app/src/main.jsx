@@ -5,7 +5,7 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { HelmetProvider } from 'react-helmet-async'
 import * as Sentry from '@sentry/react'
-//import { registerSW } from 'virtual:pwa-register'
+import { registerSW } from 'virtual:pwa-register'
 import { Capacitor } from '@capacitor/core'
 
 // ✅ Guard: hanya jalan di browser
@@ -55,15 +55,15 @@ if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
     }
     nukeSW()
   } else {
-    // ✅ PWA register hanya kalau SW sudah bersih
-    // const updateSW = registerSW({
-    //   onNeedRefresh() {
-    //     if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
-    //   },
-    //   onOfflineReady() {
-    //     console.log('Aplikasi siap bekerja offline')
-    //   },
-    // })
+    // PWA register hanya kalau SW sudah bersih
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
+      },
+      onOfflineReady() {
+        console.log('Aplikasi siap bekerja offline')
+      },
+    })
   }
 }
 
