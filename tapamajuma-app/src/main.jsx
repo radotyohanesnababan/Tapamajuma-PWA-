@@ -34,15 +34,37 @@ if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
     nukeAndRedirect()
   }
 
-  // ✅ PWA register juga hanya di browser
-  const updateSW = registerSW({
-    onNeedRefresh() {
-      if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
-    },
-    onOfflineReady() {
-      console.log('Aplikasi siap bekerja offline')
-    },
-  })
+  // ✅ TAMBAHKAN INI — clear SW lama untuk user domain aktif
+  const swCleared = localStorage.getItem('sw_cleared_v3')
+  if (!swCleared) {
+    const nukeSW = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          for (let r of registrations) await r.unregister()
+        } catch (e) { console.error("Gagal cabut SW:", e) }
+      }
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys()
+          for (let c of cacheNames) await caches.delete(c)
+        } catch (e) { console.error("Gagal hapus cache:", e) }
+      }
+      localStorage.setItem('sw_cleared_v3', 'true')
+      window.location.reload()
+    }
+    nukeSW()
+  } else {
+    // ✅ PWA register hanya kalau SW sudah bersih
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
+      },
+      onOfflineReady() {
+        console.log('Aplikasi siap bekerja offline')
+      },
+    })
+  }
 }
 
 // Sentry boleh di luar guard
