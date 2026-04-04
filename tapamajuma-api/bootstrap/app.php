@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // 1. Group API Middleware
         $middleware->api(prepend: [
+            \App\Http\Middleware\NoCacheHeaders::class, // Paksa header Cache-Control no-cache
             \App\Http\Middleware\ForceJsonResponse::class, // Paksa return JSON
             \App\Http\Middleware\LogActivityMiddleware::class, // Pastikan nama class & file ini SAMA
             
