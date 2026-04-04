@@ -19,9 +19,11 @@ export const AuthProvider = ({ children }) => {
             }
 
             try {
-                const { data } = await api.get("/api/user");
-                setUser(data);
-            } catch (error) {
+            const { data } = await api.get("/api/user");
+            const userData = data.data ? data.data : data; // ← normalisasi
+            setUser(userData);
+            } 
+            catch (error) {
                 // Token expired/salah
                 console.error("Session invalid:", error);
                 localStorage.removeItem("auth_token");

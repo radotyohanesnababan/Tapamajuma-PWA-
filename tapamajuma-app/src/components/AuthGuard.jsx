@@ -1,69 +1,29 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
-import api from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AuthGuard({ children, roleRequired }) {
-  const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const hasChecked = useRef(false); // ← tambah ini
 
   useEffect(() => {
-    // ← Guard: jangan re-run kalau sudah pernah check
-    if (hasChecked.current) return;
-    hasChecked.current = true;
+    if (isLoading) return; // tunggu context selesai load
 
-    let isMounted = true;
+    if (!user) {
+      navigate("/login", { replace: true, state: { from: location } });
+      return;
+    }
 
-    const checkAuth = async () => {
-      try {
-        const res = await api.get("/api/user");
-        const user = res.data.data ? res.data.data : res.data;
-        const userRole = user.role;
+    if (roleRequired && user.role !== roleRequired) {
+      let dashboard = "/student";
+      if (user.role === "superadmin") dashboard = "/superadmin";
+      else if (user.role === "teacher") dashboard = "/teacher";
+      navigate(dashboard, { replace: true });
+    }
+  }, [user, isLoading, roleRequired]);
 
-        localStorage.setItem("user_data", JSON.stringify(user));
-
-        if (!userRole) {
-          navigate("/social-callback?needs_onboarding=true", { replace: true });
-          return;
-        }
-
-        if (roleRequired && userRole !== roleRequired) {
-          let dashboardTujuan = "/student";
-          if (userRole === "superadmin") dashboardTujuan = "/superadmin";
-          else if (userRole === "teacher") dashboardTujuan = "/teacher";
-          navigate(dashboardTujuan, { replace: true });
-          return;
-        }
-
-        if (isMounted) setAuthorized(true);
-
-      } catch (err) {
-        console.error("AuthGuard Error:", err);
-
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("user_data");
-          localStorage.removeItem("onboarding_data");
-          navigate("/login", { replace: true, state: { from: location } });
-        } else {
-          // ← Jangan redirect kalau network error biasa
-          // misal di Capacitor koneksi lambat
-          toast.error("Gagal terhubung ke server.");
-          if (isMounted) setLoading(false);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    checkAuth();
-    return () => { isMounted = false; };
-  }, []); // ← kosongkan dependency array
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-slate-50 gap-2">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
@@ -74,5 +34,8 @@ export default function AuthGuard({ children, roleRequired }) {
     );
   }
 
-  return authorized ? children : null;
+  if (!user) return null;
+  if (roleRequired && user.role !== roleRequired) return null;
+
+  return children;
 }
