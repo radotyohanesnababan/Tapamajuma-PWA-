@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tapamajuma</string>
+    <string name="title_activity_main">Tapamajuma</string>
+    <string name="package_name">id.sch.smpn1siborongborong.tapamajuma</string>
+    <string name="custom_url_scheme">id.sch.smpn1siborongborong.tapamajuma</string>
+</resources>

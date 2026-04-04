@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // TAMBAHKAN useLocation
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 
@@ -7,15 +7,20 @@ export default function AuthGuard({ children, roleRequired }) {
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation(); // TAMBAHKAN INI (untuk rekam jejak URL)
+  const location = useLocation();
+  const hasChecked = useRef(false); // ← tambah ini
 
   useEffect(() => {
+    // ← Guard: jangan re-run kalau sudah pernah check
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
     let isMounted = true;
 
     const checkAuth = async () => {
       try {
         const res = await api.get("/api/user");
-        const user = res.data.data ? res.data.data : res.data; 
+        const user = res.data.data ? res.data.data : res.data;
         const userRole = user.role;
 
         localStorage.setItem("user_data", JSON.stringify(user));
@@ -29,7 +34,6 @@ export default function AuthGuard({ children, roleRequired }) {
           let dashboardTujuan = "/student";
           if (userRole === "superadmin") dashboardTujuan = "/superadmin";
           else if (userRole === "teacher") dashboardTujuan = "/teacher";
-          
           navigate(dashboardTujuan, { replace: true });
           return;
         }
@@ -38,19 +42,17 @@ export default function AuthGuard({ children, roleRequired }) {
 
       } catch (err) {
         console.error("AuthGuard Error:", err);
-        
+
         if (err.response?.status === 401 || err.response?.status === 403) {
           localStorage.removeItem("auth_token");
           localStorage.removeItem("user_data");
           localStorage.removeItem("onboarding_data");
-          
-          // UBAH BARIS INI: Titipkan lokasi asal ke state
-          navigate("/login", { 
-            replace: true, 
-            state: { from: location } // <-- INI KUNCINYA
-          });
+          navigate("/login", { replace: true, state: { from: location } });
         } else {
+          // ← Jangan redirect kalau network error biasa
+          // misal di Capacitor koneksi lambat
           toast.error("Gagal terhubung ke server.");
+          if (isMounted) setLoading(false);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -59,7 +61,7 @@ export default function AuthGuard({ children, roleRequired }) {
 
     checkAuth();
     return () => { isMounted = false; };
-  }, [navigate, roleRequired]); // Tambahkan location di dependency
+  }, []); // ← kosongkan dependency array
 
   if (loading) {
     return (

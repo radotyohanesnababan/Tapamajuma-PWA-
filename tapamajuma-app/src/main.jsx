@@ -6,9 +6,10 @@ import { AuthProvider } from './context/AuthContext'
 import { HelmetProvider } from 'react-helmet-async'
 import * as Sentry from '@sentry/react'
 import { registerSW } from 'virtual:pwa-register'
+import { Capacitor } from '@capacitor/core'
 
 // ✅ Guard: hanya jalan di browser
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
   const currentHostname = window.location.hostname
   const oldDomains = ['tapamajuma.my.id', 'tapamajuma-pwa.vercel.app']
 
