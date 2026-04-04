@@ -3,8 +3,6 @@ import { fileURLToPath } from "url"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from 'vite-plugin-pwa'
-import Renderer from '@prerenderer/renderer-jsdom'
-import vitePrerender from 'vite-plugin-prerender'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -12,14 +10,6 @@ const __dirname = path.dirname(__filename)
 export default defineConfig({
   plugins: [
     react(),
-
-    // ✅ Prerender harus SEBELUM VitePWA
-    vitePrerender({
-      staticDir: path.join(__dirname, 'dist'),
-      routes: ['/'], // cukup landing page saja
-      renderer: new Renderer(),
-    }),
-
     VitePWA({
       strategies: 'generateSW',
       registerType: 'autoUpdate',
@@ -28,10 +18,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-
-        // ✅ Tambah ini: pastikan SW tidak cache / dengan agresif
-        // supaya Googlebot selalu dapat HTML fresh dari server
-        navigateFallback: null, // ← INI PENTING
+        navigateFallback: null, // ← tetap pakai ini
       },
       includeAssets: ['favicon.ico', 'iconapp.ico', 'robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
