@@ -15,11 +15,18 @@ export default defineConfig({
       strategies: 'generateSW',
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: 'index.html', // ← tetap pakai ini
+        navigateFallbackDenylist: [/^\/api/],
+        runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/tapamajuma-api\.my\.id\/api\/.*/i,
+      handler: 'NetworkOnly',
+    }
+  ]
       },
       includeAssets: ['favicon.ico', 'iconapp.ico', 'robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
