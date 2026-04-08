@@ -29,7 +29,7 @@ useEffect(() => {
     setStudentInfo({
       name: user.name,
       // Gunakan fallback "Belum Diatur" jika kolom nisn di database ternyata kosong (null)
-      nisn: user.nisn || "Belum Diatur" 
+      nisn: user.nis || "Belum Diatur" 
     });
   }
 }, []); // 
