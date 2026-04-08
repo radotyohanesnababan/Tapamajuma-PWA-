@@ -5,10 +5,10 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { HelmetProvider } from 'react-helmet-async'
 import * as Sentry from '@sentry/react'
-import { registerSW } from 'virtual:pwa-register'
+//import { registerSW } from 'virtual:pwa-register'
 import { Capacitor } from '@capacitor/core'
 
-// ✅ Guard: hanya jalan di browser
+
 if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
   const currentHostname = window.location.hostname
   const oldDomains = ['tapamajuma.my.id', 'tapamajuma-pwa.vercel.app']
@@ -34,7 +34,6 @@ if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
     nukeAndRedirect()
   }
 
-  // ✅ TAMBAHKAN INI — clear SW lama untuk user domain aktif
   const swCleared = localStorage.getItem('sw_cleared_v3')
   if (!swCleared) {
     const nukeSW = async () => {
@@ -55,14 +54,19 @@ if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
     }
     nukeSW()
   } else {
-    // PWA register hanya kalau SW sudah bersih
-    const updateSW = registerSW({
-      onNeedRefresh() {
-        if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
-      },
-      onOfflineReady() {
-        console.log('Aplikasi siap bekerja offline')
-      },
+    // ← dynamic import, hanya resolve saat PWA plugin aktif (web build)
+    import('virtual:pwa-register').then(({ registerSW }) => {
+      const updateSW = registerSW({
+        onNeedRefresh() {
+          if (confirm('Aplikasi versi baru tersedia. Refresh sekarang?')) updateSW(true)
+        },
+        onOfflineReady() {
+          console.log('Aplikasi siap bekerja offline')
+        },
+      })
+    }).catch(() => {
+      // ← native build: virtual:pwa-register tidak ada, skip saja
+      console.log('PWA tidak aktif di platform ini')
     })
   }
 }

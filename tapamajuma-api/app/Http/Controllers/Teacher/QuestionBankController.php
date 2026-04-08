@@ -45,7 +45,7 @@ class QuestionBankController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:numeracy,literacy,tka',
+            'type' => 'required|in:numeracy,literacy,tka,official',
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:class_names,id',
             'question_text' => 'required|string',

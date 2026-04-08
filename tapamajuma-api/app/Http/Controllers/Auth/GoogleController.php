@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AllowedNis;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Laravel\Socialite\Two\AbstractProvider;
@@ -71,18 +73,50 @@ class GoogleController extends Controller
 }
 public function completeProfile(Request $request)
 {
-    // Validasi data yang masuk
+    // 1. Validasi Input KETAT
     $request->validate([
-        'role' => 'required|in:student,teacher',
-        'class_id' => 'required_if:role,student|nullable|exists:class_names,id',
+        'role' => ['required', 'string', 'in:student,teacher'],
+        'class_id' => ['required_if:role,student', 'nullable', 'integer'],
+        // Validasi NIS: Wajib jika siswa, harus 10 digit, dan harus terdaftar di allowed_nis
+        'nis' => ['required_if:role,student', 'nullable', 'digits:10', 'exists:allowed_nis,nis'],
     ]);
 
     $user = Auth::user(); // Ambil user yang sedang login lewat token
 
-    $user->update([
-        'role' => $request->role,
-        'class_id' => $request->role === 'student' ? $request->class_id : null,
-    ]);
+    // 2. Cek Status NIS Khusus untuk Siswa
+    $allowedNis = null;
+    if ($request->role === 'student' && $request->filled('nis')) {
+        $allowedNis = AllowedNis::where('nis', $request->nis)->first();
+        
+        // Tolak jika NISN sudah dipakai orang lain
+        if ($allowedNis->is_used) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'nis' => ['NISN ini sudah terdaftar oleh pengguna lain.']
+                ]
+            ], 422);
+        }
+    }
+
+    // 3. Gunakan DB Transaction agar aman
+    DB::transaction(function () use ($user, $request, $allowedNis) {
+        
+        // A. Update profil user
+        $user->update([
+            'role' => $request->role,
+            'class_id' => $request->role === 'student' ? $request->class_id : null,
+            'nis' => $request->role === 'student' ? $request->nis : null,
+        ]);
+
+        // B. Jika yang login siswa dan NIS-nya valid, tandai NIS tersebut terpakai
+        if ($allowedNis) {
+            $allowedNis->update([
+                'is_used' => true,
+                'used_by' => $user->id
+            ]);
+        }
+    });
 
     return response()->json([
         'message' => 'Profil berhasil dilengkapi!',

@@ -87,7 +87,7 @@ class QuestionInputSheet implements WithHeadings, WithTitle, WithEvents
                 $validationKategori->setErrorStyle(DataValidation::STYLE_STOP);
                 $validationKategori->setAllowBlank(false);
                 $validationKategori->setShowDropDown(true);
-                $validationKategori->setFormula1('"numeracy,literacy,tka"');
+                $validationKategori->setFormula1('"numeracy,literacy,tka,official"');
 
                 // D. SETUP DROPDOWN MAPEL (Kolom B)
                 $validationMapel = $sheet->getCell('B2')->getDataValidation();

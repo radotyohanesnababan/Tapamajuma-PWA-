@@ -70,6 +70,37 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted()
+    {
+        // EVENT 1: Ketika user di-update (misal NIS-nya diganti atau dihapus/null)
+        static::updated(function ($user) {
+            // Cek apakah kolom 'nis' mengalami perubahan
+            if ($user->wasChanged('nis')) {
+                
+                $oldNis = $user->getOriginal('nis'); // Ambil NIS yang lama
+                
+                // Jika sebelumnya dia punya NIS, bebaskan NIS lama tersebut
+                if ($oldNis) {
+                    AllowedNis::where('nis', $oldNis)->update([
+                        'is_used' => false,
+                        'used_by' => null
+                    ]);
+                }
+            }
+        });
+
+        // EVENT 2: Ketika akun user dihapus permanen dari sistem
+        static::deleted(function ($user) {
+            // Bebaskan NIS yang sedang dia pakai sebelum akunnya lenyap
+            if ($user->nis) {
+                AllowedNis::where('nis', $user->nis)->update([
+                    'is_used' => false,
+                    'used_by' => null
+                ]);
+            }
+        });
+    }
+
 
     /**
      * Get the daily activities associated with the user.

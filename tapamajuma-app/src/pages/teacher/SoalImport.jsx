@@ -41,7 +41,7 @@ const handleImportSubmit = async (e) => {
     formData.append("type", importType); 
 
     try {
-      // TAMBAHKAN CONFIG TIMEOUT DI SINI
+      
       const res = await api.post("/api/teacher/bank-soal/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 300000, // Waktu tunggu 5 Menit (300.000 ms)
@@ -111,7 +111,7 @@ const handleImportSubmit = async (e) => {
                       <div className="text-[10px] sm:text-xs font-black text-slate-400 break-all px-2">
                           {xlsxFile ? (
                             <span className="text-green-600 bg-green-50 px-3 py-1.5 rounded-full inline-block border border-green-100">
-                              ✅ {xlsxFile.name.length > 20 ? xlsxFile.name.substring(0, 20) + '...' : xlsxFile.name}
+                              {xlsxFile.name.length > 20 ? xlsxFile.name.substring(0, 20) + '...' : xlsxFile.name}
                             </span>
                           ) : "Klik atau Tarik file .xlsx / .csv"}
                       </div>

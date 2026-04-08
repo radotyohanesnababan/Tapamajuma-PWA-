@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ChangelogController;
 use App\Http\Controllers\Admin\ClassMgmtController;
 use App\Http\Controllers\Admin\MorningSessionController;
+use App\Http\Controllers\Admin\NisController as ControllersAdminNisController;
 use App\Http\Controllers\Admin\QuestionMgmtController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StudentMgmtController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\LiteracyCardController;
+use App\Http\Controllers\Api\NisController;
 use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\ProfileController; // Tambahkan ini
 use App\Http\Controllers\Api\PublicDataController;
@@ -134,6 +137,8 @@ Route::middleware('auth:sanctum',)->group(function () {
         return $request->user();
     });
     Route::post('/auth/complete-profile', [GoogleController::class, 'completeProfile']);
+    // Endpoint untuk Claim NISN
+    Route::post('/claim-nis', [NisController::class, 'claimNis']);
     
     // --- KHUSUS SISWA ---
     Route::get('/dashboard', [DashboardController::class, 'index']);
@@ -262,6 +267,20 @@ Route::middleware('auth:sanctum',)->group(function () {
         Route::get('/activity-report/pdf/', [ReportController::class, 'downloadFullReport']);
         Route::get('/activity-report/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);
         Route::get('/activity-report/morning-session-details/{student_id}', [MorningSessionController::class, 'getStudentSummary']);
+        
+        Route::get('nis', [ControllersAdminNisController::class, 'index']);
+        Route::get('nis/template', [ControllersAdminNisController::class, 'downloadTemplate']);
+        Route::post('nis/import', [ControllersAdminNisController::class, 'import']);
+        Route::post('nis/{id}/unbind', [ControllersAdminNisController::class, 'unbind']);
+
+        Route::get('/announcements', [AnnouncementController::class, 'index']);
+        Route::post('/announcements', [AnnouncementController::class, 'store']);
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+
+
+
+    
     });
 
 });

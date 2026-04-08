@@ -1,53 +1,125 @@
-import { useEffect, useState } from "react";
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
-// Import Ikon biar makin keren
 import { 
-  Zap, Trophy, Target, Star, 
+  Zap, Target, Star, 
   Calendar, Flame, Rocket, Smile, 
-  ZapIcon
+  ZapIcon, Lock, ShieldAlert,
+  KeySquare, ShieldCheckIcon, Loader2, Megaphone, Trophy
 } from "lucide-react";
 
 export default function StudentDashboard() {
   const { user, isLoading: isAuthLoading } = useAuth(); 
   const navigate = useNavigate();
+  
+  // --- STATES ---
   const [activities, setActivities] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [announcementText, setAnnouncementText] = useState("");
+  const [isNisValid, setIsNisValid] = useState(true);
+  const [showNisModal, setShowNisModal] = useState(false);
+  const [nisInput, setNisInput] = useState("");
+  const [isSubmittingNis, setIsSubmittingNis] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [needsPassword, setNeedsPassword] = useState(false);
 
+  // --- 1. FUNGSI FETCH UTAMA (Didefinisikan di luar agar bisa dipanggil ulang) ---
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setIsDataLoading(true);
+      const response = await api.get("/api/dashboard");
+      const { is_nis_valid, needs_password, announcements } = response.data;
+
+      // Set Pengumuman
+      if (announcements && announcements.length > 0) {
+        setAnnouncementText(announcements.map(a => a.content).join("   •   "));
+      } else {
+        setAnnouncementText("");
+      }
+
+      setNeedsPassword(needs_password);
+      setIsNisValid(is_nis_valid);
+      setShowNisModal(!is_nis_valid);
+
+    } catch (err) {
+      console.error("Gagal memuat dashboard:", err);
+      if (err.response?.status === 403) setShowNisModal(true);
+    } finally {
+      setIsDataLoading(false);
+    }
+  }, []);
+
+  // --- 2. AUTH REDIRECT ---
   useEffect(() => {
     if (!isAuthLoading) {
       if (!user) navigate("/login");
-      else if (user.role === "superadmin") navigate("/superadmin", { replace: true });
-      else if (user.role === "teacher") navigate("/teacher", { replace: true });
+      else if (user.role !== "student") navigate(`/${user.role}`, { replace: true });
     }
   }, [user, isAuthLoading, navigate]);
 
+  // --- 3. INITIAL FETCH ---
   useEffect(() => {
-    if (user) {
+    if (user && user.role === 'student') {
+      fetchDashboardData();
+      
+      // Fetch activities terpisah jika NIS sudah ada
+      if (user.nis) {
         api.get("/api/activities")
-        .then((res) => setActivities(res.data))
-        .catch((err) => console.error("Gagal ambil activities", err))
-        .finally(() => setIsDataLoading(false));
+          .then((res) => setActivities(res.data))
+          .catch((err) => console.error(err));
+      }
     }
-  }, [user]);
+  }, [user, fetchDashboardData]);
 
+  // --- 4. HANDLER CLAIM NISN ---
+  const handleClaimNis = async (e) => {
+    e.preventDefault();
+    setIsSubmittingNis(true);
+
+    try {
+      const payload = {
+        nis: nisInput,
+        ...(needsPassword && { 
+          password: password, 
+          password_confirmation: passwordConfirm 
+        })
+      };
+
+      const response = await api.post('/api/claim-nis', payload);
+      toast.success("Akses Dibuka!", { description: response.data.message });
+
+      // Reset & Refresh UI
+      setNisInput(""); setPassword(""); setPasswordConfirm("");
+      await fetchDashboardData(); 
+      
+    } catch (err) {
+      const msg = err.response?.data?.message || "Terjadi kesalahan sistem.";
+      toast.error("Gagal", { description: msg });
+    } finally {
+      setIsSubmittingNis(false);
+    }
+  };
+
+  // --- DATA FORMATTING ---
   if (isAuthLoading || isDataLoading) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-4">
-            <Rocket className="animate-bounce text-indigo-500" size={48} />
-            <p className="font-bold text-slate-600 animate-pulse">Menyiapkan petualanganmu...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-4">
+        <Rocket className="animate-bounce text-indigo-500" size={48} />
+        <p className="font-bold text-slate-600 animate-pulse">Menyiapkan petualanganmu...</p>
+      </div>
     ); 
   }
-
-  if (!user) return null;
 
   const chartData = activities.map((act, index) => ({
     name: `Aksi ${index + 1}`,
@@ -55,18 +127,115 @@ export default function StudentDashboard() {
     yakin: act.confidence_level * 20, 
   }));
 
-  // Logika Level Badge
-  const getLevelInfo = (lvl) => {
+  const levelInfo = (lvl) => {
     if (lvl >= 3) return { label: "Master", color: "bg-purple-500", icon: <Star size={14} /> };
     if (lvl === 2) return { label: "Explorer", color: "bg-blue-500", icon: <Target size={14} /> };
     return { label: "Beginner", color: "bg-emerald-500", icon: <Smile size={14} /> };
   };
-
-  const level = getLevelInfo(user.level || 1);
+  const level = levelInfo(user?.level || 1);
 
   return (
-    <div className="space-y-6 pb-24 p-4 bg-slate-50 min-h-screen"> 
-      
+
+    <>
+      {showNisModal && (
+  <div className="fixed inset-0 z-[99] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm p-8 relative overflow-hidden text-center animate-in fade-in zoom-in duration-300">
+      {/* Dekorasi Background */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-50 rounded-full blur-2xl -z-10"></div>
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -z-10"></div>
+
+      <div className="mx-auto bg-rose-100 text-rose-500 w-16 h-16 flex items-center justify-center rounded-2xl mb-6 rotate-3">
+        <ShieldAlert size={32} />
+      </div>
+
+      <h2 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">
+        Akses Terkunci!
+      </h2>
+      <p className="text-xs text-slate-500 mb-6 leading-relaxed font-medium">
+        Sistem mendeteksi Anda belum memasukkan NISN yang valid. Untuk keamanan data dan sinkronisasi nilai, Anda <b>wajib memasukkan NISN</b> yang valid.
+      </p>
+
+      <form onSubmit={handleClaimNis} className="space-y-4 relative z-10 text-left">
+        {/* INPUT NISN */}
+        <div className="relative">
+          <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+          <input
+            type="number"
+            placeholder="Masukkan NISN"
+            className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            value={nisInput}
+            onChange={(e) => setNisInput(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* INPUT PASSWORD (DENGAN STYLE) */}
+        {needsPassword && (
+          <div className="space-y-3 pt-3 border-t border-slate-100 animate-in slide-in-from-top-2 duration-300">
+            <p className="text-[10px] text-indigo-600 font-bold  tracking-wider px-1">
+              Set Kredensial Ujian (CBT)
+            </p>
+            <p className="text-[9px] text-slate-800 px-1 leading-tight">
+              Kamu terdeteksi masuk menggunakan akun Google. Untuk keamanan ujian, silakan buat password baru yang akan digunakan untuk login saat ujian.
+            </p>
+            
+            <div className="relative">
+              <KeySquare className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+              <input
+                type="password"
+                placeholder="Buat Password Baru"
+                className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="relative">
+              <ShieldCheckIcon className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+              <input
+                type="password"
+                placeholder="Konfirmasi Password"
+                className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSubmittingNis}
+          className="w-full h-12 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isSubmittingNis ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <>Buka Gembok Akun <Zap size={16} /></>
+          )}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
+        <div className="space-y-6 pb-24 p-4 bg-slate-50 min-h-screen"> 
+      {/* RUNNING ANNOUNCEMENT */}
+  {announcementText && (
+  <div className="bg-indigo-600/10 border border-indigo-100 rounded-2xl h-10 flex items-center overflow-hidden relative mb-6">
+    <div className="absolute left-0 top-0 bottom-0 bg-indigo-600 text-white px-3 flex items-center gap-2 z-10 rounded-r-xl">
+      <Megaphone size={14} className="animate-bounce" />
+      <span className="text-[10px] font-black uppercase">Info</span>
+    </div>
+    <div className="flex-1 overflow-hidden">
+      <p className="animate-marquee text-xs font-bold text-indigo-700">
+        {announcementText}
+      </p>
+    </div>
+  </div>
+)}
       {/* GREETING SECTION */}
       <div className="flex justify-between items-center">
         <div className="space-y-1">
@@ -150,7 +319,7 @@ export default function StudentDashboard() {
                 {activities.length} / 10 AKSI
             </span>
         </div>
-        <Progress value={(activities.length / 10) * 100} className="h-3 bg-slate-100" indicatorClassName="bg-gradient-to-r from-indigo-500 to-teal-400" />
+        <Progress value={(activities.length / 10) * 100} className="h-3 bg-slate-100 [&>div]:bg-blue-500" />
         <p className="text-[10px] mt-3 text-slate-500 text-center font-medium">
             Tinggal <span className="text-indigo-600 font-bold">{10 - activities.length} aksi lagi</span> untuk jadi <span className="italic">Explorer!</span>
         </p>
@@ -197,5 +366,8 @@ export default function StudentDashboard() {
         </div>
       </div>
     </div>
+    
+    </>
+
   );
 }

@@ -11,6 +11,8 @@ apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':capacitor-browser')
     implementation project(':capacitor-splash-screen')
+    implementation project(':mozartec-capacitor-microphone')
+    implementation project(':capacitor-voice-recorder')
 
 }
 

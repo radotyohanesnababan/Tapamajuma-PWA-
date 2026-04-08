@@ -73,8 +73,21 @@ export default function Register() {
       navigate("/login");
 
     } catch (err) {
-      console.error("Register Error:", err);
-      const msg = err.response?.data?.message || "Gagal mendaftar.";
+     console.error("Register Error:", err);
+      
+      // TAMBAHAN: Handle pesan error spesifik dari validasi Laravel (422)
+      if (err.response?.status === 422 && err.response?.data?.errors) {
+        const validationErrors = err.response.data.errors;
+        
+        // Ambil pesan error pertama (misal: error dari NIS atau Email)
+        const firstErrorKey = Object.keys(validationErrors)[0];
+        const errorMessage = validationErrors[firstErrorKey][0];
+        
+        return toast.error("Validasi Gagal", { description: errorMessage });
+      }
+
+      // Fallback jika error bukan dari validasi
+      const msg = err.response?.data?.message || "Gagal mendaftar. Silakan coba lagi.";
       toast.error("Registrasi Gagal", { description: msg });
     } finally {
       setIsLoading(false);

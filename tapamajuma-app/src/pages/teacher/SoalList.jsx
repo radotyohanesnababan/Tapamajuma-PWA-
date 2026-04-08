@@ -106,9 +106,10 @@ const fetchQuestions = async (page = 1) => {
             onChange={(e) => setFilterType(e.target.value)}
             className="h-12 px-4 rounded-2xl border-none shadow-sm bg-white text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
           >
-            <option value="numeracy">🔢 Numerasi</option>
-            <option value="literacy">📚 Literasi</option>
-            <option value="tka">🧠 TKA (HOTS)</option>
+            <option value="numeracy">Numerasi</option>
+            <option value="literacy">Literasi</option>
+            <option value="tka"> TKA (HOTS)</option>
+            <option value="official">Soal Resmi</option>
           </select>
 
                     <div className="relative flex-1">

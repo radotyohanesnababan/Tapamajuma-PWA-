@@ -1,34 +1,86 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Trash2, Play, Pause } from "lucide-react";
+import { Mic, Square, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Capacitor } from '@capacitor/core';
 
 export default function VoiceRecorder({ onRecordingComplete }) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+
+  // Web refs
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  const startRecording = async () => {
+  // ─── Native (Capacitor) ───────────────────────────────────────
+
+const startRecordingNative = async () => {
+  try {
+    const { CapacitorMicrophone } = await import('@mozartec/capacitor-microphone');
+    
+    const permission = await CapacitorMicrophone.requestPermissions();
+    console.log('Permission:', JSON.stringify(permission));
+
+    if (permission.microphone === 'granted') {
+      await CapacitorMicrophone.startRecording();
+      setIsRecording(true);
+      console.log('Recording started!');
+    } else {
+      toast.error("Izin mikrofon ditolak.");
+    }
+
+  } catch (err) {
+    console.error('Error:', err.name, err.message);
+    toast.error("Gagal merekam: " + err.message);
+  }
+};
+
+const stopRecordingNative = async () => {
+  try {
+    const { CapacitorMicrophone } = await import('@mozartec/capacitor-microphone');
+    const result = await CapacitorMicrophone.stopRecording();
+    console.log('Result:', JSON.stringify(result));
+
+    const base64 = result.base64Sound;
+    const mimeType = 'audio/aac';
+    const byteChars = atob(base64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteArray[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const file = new File([blob], `rekaman-${Date.now()}.aac`, { type: mimeType });
+
+    setAudioUrl(url);
+    onRecordingComplete(file);
+
+  } catch (err) {
+    console.error('Error:', err.name, err.message);
+    toast.error("Gagal stop rekaman: " + err.message);
+  } finally {
+    setIsRecording(false);
+  }
+};
+
+  // ─── Web (Browser Fallback) ───────────────────────────────────
+  const startRecordingWeb = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mpeg' });
-        const url = URL.createObjectURL(audioBlob);
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+        const file = new File([blob], `rekaman-${Date.now()}.mp3`, { type: 'audio/mpeg' });
         setAudioUrl(url);
-        
-        // Buat objek file agar bisa diunggah via FormData
-        const file = new File([audioBlob], `rekaman-${Date.now()}.mp3`, { type: 'audio/mpeg' });
-        onRecordingComplete(file); // Kirim file ke parent component (StudentGallery)
+        onRecordingComplete(file);
       };
 
       mediaRecorderRef.current.start();
@@ -38,11 +90,27 @@ export default function VoiceRecorder({ onRecordingComplete }) {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecordingWeb = () => {
     mediaRecorderRef.current.stop();
-    setIsRecording(false);
-    // Matikan mikrofon setelah selesai
     mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    setIsRecording(false);
+  };
+
+  // ─── Unified Handler ──────────────────────────────────────────
+  const startRecording = () => {
+    if (Capacitor.isNativePlatform()) {
+      startRecordingNative();
+    } else {
+      startRecordingWeb();
+    }
+  };
+
+  const stopRecording = () => {
+    if (Capacitor.isNativePlatform()) {
+      stopRecordingNative();
+    } else {
+      stopRecordingWeb();
+    }
   };
 
   const resetRecording = () => {

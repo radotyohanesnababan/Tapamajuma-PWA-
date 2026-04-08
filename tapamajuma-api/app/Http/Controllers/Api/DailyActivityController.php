@@ -127,7 +127,7 @@ public function store(Request $request)
 }
 
     // Ambil Riwayat (Untuk Grafik)
-    public function index(Request $request)
+public function index(Request $request)
     {
         $activities = $request->user()->dailyActivities()
             ->latest()

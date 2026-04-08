@@ -104,9 +104,10 @@ const handleManualSubmit = async (e) => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori Soal</label>
               <select className="w-full h-12 px-4 rounded-2xl bg-emerald-50 border-none text-sm font-bold text-emerald-700 outline-none focus:ring-2 focus:ring-emerald-400 appearance-none shadow-inner" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} required>
-                <option value="numeracy">🔢 Numerasi</option>
-                <option value="literacy">📚 Literasi</option>
-                <option value="tka">🧠 TKA (HOTS)</option>
+                <option value="numeracy">Numerasi</option>
+                <option value="literacy">Literasi</option>
+                <option value="tka">TKA (HOTS)</option>
+                <option value="official">Soal Resmi</option>
               </select>
             </div>
 
