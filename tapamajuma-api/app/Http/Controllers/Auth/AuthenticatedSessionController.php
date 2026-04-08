@@ -10,15 +10,28 @@ class AuthenticatedSessionController extends Controller
 {
     public function store(Request $request)
     {
+        // 1. Validasi diubah: 'login' menggantikan 'email', dan tidak wajib format email
         $request->validate([
-            'email' => ['required', 'email'],
+            'login' => ['required', 'string'], 
             'password' => ['required'],
+        ], [
+            'login.required' => 'Email atau NISN wajib diisi.',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'))) {
+        // 2. Deteksi apakah input 'login' adalah Email atau NISN
+        // Jika mengandung '@', kita anggap email. Jika tidak, kita anggap NISN.
+        $loginField = str_contains($request->login, '@') ? 'email' : 'nis';
+
+        // 3. Coba Autentikasi dengan field yang dinamis
+        $credentials = [
+            $loginField => $request->login,
+            'password' => $request->password
+        ];
+
+        if (Auth::attempt($credentials)) {
             $user = Auth::user();
             
-            // Hapus semua token lama user ini (biar single device login - Opsional)
+            // Opsional: Hapus token lama agar tidak bisa login di banyak device/browser
             // $user->tokens()->delete(); 
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -31,19 +44,15 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Email atau password salah'], 401);
+        // 4. Pesan error disesuaikan
+        return response()->json([
+            'message' => 'Kredensial (Email/NISN atau Password) salah.'
+        ], 401);
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request)
     {
-        // JANGAN pakai Auth::guard('web')->logout(); 
-        // Karena itu menghapus session browser, bukan token API.
-        
         if ($request->user()) {
-            // Hapus token yang dipakai saat request ini
             $request->user()->currentAccessToken()->delete();
         }
 

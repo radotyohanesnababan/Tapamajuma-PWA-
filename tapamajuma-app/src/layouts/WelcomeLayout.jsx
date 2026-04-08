@@ -179,19 +179,9 @@ export default function WelcomeLayout({ title, children, auth }) {
     
     {/* 2. PENJAGA KHUSUS SEB: Cuma tombol ini yang disembunyikan di HP (hidden) */}
     <div className="hidden md:block">
-        <button 
-            onClick={() => {
-                const frontendHost = window.location.host; 
-                const alamatBersih = `${frontendHost}/configs/EXAMSMP1SBB_V1.seb`;
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const protocol = isLocal ? "seb://" : "sebs://";
-                window.location.href = `${protocol}${alamatBersih}`;
-            }}
-            className="flex wl-btn-cta bg-emerald-700 hover:bg-emerald-800 border-none text-white items-center gap-2 w-full sm:w-auto"
-            aria-label="Buka Ujian dengan SEB"
-        >
-            Buka Ruang Ujian (SEB)
-        </button>
+       <Link to="/seb" className="wl-btn-cta-seb  w-full sm:w-auto text-center " aria-label="Buka Dashboard">
+            Menuju Ujian
+        </Link>
     </div>
 
     {/* 3. TOMBOL LOGIN: Berada di luar penjaga 'hidden', jadi akan selalu muncul di semua perangkat */}

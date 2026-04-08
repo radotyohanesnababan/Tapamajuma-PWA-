@@ -16,6 +16,7 @@ import StudentLayout from "./layouts/StudentLayout";
 import TeacherLayout from "./layouts/TeacherLayout";
 import SuperadminLayout from "./layouts/SuperadminLayout";
 import Welcome from "./pages/Welcome";
+import SebPage from "./pages/SebPage";
 import GuestGuard from './components/GuestGuard';
 import SharedGallery from './pages/SharedGallery';
 import CBTManager from './pages/student/CBTManager';
@@ -106,6 +107,7 @@ function App() {
           <Routes>
             {/* Rute Publik & Utama (NO GUARD) */}
             <Route path="/s/:token" element={<SharedGallery />} />
+            <Route path="/seb" element={<SebPage />} />            
             {/* Rute Publik & Utama */}
             <Route element={<GuestGuard />}>
               <Route path="/" element={<Welcome />} />

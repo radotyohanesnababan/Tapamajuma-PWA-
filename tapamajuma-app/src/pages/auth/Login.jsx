@@ -35,7 +35,13 @@ const handleLogin = async (e) => {
     setIsLoading(true);
 
     try {
-      const responseData = await login({ email, password });
+      // PERUBAHAN DI SINI:
+      // Kita kirim properti 'login' (isinya bisa state email atau state nisn kamu)
+      // Sesuaikan nama variabel 'email' di bawah dengan state input kamu
+      const responseData = await login({ 
+        login: email, // 'email' di sini adalah nilai dari input text (Email/NISN)
+        password: password 
+      });
       
       if (responseData?.access_token) {
           localStorage.setItem("auth_token", responseData.access_token);
@@ -48,17 +54,12 @@ const handleLogin = async (e) => {
         description: `Selamat datang kembali, ${user?.name || 'User'}`
       });
 
-      // ---------------------------------------------------------
-      // LOGIKA REDIRECT DINAMIS (PENTING!)
-      // ---------------------------------------------------------
-      // Cek apakah ada 'titipan' halaman asal dari AuthGuard?
+      // LOGIKA REDIRECT DINAMIS
       const targetPath = location.state?.from?.pathname;
 
       if (targetPath) {
-        // Jika ada (misal: siswa tadi mau buka /cbt tapi disuruh login dulu)
         navigate(targetPath, { replace: true });
       } else {
-        // Jika tidak ada (login normal dari halaman depan), pakai role default
         if (user?.role === "teacher") {
           navigate("/teacher", { replace: true });
         } else if (user?.role === "superadmin") {
@@ -67,11 +68,11 @@ const handleLogin = async (e) => {
           navigate("/student", { replace: true }); 
         }
       }
-      // ---------------------------------------------------------
 
     } catch (err) {
       console.error("Login Error:", err);
-      const errMsg = err.response?.data?.message || err.message || "Cek email dan password Anda.";
+      // Backend sekarang mengirim "Kredensial (Email/NISN atau Password) salah."
+      const errMsg = err.response?.data?.message || "Cek kembali data login Anda.";
       toast.error("Login Gagal", { description: errMsg });
     } finally {
       setIsLoading(false);
@@ -139,13 +140,13 @@ const handleLogin = async (e) => {
             <form onSubmit={handleLogin} className="space-y-5">
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email atau NISN</Label>
                 <div className="relative group">
             <Mail className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
             <Input 
               id="email"
-              type="email" 
-              placeholder="user@sekolah.id" 
+              type="text" 
+              placeholder="user@sekolah.id atau 1234567890" 
               className="pl-10 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-900 transition-all rounded-xl"
               required 
               value={email}

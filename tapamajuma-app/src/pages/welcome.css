@@ -500,6 +500,31 @@
     box-shadow: 0 4px 16px rgba(8,145,178,0.32);
     letter-spacing: -0.01em;
 }
+.wl-btn-cta-seb:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(8,145,178,0.42);
+    color: white !important;
+    text-decoration: none;
+}
+.wl-btn-cta-seb {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 0.83rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, #08b20b, #15a103);
+    color: white !important;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(8,145,178,0.32);
+    letter-spacing: -0.01em;
+}
+
 .wl-btn-cta:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 24px rgba(8,145,178,0.42);

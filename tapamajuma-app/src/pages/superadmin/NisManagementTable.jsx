@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Pastikan Input di-import
 import { Upload, Trash2, ShieldCheck, ShieldAlert, Download, Loader2, Search } from "lucide-react";
 
+
 export default function NisManagementTable({ hookData }) {
   const { 
     nisList, isNisLoading, handleNisImport, handleNisUnbind, handleDownloadNisTemplate,
