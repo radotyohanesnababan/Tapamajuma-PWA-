@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->boolean('is_password_set')->default(false);
-            $table->dropColumn('needs_password'); // Hapus kolom lama yang sudah tidak dipakai
+            // Hapus kolom lama yang sudah tidak dipakai
         });
     }
 
