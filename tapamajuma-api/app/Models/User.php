@@ -37,6 +37,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_password_set',
+        'google_id',
         'phone_number',
         'class_id',
         'nis',

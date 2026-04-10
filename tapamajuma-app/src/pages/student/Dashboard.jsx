@@ -39,21 +39,32 @@ export default function StudentDashboard() {
     try {
       setIsDataLoading(true);
       const response = await api.get("/api/dashboard");
+      
+      // Ambil data dari backend
       const { is_nis_valid, needs_password, announcements } = response.data;
 
-      // Set Pengumuman
+      // 1. Set Pengumuman (sudah benar)
       if (announcements && announcements.length > 0) {
         setAnnouncementText(announcements.map(a => a.content).join("   •   "));
       } else {
         setAnnouncementText("");
       }
 
+      // 2. Update States
       setNeedsPassword(needs_password);
       setIsNisValid(is_nis_valid);
-      setShowNisModal(!is_nis_valid);
+
+      // 3. LOGIKA MODAL (KUNCI):
+      // Modal harus muncul JIKA (NIS belum valid) ATAU (Butuh set password)
+      if (!is_nis_valid || needs_password) {
+        setShowNisModal(true);
+      } else {
+        setShowNisModal(false);
+      }
 
     } catch (err) {
       console.error("Gagal memuat dashboard:", err);
+      // Jika kena middleware 403, paksa munculkan modal
       if (err.response?.status === 403) setShowNisModal(true);
     } finally {
       setIsDataLoading(false);
@@ -88,8 +99,9 @@ export default function StudentDashboard() {
     setIsSubmittingNis(true);
 
     try {
-      const payload = {
-        nis: nisInput,
+            const payload = {
+        // Hanya kirim NIS jika memang belum valid
+        ...(!isNisValid && { nis: nisInput }),
         ...(needsPassword && { 
           password: password, 
           password_confirmation: passwordConfirm 
@@ -137,47 +149,51 @@ export default function StudentDashboard() {
   return (
 
     <>
-      {showNisModal && (
+{showNisModal && (
   <div className="fixed inset-0 z-[99] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
     <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm p-8 relative overflow-hidden text-center animate-in fade-in zoom-in duration-300">
-      {/* Dekorasi Background */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-50 rounded-full blur-2xl -z-10"></div>
-      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -z-10"></div>
-
-      <div className="mx-auto bg-rose-100 text-rose-500 w-16 h-16 flex items-center justify-center rounded-2xl mb-6 rotate-3">
-        <ShieldAlert size={32} />
+      
+      {/* Icon menyesuaikan kondisi */}
+      <div className={`mx-auto w-16 h-16 flex items-center justify-center rounded-2xl mb-6 rotate-3 ${!isNisValid ? 'bg-rose-100 text-rose-500' : 'bg-indigo-100 text-indigo-600'}`}>
+        {!isNisValid ? <ShieldAlert size={32} /> : <KeySquare size={32} />}
       </div>
 
       <h2 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">
-        Akses Terkunci!
+        {!isNisValid ? "Akses Terkunci!" : "Set Password Manual"}
       </h2>
+      
       <p className="text-xs text-slate-500 mb-6 leading-relaxed font-medium">
-        Sistem mendeteksi Anda belum memasukkan NISN yang valid. Untuk keamanan data dan sinkronisasi nilai, Anda <b>wajib memasukkan NISN</b> yang valid.
+        {!isNisValid 
+          ? "Sistem mendeteksi Anda belum memasukkan NISN yang valid untuk sinkronisasi data."
+          : "Akun Google terdeteksi. Silakan buat password untuk login manual dan akses ujian"}
       </p>
 
       <form onSubmit={handleClaimNis} className="space-y-4 relative z-10 text-left">
-        {/* INPUT NISN */}
-        <div className="relative">
-          <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-          <input
-            type="number"
-            placeholder="Masukkan NISN"
-            className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            value={nisInput}
-            onChange={(e) => setNisInput(e.target.value)}
-            required
-          />
-        </div>
+        
+        {/* INPUT NISN: Hanya muncul jika NIS belum valid */}
+        {!isNisValid && (
+          <div className="relative">
+            <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+            <input
+              type="number"
+              placeholder="Masukkan NISN"
+              className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              value={nisInput}
+              onChange={(e) => setNisInput(e.target.value)}
+              required
+            />
+          </div>
+        )}
 
-        {/* INPUT PASSWORD (DENGAN STYLE) */}
+        {/* INPUT PASSWORD: Muncul jika butuh password */}
         {needsPassword && (
           <div className="space-y-3 pt-3 border-t border-slate-100 animate-in slide-in-from-top-2 duration-300">
-            <p className="text-[10px] text-indigo-600 font-bold  tracking-wider px-1">
-              Set Kredensial Ujian (CBT)
+            <p className="text-[10px] text-indigo-600 font-bold tracking-wider px-1 uppercase">
+              Akun Google Terdeteksi.
             </p>
-            <p className="text-[9px] text-slate-800 px-1 leading-tight">
-              Kamu terdeteksi masuk menggunakan akun Google. Untuk keamanan ujian, silakan buat password baru yang akan digunakan untuk login saat ujian.
-            </p>
+              <p className="text-[10px] text-slate-500 font-medium px-1">
+                Silakan buat password untuk login manual dan akses ujian
+              </p>
             
             <div className="relative">
               <KeySquare className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
@@ -208,12 +224,12 @@ export default function StudentDashboard() {
         <button
           type="submit"
           disabled={isSubmittingNis}
-          className="w-full h-12 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className={`w-full h-12 mt-2 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${!isNisValid ? 'bg-slate-900 hover:bg-slate-800' : 'bg-indigo-600 hover:bg-indigo-700'}`}
         >
           {isSubmittingNis ? (
             <Loader2 className="animate-spin" size={18} />
           ) : (
-            <>Buka Gembok Akun <Zap size={16} /></>
+            <>{!isNisValid ? 'Buka Gembok Akun' : 'Simpan Kredensial'} <Zap size={16} /></>
           )}
         </button>
       </form>

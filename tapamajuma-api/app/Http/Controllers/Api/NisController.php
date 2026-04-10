@@ -17,70 +17,67 @@ public function claimNis(Request $request)
 {
     $user = Auth::user();
     
-    // 1. Deteksi Tipe Akun
+    // 1. Deteksi Kondisi Akun
     $isExternalAccount = !str_contains($user->email, '@tapamajuma.id');
-
-    // 2. Validasi Input
-    $rules = ['nis' => ['required', 'exists:allowed_nis,nis']];
-    if ($isExternalAccount) {
-        $rules['password'] = ['required', 'min:6', 'confirmed'];
-    }
-
-    $request->validate($rules, [
-        'nis.exists' => 'NISN tidak terdaftar dalam sistem sekolah.',
-        'password.required' => 'Anda login via Google, silakan buat password untuk login ujian.',
-        'password.confirmed' => 'Konfirmasi password tidak cocok.',
-    ]);
-
-    // 3. Cek apakah NIS saat ini sudah valid (Mencegah Bypass)
-    $isAlreadyValid = \App\Models\AllowedNis::where('nis', $user->nis)
+    
+    $hasValidNis = \App\Models\AllowedNis::where('nis', $user->nis)
         ->where('is_used', true)
         ->where('used_by', $user->id)
         ->exists();
 
-    if ($isAlreadyValid) {
-        return response()->json(['message' => 'Akun Anda sudah memiliki NISN yang terverifikasi.'], 400); 
+    // 2. Validasi
+    $rules = [];
+    if (!$hasValidNis) {
+        $rules['nis'] = ['required', 'exists:allowed_nis,nis'];
+    } else {
+        $rules['nis'] = ['nullable', 'exists:allowed_nis,nis'];
     }
 
-    // 4. Ambil data NISN target & Cek ketersediaan
-    $allowedNis = AllowedNis::where('nis', $request->nis)->first();
-
-    if ($allowedNis->is_used && $allowedNis->used_by !== $user->id) {
-        return response()->json([
-            'message' => 'Data tidak valid.',
-            'errors' => ['nis' => ['NISN ini sudah diklaim oleh akun lain.']]
-        ], 422);
+    if ($isExternalAccount) {
+        $rules['password'] = ['required', 'min:6', 'confirmed'];
+        // Hapus baris $updateData['needs_password'] = true; yang tadi nyasar di sini
     }
 
-    // Simpan status lama sebelum update untuk menentukan pesan response
-    $oldNis = $user->nis;
+    $request->validate($rules, [
+        'nis.required' => 'NISN wajib diisi.',
+        'nis.exists' => 'NISN tidak terdaftar.',
+        'password.required' => 'Silakan buat password untuk login manual (SEB).',
+    ]);
 
-    // 5. Eksekusi Database
-    DB::transaction(function () use ($user, $allowedNis, $request, $isExternalAccount) {
-        $updateData = ['nis' => $allowedNis->nis];
+    // 3. Eksekusi
+    DB::transaction(function () use ($user, $request, $hasValidNis, $isExternalAccount) {
+        $updateData = [];
 
-        if ($isExternalAccount) {
-            $updateData['password'] = bcrypt($request->password);
+        if (!$hasValidNis && $request->has('nis')) {
+            $allowedNis = AllowedNis::where('nis', $request->nis)->first();
+
+            if ($allowedNis->is_used && $allowedNis->used_by !== $user->id) {
+                throw new \Exception("NISN ini sudah diklaim oleh akun lain.");
+            }
+
+            $updateData['nis'] = $allowedNis->nis;
+
+            $allowedNis->update([
+                'is_used' => true,
+                'used_by' => $user->id
+            ]);
         }
 
-        // Lakukan update
-        $user->update($updateData);
+        // UPDATE PASSWORD & FLAG
+        if ($isExternalAccount && $request->has('password')) {
+            $updateData['password'] = bcrypt($request->password);
+            // Kunci: Flag ini yang akan mematikan modal selamanya
+            $updateData['is_password_set'] = true; 
+        }
 
-        // Kunci di tabel master
-        $allowedNis->update([
-            'is_used' => true,
-            'used_by' => $user->id
-        ]);
+        if (!empty($updateData)) {
+            $user->update($updateData);
+        }
     });
 
-    // 6. Tentukan Pesan Berdasarkan $oldNis
-    $isReplacement = !is_null($oldNis) && $oldNis !== $allowedNis->nis;
-
     return response()->json([
-        'message' => $isReplacement 
-            ? 'NISN & Kredensial Ujian berhasil diperbarui! 🔄' 
-            : 'NISN & Kredensial Ujian berhasil diverifikasi! 🔓',
-        'user' => $user->fresh() // Mengambil data terbaru dari DB
+        'message' => 'Kredensial berhasil diperbarui! 🔓',
+        'user' => $user->fresh()
     ], 200);
 }
 }
