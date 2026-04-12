@@ -1,64 +1,50 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { Send, BookOpen, Calculator, Sparkles, Coffee, Sun, ArrowLeft, BatteryCharging  } from "lucide-react";
+import { 
+  ChevronLeft, Timer, HelpCircle, Play, Rocket, 
+  GraduationCap, Dumbbell, BarChart2, User, Sparkles 
+} from "lucide-react";
 import api from "@/lib/axios";
 import { Link } from 'react-router-dom';
-
-// Import kartu kustom kamu
-import LiteracyChallengeCard from "@/components/challenge/LiteracyChallengeCard";
-import NumeracyChallengeCard from "@/components/challenge/NumeracyChallengeCard";
 import { toast } from "sonner";
-import TKAChallengeCard from "@/components/challenge/TKAChallengeCard";
+
+import LiteracyChallengeCard, { LITERACY_CONFIG } from "@/components/challenge/LiteracyChallengeCard";
+import NumeracyChallengeCard, { NUMERACY_CONFIG } from "@/components/challenge/NumeracyChallengeCard";
+import TKAChallengeCard, { TKA_CONFIG } from "@/components/challenge/TKAChallengeCard";
 import OffDayPage from "./OffDayPage";
 
+// Mapping Konfigurasi Aktivitas
+const ACTIVITY_CONFIGS = {
+  tka: TKA_CONFIG,
+  numeracy: NUMERACY_CONFIG,
+  literacy: LITERACY_CONFIG
+};
 
-
-// 1. Definisikan HeaderSection di sini agar tidak hilang
-const HeaderSection = ({ activity }) => {
-  const content = {
-    literacy: { 
-      title: "Hari Literasi", 
-      desc: "Pembiasaan membaca & bercerita (Semua Mapel)", 
-      color: "bg-indigo-600", 
-      icon: <BookOpen size={28} /> 
-    },
-    numeracy: { 
-      title: "Hari Numerasi", 
-      desc: "Pembiasaan berhitung & logika", 
-      color: "bg-amber-500", 
-      icon: <Calculator size={28} /> 
-    },
-    practice: { 
-      title: "TKA Mandiri", 
-      desc: "Soal soal HOTS untuk latihan mandiri", 
-      color: "bg-purple-700", 
-      icon: <Sparkles size={28} /> 
-    }
-  };
-
-  const active = content[activity] || content.practice;
-
-  return (
-    <div className={`${active.color} p-6 rounded-3xl text-white shadow-lg transition-all duration-500`}>
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <p className="text-white/70 text-[10px] font-black tracking-widest">TAPAMAJUMA Learning</p>
-          <h1 className="text-2xl font-bold">{active.title}</h1>
-          <p className="text-sm text-white/90">{active.desc}</p>
-        </div>
-        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
-          {active.icon}
-        </div>
-      </div>
-    </div>
-  );
+const colorStyles = {
+  indigo: {
+    badge: "bg-indigo-100 text-indigo-600",
+    title: "text-indigo-950",
+    border: "border-indigo-100"
+  },
+  orange: {
+    badge: "bg-orange-100 text-orange-600",
+    title: "text-orange-950",
+    border: "border-orange-100"
+  },
+  blue: {
+    badge: "bg-blue-100 text-blue-600",
+    title: "text-blue-950",
+    border: "border-blue-100"
+  }
 };
 
 export default function ChallengeForm() {
- const [todayActivity, setTodayActivity] = useState(null);
+  const [todayActivity, setTodayActivity] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false); // State baru
-  const [checkingStatus, setCheckingStatus] = useState(true); // State loading awal
-  
+  const [isCompleted, setIsCompleted] = useState(false); 
+  const [checkingStatus, setCheckingStatus] = useState(true); 
+  const [isPlaying, setIsPlaying] = useState(false); // State untuk trigger game (TKA/Numerasi)
+
   const [formData, setFormData] = useState({
     subject: "",
     journal: "",
@@ -66,43 +52,46 @@ export default function ChallengeForm() {
   });
 
   useEffect(() => {
-    // 1. Deteksi hari (logika lama kamu)
     const today = new Date().getDay();
     if (today === 1 || today === 2) setTodayActivity("literacy"); 
     else if (today === 3 || today === 4 || today === 5) setTodayActivity("numeracy");
     else if (today === 6) setTodayActivity("tka");
     else setTodayActivity("off");
 
-    //setTodayActivity("off");
-    // 2. CEK STATUS KE BACKEND
     const checkStatus = async () => {
       try {
         const response = await api.get("/api/activities/today-status");
-        if (response.data.already_submitted) {
-          setIsCompleted(true);
-        }
+        if (response.data.already_submitted) setIsCompleted(true);
       } catch (err) {
         console.error("Gagal cek status:", err);
       } finally {
         setCheckingStatus(false);
       }
     };
-
     checkStatus();
   }, []);
 
+  // Fungsi dinamis saat tombol utama ditekan
+const handleActionTrigger = () => {
+  // Semua aktivitas (TKA, Lit, Num) sekarang langsung trigger isPlaying
+  setIsPlaying(true);
+};
+
+ const currentUI = ACTIVITY_CONFIGS[todayActivity] || ACTIVITY_CONFIGS.tka;
+
+const styles = colorStyles[currentUI.themeColor] || colorStyles.indigo;
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!formData.subject || !formData.journal) {
       toast.error("Mohon lengkapi semua data.");
       return;
     }
-
     setLoading(true);
     try {
       await api.post("/api/activities", { ...formData, type: todayActivity });
       toast.success("Aktivitas berhasil dicatat!");
-      setIsCompleted(true); // <--- LANGSUNG KUNCI SETELAH BERHASIL
+      setIsCompleted(true);
     } catch (err) {
       toast.error(err.response?.data?.message || "Gagal menyimpan.");
     } finally {
@@ -110,120 +99,101 @@ export default function ChallengeForm() {
     }
   };
 
-  // --- LOGIKA RENDERING ---
+  if (checkingStatus) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (todayActivity === 'off') return <OffDayPage />;
 
-  // 1. Jika sedang mengecek ke server
-  if (checkingStatus) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-         <p className="mt-4 text-slate-500 font-medium">Memeriksa status harian...</p>
-      </div>
-    );
-  }
-
-  // 2. Jika hari libur (Minggu)
-  if (todayActivity === 'off') {
-    return <OffDayPage />; 
-  }
-
-  // 3. JIKA SUDAH MENGERJAKAN (Tampilan Sukses)
-  if (isCompleted) {
-    return (
-      <div className="p-6 space-y-6 max-w-2xl mx-auto animate-in fade-in zoom-in duration-500">
-        <HeaderSection activity={todayActivity} />
-        <div className="bg-white border-2 border-dashed border-slate-200 p-10 rounded-[2.5rem] text-center">
-          <div className="w-20 h-20 bg-emerald-100 text-sky-600 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
-            <Sparkles size={40} />
-          </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-2">Misi Selesai!</h2>
-          <p className="text-slate-500 mb-8 leading-relaxed">
-            Kamu sudah menyelesaikan tantangan <b className="uppercase">{todayActivity}</b> untuk hari ini. <br/>
-            Istirahat sejenak, dan siap-siap untuk tantangan seru berikutnya di esok hari!
-          </p>
-          <Link 
-            to="/student" 
-            className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
-          >
-            <ArrowLeft size={18} />
-            Kembali ke Beranda
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. JIKA BELUM MENGERJAKAN (Tampilkan Form Normal)
+ 
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl mx-auto">
-    <HeaderSection activity={todayActivity} />
-    
-    {/* === BAGIAN 1: NUMERASI (MANDIRI) === */}
-    {/* Kita taruh di LUAR <form> agar tombolnya tidak bentrok */}
-    {todayActivity === "numeracy" && (
-       <div className="transition-all duration-500">
-          {/* Numeracy menangani submit-nya sendiri di dalam MathGame */}
-          <NumeracyChallengeCard formData={formData} setFormData={setFormData} />
-       </div>
-    )}
+    <div className={`min-h-screen bg-[#F9F9FF] pb-28 font-sans ${isPlaying ? 'overflow-hidden' : ''}`}>
 
-    {/* === BAGIAN 2: LITERASI-SOALGURU (MANDIRI) === */}
-    {/* Kita taruh di LUAR <form> agar tombolnya tidak bentrok */}
-    {todayActivity === "literacy" && (
-       <div className="transition-all duration-500">
-          {/* Numeracy menangani submit-nya sendiri di dalam MathGame */}
-          <LiteracyChallengeCard formData={formData} setFormData={setFormData} />
-       </div>
-    )}
+      <main className="px-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <section className="mt-4">
+          <p className="text-slate-400 text-[10px] font-black tracking-widest uppercase mb-1">TAPAMAJUMA LEARNING</p>
+          <h2 className="text-4xl font-black text-indigo-950 leading-tight">
+            {currentUI.title} <br />
+          </h2>
+        </section>
 
-    
-    {/* Literasi tetap butuh form karena tombol simpannya ada di bawah */}
-    {todayActivity === "literacyforai" && (
-      <form onSubmit={handleSubmit} className="space-y-6 transition-all duration-500">
-        
-        <LiteracyChallengeCard formData={formData} setFormData={setFormData} />
-
-        {/* Input Refleksi & Tombol Simpan (Hanya untuk Literasi) */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              Refleksi Keyakinan Belajar
-            </label>
-            <span className="text-xl font-bold text-indigo-600">{formData.confidence_level}</span>
-          </div>
-          <input 
-            type="range" min="1" max="5" 
-            className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-            value={formData.confidence_level}
-            onChange={(e) => setFormData({...formData, confidence_level: e.target.value})}
-          />
-          <button 
-            disabled={loading}
-            type="submit"
-            className="w-full bg-slate-900 text-white h-14 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"
-          >
-            {loading ? "Menyimpan..." : (
-              <>
-                <Send size={20} />
-                Simpan Progres Digital
-              </>
-            )}
-          </button>
+        {/* Info Card - Data diambil dari currentUI (Config masing-masing card) */}
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 relative">
+                <span className={`${styles.badge} text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest`}>
+              Kegiatan Hari Ini
+            </span>
+            
+            {/* Judul Dinamis */}
+            <h3 className={`text-3xl font-bold ${styles.title} mt-4 mb-3`}>
+              {currentUI.title}
+            </h3>
+            
+            <p className="text-slate-500 leading-relaxed text-sm">
+              {currentUI.desc}
+            </p>
+          
         </div>
-      </form>
-    )}
 
-    {/* === BAGIAN 1: TKA === */}
-    {/* Kita taruh di LUAR <form> agar tombolnya tidak bentrok */}
-    {todayActivity === "tka" && (
-       <div className="transition-all duration-500">
-          {/* Numeracy menangani submit-nya sendiri di dalam MathGame */}
-          <TKAChallengeCard formData={formData} setFormData={setFormData} />
-       </div>
-    )}
+        {/* Stats Grid */}
+        <div className="flex gap-4">
+          <StatBox icon={Timer} label="Waktu Pengerjaan" value={currentUI.time} color="indigo" />
+          <StatBox icon={HelpCircle} label="Total Pertanyaan" value={currentUI.items} color="pink" />
+        </div>
 
+        {/* Activity Container */}
+        <div className="space-y-6">
+          {isCompleted ? (
+             <SuccessState />
+          ) : (
+            <>
+              {/* Render Kartu Spesifik secara invisible/logic-only jika TKA */}
+              {todayActivity === "tka" && (
+                <TKAChallengeCard isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+              )}
+              {todayActivity === "numeracy" && (
+                <NumeracyChallengeCard isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+              )}
+              {todayActivity === "literacy" && (
+                <LiteracyChallengeCard isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+              )}
 
-  </div>
+              {/* Dynamic Start Button */}
+              <button 
+                onClick={handleActionTrigger}
+                disabled={loading}
+                className="w-full bg-indigo-600 text-white rounded-[2rem] p-2 flex items-center group shadow-xl relative overflow-hidden"
+              >
+                <div className="bg-white/20 p-5 rounded-full mr-4 transition-transform group-hover:scale-110">
+                  <Play fill="white" size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="text-xl font-bold">
+                    {/* SEKARANG DINAMIS MENGGUNAKAN currentUI */}
+                    {loading ? "Menyimpan..." : (currentUI.buttonLabel || "Mulai Latihan")}
+                  </p>
+                  <p className="text-indigo-100 text-xs">Start Practice Session</p>
+                </div>
+                <Rocket className="absolute right-6 opacity-20" size={40} />
+              </button>
+            </>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
+
+// Sub-components untuk kerapihan
+const StatBox = ({ icon: Icon, label, value, color }) => (
+  <div className={`bg-${color}-50/50 p-5 rounded-[2rem] flex flex-col gap-2 w-full`}>
+    <div className={`p-2 bg-${color}-600 text-white rounded-xl w-fit`}><Icon size={18} /></div>
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+    <p className="text-xl font-bold text-indigo-950">{value}</p>
+  </div>
+);
+
+const SuccessState = () => (
+  <div className="bg-emerald-100/50 border-2 border-dashed border-emerald-200 p-10 rounded-[2.5rem] text-center">
+    <Sparkles size={40} className="text-emerald-500 mx-auto mb-4" />
+    <h2 className="text-xl font-bold text-slate-800">Misi Selesai!</h2>
+    <Link to="/student" className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm mt-4">Kembali</Link>
+  </div>
+);

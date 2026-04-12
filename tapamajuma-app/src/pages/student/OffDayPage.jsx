@@ -28,7 +28,7 @@ const OffDayPage = () => {
         </div>
         
         <h2 className="text-4xl font-black text-slate-800 tracking-tight mb-4">
-          Selamat Hari Minggu! 
+          Happy Off Day!
         </h2>
         
         <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10">

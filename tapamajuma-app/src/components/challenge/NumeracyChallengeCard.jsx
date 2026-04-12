@@ -1,48 +1,29 @@
-import React, { useState } from "react";
+import React from "react";
 import MathGame from "@/components/games/MathGame";
-import { Calculator } from "lucide-react";
+import { button } from "framer-motion/client";
 
+// Metadata untuk dikonsumsi ChallengeForm
+export const NUMERACY_CONFIG = {
+  title: "Hari Numerasi",
+  desc: "Latihan logika matematika praktis untuk mengasah ketajaman berhitung sehari-hari dan pemecahan masalah kontekstual.",
+  time: "10 Menit",
+  items: "10 Soal",
+  themeColor: "orange",
+  buttonLabel: "Mulai Latihan"
+};
 
-export const NumeracyChallengeCard = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Jika sedang bermain, tampilkan Game
-  // Kita tidak lagi mengirim 'selectedSubject' karena pemilihan dilakukan di dalam game
+export const NumeracyChallengeCard = ({ isPlaying, setIsPlaying, onComplete }) => {
+  // Jika sedang bermain, tampilkan Game secara full screen overlay
   if (isPlaying) {
     return (
-      <MathGame 
-        onClose={() => setIsPlaying(false)} 
-      />
+      <div className="fixed inset-0 z-[100] bg-white">
+        <MathGame onClose={() => setIsPlaying(false)} />
+      </div>
     );
   }
 
-  return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-orange-100 space-y-6 animate-in slide-in-from-bottom-4">
-      <div>
-        <h2 className="text-xl font-bold text-orange-900 mb-2">Tantangan Numerasi</h2>
-        <p className="text-slate-500 text-sm">
-          Asah logika dan kecepatan berhitung kontekstual hari ini.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {/* BUTTON LANGSUNG MULAI GAME */}
-        <button
-          type="button"
-          onClick={() => setIsPlaying(true)}
-          className="w-full py-6 px-6 rounded-2xl bg-orange-50 text-orange-700 font-bold border-2 border-dashed border-orange-200 hover:bg-orange-100 flex flex-col items-center justify-center gap-2 transition-all active:scale-95"
-        >
-          <Calculator className="w-8 h-8" />
-          <div className="text-center">
-            <span className="block text-lg">Mulai Latihan Numerasi</span>
-            <span className="text-xs font-medium opacity-70">
-              Klik untuk memulai permainan
-            </span>
-          </div>
-        </button>
-      </div>
-    </div>
-  );
+  // Tampilan kartu minimalis (jika ada info tambahan di luar wrapper)
+  return null;
 };
 
 export default NumeracyChallengeCard;
