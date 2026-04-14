@@ -16,7 +16,7 @@ export const NumeracyChallengeCard = ({ isPlaying, setIsPlaying, onComplete }) =
   // Jika sedang bermain, tampilkan Game secara full screen overlay
   if (isPlaying) {
     return (
-      <div className="fixed inset-0 z-[100] bg-white">
+      <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
         <MathGame onClose={() => setIsPlaying(false)} />
       </div>
     );

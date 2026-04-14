@@ -288,7 +288,7 @@ export default function QuizEngine() {
     const currentQ = questions[currentIndex];
     
     return (
-      <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-start py-6 overflow-y-auto">
         <Card className="w-full max-w-md border-none shadow-2xl rounded-[32px] overflow-hidden bg-white">
           
           {/* Top Bar (Timer & Progress) Dinamis warnanya */}
@@ -345,7 +345,7 @@ export default function QuizEngine() {
   // 4. REFLECTION: HASIL & JURNAL
   if (gameState === "reflection") {
     return (
-      <div className={`min-h-screen p-6 flex flex-col items-center justify-start bg-slate-50`}>
+      <div className={`min-h-screen p-6 flex flex-col items-center justify-start bg-slate-50 overflow-y-auto`}>
         <div className="w-full max-w-md space-y-6 animate-in slide-in-from-bottom-8 duration-500 mb-6">
                 <div className="text-center space-y-2">
         <div className="inline-block p-4 bg-white rounded-full shadow-xl mb-2">
