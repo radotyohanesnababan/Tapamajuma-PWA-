@@ -9,7 +9,6 @@ const PROD_URL = "https://tapamajuma-api.my.id";
 const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
 const isDevelopment = import.meta.env.DEV;
 
-// ← Fix: di Capacitor selalu pakai PROD_URL, jangan pakai hostname
 const getEnvUrl = () => {
   if (Capacitor.isNativePlatform()) return PROD_URL;
   if (isDevelopment) {
@@ -19,12 +18,12 @@ const getEnvUrl = () => {
   return PROD_URL;
 };
 
-// ← Fix: pakai localStorage bukan sessionStorage (lebih persistent di Capacitor)
-const savedBaseUrl = !isDevelopment && !Capacitor.isNativePlatform()
-  ? localStorage.getItem("active_base_url")
-  : null;
+// Bagian ini di-comment agar tidak mengambil URL backup yang lama
+// const savedBaseUrl = !isDevelopment && !Capacitor.isNativePlatform()
+//   ? localStorage.getItem("active_base_url")
+//   : null;
 
-let currentBaseUrl = savedBaseUrl || getEnvUrl();
+let currentBaseUrl = getEnvUrl(); // Dipaksa selalu mulai dari DomCloud/Localhost
 
 const api = axios.create({
   baseURL: currentBaseUrl,
@@ -46,12 +45,9 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // ← TAMBAHKAN INI: cache buster untuk GET request saja
+    // Cache buster biar request-nya kelihatan terus di Network Tab
     if (config.method === 'get') {
-      config.params = {
-        ...config.params,
-        _t: Date.now()
-      }
+      config.params = { ...config.params, _t: Date.now() };
     }
 
     return config;
@@ -65,20 +61,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    // const originalRequest = error.config;
     const status = error.response ? error.response.status : null;
 
-    // Failover hanya di production web (bukan Capacitor)
+    /* --- LOGIC FAILOVER (OFF SEMENTARA) ---
     if (!isDevelopment && !Capacitor.isNativePlatform()) {
       const isUsingBackup = currentBaseUrl === BACKUP_URL;
       const isServerError = !error.response || (status >= 500 && status <= 599);
 
       if (!isUsingBackup && isServerError && !originalRequest._retry) {
-        console.warn("🚨 DOMCLOUD GANGGUAN. SWITCHING TO RENDER...");
+        console.warn("🚨 FAILOVER DIAKTIFKAN...");
         originalRequest._retry = true;
         currentBaseUrl = BACKUP_URL;
         api.defaults.baseURL = BACKUP_URL;
-        localStorage.setItem("active_base_url", BACKUP_URL); // ← ganti ke localStorage
+        // localStorage.setItem("active_base_url", BACKUP_URL); 
         toast.error("Server Utama gangguan. Dialihkan ke cadangan...", { duration: 10000 });
         originalRequest.baseURL = BACKUP_URL;
         if (originalRequest.url.startsWith("http")) {
@@ -87,6 +83,14 @@ api.interceptors.response.use(
         }
         return api(originalRequest);
       }
+    }
+    */
+
+    // Jika terjadi error, kita beri notifikasi toast biasa agar tahu ada masalah
+    if (!error.response) {
+      toast.error("Koneksi terputus atau server tidak merespon.");
+    } else if (status >= 500) {
+      toast.error(`Server Utama Error: ${status}`);
     }
 
     // Auto logout 401
