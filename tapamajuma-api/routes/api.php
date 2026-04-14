@@ -18,51 +18,32 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\LiteracyCardController;
 use App\Http\Controllers\Api\NisController;
-use App\Http\Controllers\Api\ReflectionController;
-use App\Http\Controllers\Api\ProfileController; // Tambahkan ini
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicDataController;
+use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\StudentQuizController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Teacher\CBTAdminController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\MandiriSessionController;
 use App\Http\Controllers\Teacher\MediaBankController;
+use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 use App\Http\Controllers\Teacher\QuestionBankController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\Teacher\CBTAdminController;
-use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
-
 
 /*
 |--------------------------------------------------------------------------
-| Share Routes
+| Public Routes (Tanpa Autentikasi)
 |--------------------------------------------------------------------------
 */
 
-Route::get('/public/gallery/{token}', [GalleryController::class, 'showPublic']);
-
-/*
-|--------------------------------------------------------------------------
-| Public Routes (Tanpa Login)
-|--------------------------------------------------------------------------
-*/
 Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
- Route::get('/bank-soal/template', [QuestionBankController::class, 'downloadTemplate']);
+Route::get('/public/gallery/{token}', [GalleryController::class, 'showPublic']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 
-
-Route::get('/debug-sentry', function () {
-    throw new Exception('My first Sentry error in Laravel!');
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Share Routes (Bisa diakses tanpa login, untuk keperluan share karya siswa)
-|--------------------------------------------------------------------------
-*/
-
+// Open Graph untuk share karya siswa
 Route::get('/share-og/{token}', function ($token) {
     $gallery = \App\Models\Gallery::with('user')
         ->where('share_token', $token)
@@ -80,18 +61,17 @@ Route::get('/share-og/{token}', function ($token) {
 
     $ownerName = $gallery->user->name ?? 'Siswa';
     $urlOrPath = $gallery->file_path;
-
-    $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/iconappp.png';
+    $imageUrl  = 'https://cdn.tapamajuma-api.my.id/images/iconappp.png';
 
     if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $urlOrPath, $matches)) {
         $imageUrl = "https://img.youtube.com/vi/{$matches[1]}/hqdefault.jpg";
     } elseif (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([-\w]+)/', $urlOrPath, $matches)) {
         $imageUrl = "https://lh3.googleusercontent.com/d/{$matches[1]}=w1200";
-    } elseif (strpos($urlOrPath, 'instagram.com') !== false) {
+    } elseif (str_contains($urlOrPath, 'instagram.com')) {
         $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/ig-pld.png';
-    } elseif (strpos($urlOrPath, 'facebook.com') !== false || strpos($urlOrPath, 'fb.watch') !== false) {
+    } elseif (str_contains($urlOrPath, 'facebook.com') || str_contains($urlOrPath, 'fb.watch')) {
         $imageUrl = 'https://cdn.tapamajuma-api.my.id/images/fb-pld.png';
-    } elseif (strpos($urlOrPath, 'tiktok.com') !== false) {
+    } elseif (str_contains($urlOrPath, 'tiktok.com')) {
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(3)
                 ->get('https://www.tiktok.com/oembed?url=' . $urlOrPath);
@@ -120,167 +100,211 @@ Route::get('/share-og/{token}', function ($token) {
 });
 
 
+
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| Auth Routes (Google OAuth)
 |--------------------------------------------------------------------------
 */
 
-// Jalur Login Google
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 
-Route::middleware('auth:sanctum',)->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Auth & User
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', fn(Request $request) => $request->user());
     Route::post('/auth/complete-profile', [GoogleController::class, 'completeProfile']);
-    // Endpoint untuk Claim NISN
     Route::post('/claim-nis', [NisController::class, 'claimNis']);
-    
-    // --- KHUSUS SISWA ---
+
+
+    /*
+    |----------------------------------------------------------------------
+    | Siswa
+    |----------------------------------------------------------------------
+    */
+
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::get('/activities', [DailyActivityController::class, 'index']);
-    Route::post('/activities', [DailyActivityController::class, 'store']);
-    Route::get('/activities/today-status', [DailyActivityController::class, 'checkStatus']);
-    Route::post('/generate-content', [ApiAIController::class, 'generate']);
-
-    //Fitur Quiz Numerasi & Literasi
-    // GET: Ambil daftar Mapel Numerasi
-        Route::get('/quiz/subjects', [StudentQuizController::class, 'getSubjects']);
-        Route::get('/quiz/literacy-subjects', [LiteracyCardController::class, 'index']); // Tambahkan route ini untuk mengambil literacy cards
-        
-        // GET: Ambil Soal (Ini yang error "Not Found" tadi)
-        Route::get('/quiz/questions', [StudentQuizController::class, 'getQuestions']);
-        
-        // POST: Submit Jawaban
-        Route::post('/quiz/submit', [StudentQuizController::class, 'submit']);
-    
-    // Fitur Refleksi & Sosial (Aksi Mingguan)
-    Route::post('/reflections', [ReflectionController::class, 'store']);
-    Route::get('/peer-feed', [ReflectionController::class, 'getPeerFeed']);
-    Route::post('/reflections/{id}/peer-feedback', [ReflectionController::class, 'storePeerFeedback']);
-
-    // Fitur Galeri Karya (Aksi C.1)
-    Route::get('/galleries', [GalleryController::class, 'index']);
-    Route::post('/galleries', [GalleryController::class, 'store']);
-    Route::post('/galleries/{id}/share', [GalleryController::class, 'share']);
-
-   
-    Route::middleware(['auth:sanctum', 'check.seb'])->group(function () {
-        
-        Route::post('cbt/start', [CBTController::class, 'startExam']);
-        Route::post('cbt/update-answer', [CBTController::class, 'updateAnswer']);
-        Route::post('cbt/submit', [CBTController::class, 'submitExam']);
-        Route::post('cbt/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
-        
-        // Tambahkan rute CBT lainnya yang butuh keamanan tinggi di sini
-    });
-
-    // --- OTHER MENU & PROFILE (Aksi C.2) ---
-    // Route ini digunakan siswa untuk edit mandiri dan melihat ringkasan presentasi
     Route::get('/summary', [ProfileController::class, 'getSummary']);
     Route::post('/user/profile-update', [ProfileController::class, 'update']);
+    Route::post('/generate-content', [ApiAIController::class, 'generate']);
 
-    // --- KHUSUS GURU  ---
-    Route::prefix('teacher')->group(function () {
-
-        Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
-        Route::get('/stats', [TeacherDashboardController::class, 'getTeacherStats']);
-        Route::get('/my-classes', [MandiriSessionController::class, 'getMyClasses']);
-        
-
-        //Route Galeri Siswa Dilihat oleh Guru (Aksi C.1)
-        Route::get('/galleries', [GalleryController::class, 'indexfortc']);
-        Route::delete('/galleries/{id}', [GalleryController::class, 'destroy']);
-
-        // Route khusus guru untuk memberi feedback (Aksi B.2)
-        Route::get('/reflections', [ReflectionController::class, 'getStudentReflections']);
-        Route::post('/reflections/{id}/feedback', [ReflectionController::class, 'giveFeedback']);
-
-            Route::get('cbt/exams', [CBTAdminController::class, 'index']); // Daftar paket
-            Route::post('cbt/exams', [CBTAdminController::class, 'store']); // Buat paket baru
-            Route::delete('cbt/exams/{id}', [CBTAdminController::class, 'destroy']); // Hapus paket
-            Route::get('cbt/options', [CBTAdminController::class, 'getOptions']);
-            Route::get('cbt/question-bank', [CBTAdminController::class, 'getQuestionBank']);
-            Route::get('cbt/exams/{id}/preview', [CBTAdminController::class, 'getPreview']);
-            ROute ::get('cbt/exams/{id}/results', [CBTAdminController::class, 'getResults']);
-            // Action khusus token & status
-            Route::post('cbt/exams/{id}/release-token', [CBTAdminController::class, 'releaseToken']);
-            Route::post('cbt/exams/{id}/close', [CBTAdminController::class, 'closeExam']);
-
-        // Fleksibilitas: Guru/Admin bisa mengedit profil siswa jika diperlukan
-        Route::put('/user-update/{id}', [ProfileController::class, 'update']);
-        Route::get('/student-summary/{id}', [ProfileController::class, 'getSummary']);
-
-        // Route Guru Bank Soal
-    Route::get('/bank-soal', [QuestionBankController::class, 'index']);
-    Route::post('/bank-soal', [QuestionBankController::class, 'store']);
-    Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
-    Route::delete('/bank-soal/{id}', [QuestionBankController::class, 'destroy']);
-    Route::get('/bank-soal/template', [QuestionBankController::class, 'downloadTemplate']);
-    Route::get('/media-bank', [MediaBankController::class, 'index']);
-    Route::post('/media-bank', [MediaBankController::class, 'store']);
-    Route::delete('/media-bank/{id}', [MediaBankController::class, 'destroy']);
-    // Route Import
-    Route::post('/bank-soal/import', [QuestionBankController::class, 'import']);
-        // Cetak Aktivitas Sesi (Aksi B.3)
-    Route::get('/print-session', [TeacherPrintSessionController::class, 'getMorningSession']);
-    Route::get('/accessible-classes', [TeacherPrintSessionController::class, 'getAccessibleClasses']);
+    // Aktivitas Harian
+    Route::prefix('activities')->group(function () {
+        Route::get('/', [DailyActivityController::class, 'index']);
+        Route::post('/', [DailyActivityController::class, 'store']);
+        Route::get('/today-status', [DailyActivityController::class, 'checkStatus']);
     });
 
+    // Quiz Numerasi & Literasi
+    Route::prefix('quiz')->group(function () {
+        Route::get('/subjects', [StudentQuizController::class, 'getSubjects']);
+        Route::get('/literacy-subjects', [LiteracyCardController::class, 'index']);
+        Route::get('/questions', [StudentQuizController::class, 'getQuestions']);
+        Route::post('/submit', [StudentQuizController::class, 'submit']);
+    });
 
-    // [BARU] 2. Ambil Siswa (Sesuai React: /api/students?class=7A)
+    // Refleksi & Sosial
+    Route::prefix('reflections')->group(function () {
+        Route::post('/', [ReflectionController::class, 'store']);
+        Route::get('/peer-feed', [ReflectionController::class, 'getPeerFeed']);
+        Route::post('/{id}/peer-feedback', [ReflectionController::class, 'storePeerFeedback']);
+    });
+
+    // Galeri Karya Siswa
+    Route::prefix('galleries')->group(function () {
+        Route::get('/', [GalleryController::class, 'index']);
+        Route::post('/', [GalleryController::class, 'store']);
+        Route::post('/{id}/share', [GalleryController::class, 'share']);
+    });
+
+    // CBT Siswa (butuh middleware SEB)
+    Route::middleware('check.seb')->prefix('cbt')->group(function () {
+        Route::post('/start', [CBTController::class, 'startExam']);
+        Route::post('/update-answer', [CBTController::class, 'updateAnswer']);
+        Route::post('/submit', [CBTController::class, 'submitExam']);
+        Route::post('/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
+    });
+
+    // Presensi Mandiri
     Route::get('/students', [MandiriSessionController::class, 'getStudents']);
-
-    // [BARU] 3. Simpan Presensi (Sesuai React: /api/self-study/store)
     Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
 
 
+    /*
+    |----------------------------------------------------------------------
+    | Guru
+    |----------------------------------------------------------------------
+    */
 
-    // --- KHUSUS ADMIN  ---
-    Route::prefix('admin')->group(function () {
-        Route::get('/student-summary', [AdminController::class, 'getStudentSummary']);
-        Route::apiResource('teachers', AdminTeacherMgmtController::class);
-        Route::apiResource('classes', ClassMgmtController::class);
-        Route::apiResource('students', StudentMgmtController::class);
-        Route::apiResource('subjects', SubjectMgmtController::class);
-        Route::get('/questions', [QuestionMgmtController::class, 'index']);
-        Route::delete('/questions/{id}', [QuestionMgmtController::class, 'destroy']);
-        Route::post('/stimport', [StudentMgmtController::class, 'import']);
-        Route::post('/tcimport', [AdminTeacherMgmtController::class, 'import']);
-        Route::get('/templates/download-template-student', [StudentMgmtController::class, 'downloadTemplateStudent']);
-        Route::get('/templates/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
-        Route::post('/changelog', [ChangelogController::class, 'store']);
-        Route::get('/changelog/all', [ChangelogController::class, 'index']);
-        
-        // Route untuk laporan aktivitas 
-        Route::get('/activity-report/executive', [ReportController::class, 'executiveSummary']);
-        Route::get('/activity-report/session', [ReportController::class, 'sessionEffectiveness']);
-        Route::get('/activity-report/student', [ReportController::class, 'studentLog']);
-        Route::get('/activity-report/student-details/{id}', [ReportController::class, 'studentActivityDetails']);
-        Route::get('/activity-report/class-summary', [ReportController::class, 'classSummary']);
-        Route::get('/activity-report/class-ranking/{classId}', [ReportController::class, 'classRanking']);
-        Route::get('/activity-report/teacher-summary', [ReportController::class, 'teacherSummary']);
-        Route::get('/activity-report/pdf/', [ReportController::class, 'downloadFullReport']);
-        Route::get('/activity-report/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);
-        Route::get('/activity-report/morning-session-details/{student_id}', [MorningSessionController::class, 'getStudentSummary']);
-        
-        Route::get('nis', [ControllersAdminNisController::class, 'index']);
-        Route::get('nis/template', [ControllersAdminNisController::class, 'downloadTemplate']);
-        Route::post('nis/import', [ControllersAdminNisController::class, 'import']);
-        Route::post('nis/{id}/unbind', [ControllersAdminNisController::class, 'unbind']);
+    Route::prefix('teacher')->group(function () {
 
-        Route::get('/announcements', [AnnouncementController::class, 'index']);
-        Route::post('/announcements', [AnnouncementController::class, 'store']);
-        Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
-        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+        // Dashboard & Kelas
+        Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
+        Route::get('/stats', [TeacherDashboardController::class, 'getTeacherStats']);
+        Route::get('/my-classes', [MandiriSessionController::class, 'getMyClasses']);
+        Route::get('/accessible-classes', [TeacherPrintSessionController::class, 'getAccessibleClasses']);
+        Route::get('/print-session', [TeacherPrintSessionController::class, 'getMorningSession']);
 
+        // Profil Siswa (oleh Guru)
+        Route::get('/student-summary/{id}', [ProfileController::class, 'getSummary']);
+        Route::put('/user-update/{id}', [ProfileController::class, 'update']);
 
+        // Galeri (view & moderasi)
+        Route::get('/galleries', [GalleryController::class, 'indexfortc']);
+        Route::delete('/galleries/{id}', [GalleryController::class, 'destroy']);
 
-    
+        // Refleksi & Feedback
+        Route::get('/reflections', [ReflectionController::class, 'getStudentReflections']);
+        Route::post('/reflections/{id}/feedback', [ReflectionController::class, 'giveFeedback']);
+
+        // Bank Soal
+        Route::prefix('bank-soal')->group(function () {
+            Route::get('/', [QuestionBankController::class, 'index']);
+            Route::post('/', [QuestionBankController::class, 'store']);
+            Route::post('/import', [QuestionBankController::class, 'import']);
+            Route::get('/template', [QuestionBankController::class, 'downloadTemplate']);
+            Route::delete('/{id}', [QuestionBankController::class, 'destroy']);
+        });
+
+        // Media Bank
+        Route::prefix('media-bank')->group(function () {
+            Route::get('/', [MediaBankController::class, 'index']);
+            Route::post('/', [MediaBankController::class, 'store']);
+            Route::delete('/{id}', [MediaBankController::class, 'destroy']);
+        });
+
+        // CBT (Manajemen Ujian oleh Guru)
+        Route::prefix('cbt')->group(function () {
+            Route::get('/options', [CBTAdminController::class, 'getOptions']);
+            Route::get('/question-bank', [CBTAdminController::class, 'getQuestionBank']);
+
+            Route::prefix('exams')->group(function () {
+                Route::get('/', [CBTAdminController::class, 'index']);
+                Route::post('/', [CBTAdminController::class, 'store']);
+                Route::delete('/{id}', [CBTAdminController::class, 'destroy']);
+                Route::get('/{id}/preview', [CBTAdminController::class, 'getPreview']);
+                Route::get('/{id}/results', [CBTAdminController::class, 'getResults']);
+                Route::post('/{id}/release-token', [CBTAdminController::class, 'releaseToken']);
+                Route::post('/{id}/close', [CBTAdminController::class, 'closeExam']);
+            });
+        });
     });
 
+
+    /*
+    |----------------------------------------------------------------------
+    | Admin
+    |----------------------------------------------------------------------
+    */
+
+    Route::prefix('admin')->group(function () {
+
+        // Manajemen Pengguna
+        Route::apiResource('teachers', AdminTeacherMgmtController::class);
+        Route::apiResource('students', StudentMgmtController::class);
+        Route::apiResource('classes', ClassMgmtController::class);
+        Route::apiResource('subjects', SubjectMgmtController::class);
+
+        // Import Data
+        Route::post('/stimport', [StudentMgmtController::class, 'import']);
+        Route::post('/tcimport', [AdminTeacherMgmtController::class, 'import']);
+
+        // Template Download
+        Route::prefix('templates')->group(function () {
+            Route::get('/download-template-student', [StudentMgmtController::class, 'downloadTemplateStudent']);
+            Route::get('/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
+        });
+
+        // Ringkasan Siswa
+        Route::get('/student-summary', [AdminController::class, 'getStudentSummary']);
+
+        // Manajemen Soal
+        Route::get('/questions', [QuestionMgmtController::class, 'index']);
+        Route::delete('/questions/{id}', [QuestionMgmtController::class, 'destroy']);
+
+        // NIS / NISN
+        Route::prefix('nis')->group(function () {
+            Route::get('/', [ControllersAdminNisController::class, 'index']);
+            Route::get('/template', [ControllersAdminNisController::class, 'downloadTemplate']);
+            Route::post('/import', [ControllersAdminNisController::class, 'import']);
+            Route::post('/{id}/unbind', [ControllersAdminNisController::class, 'unbind']);
+        });
+
+        // Pengumuman
+        Route::prefix('announcements')->group(function () {
+            Route::get('/', [AnnouncementController::class, 'index']);
+            Route::post('/', [AnnouncementController::class, 'store']);
+            Route::put('/{id}', [AnnouncementController::class, 'update']);
+            Route::delete('/{id}', [AnnouncementController::class, 'destroy']);
+        });
+
+        // Changelog
+        Route::prefix('changelog')->group(function () {
+            Route::get('/all', [ChangelogController::class, 'index']);
+            Route::post('/', [ChangelogController::class, 'store']);
+        });
+
+        // Laporan Aktivitas
+        Route::prefix('activity-report')->group(function () {
+            Route::get('/executive', [ReportController::class, 'executiveSummary']);
+            Route::get('/session', [ReportController::class, 'sessionEffectiveness']);
+            Route::get('/student', [ReportController::class, 'studentLog']);
+            Route::get('/student-details/{id}', [ReportController::class, 'studentActivityDetails']);
+            Route::get('/class-summary', [ReportController::class, 'classSummary']);
+            Route::get('/class-ranking/{classId}', [ReportController::class, 'classRanking']);
+            Route::get('/teacher-summary', [ReportController::class, 'teacherSummary']);
+            Route::get('/pdf', [ReportController::class, 'downloadFullReport']);
+            Route::get('/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);
+            Route::get('/morning-session-details/{student_id}', [MorningSessionController::class, 'getStudentSummary']);
+        });
+    });
 });

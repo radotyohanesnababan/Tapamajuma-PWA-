@@ -233,7 +233,7 @@ export default function QuizEngine() {
   // 1. MENU: PILIH MAPEL
   if (gameState === "menu") {
     return (
-      <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center justify-center">
+<div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center justify-start py-10">
         <div className="w-full max-w-md space-y-8 animate-in zoom-in duration-300">
           <div className="text-center space-y-2">
              <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-2 border border-slate-100">
@@ -274,7 +274,7 @@ export default function QuizEngine() {
   // 2. LOADING SCORE
   if (gameState === "calculating") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-start py-6 bg-slate-900">
         <div className={`text-white text-center space-y-4 animate-pulse ${activeTheme.colors.text}`}>
            <ActiveIcon size={64} className="mx-auto"/>
            <h2 className="text-2xl font-bold text-white">Menghitung Skor...</h2>
@@ -345,9 +345,8 @@ export default function QuizEngine() {
   // 4. REFLECTION: HASIL & JURNAL
   if (gameState === "reflection") {
     return (
-      <div className={`min-h-screen p-6 flex flex-col items-center py-10 bg-slate-50`}>
-        <div className="w-full max-w-md space-y-6 animate-in slide-in-from-bottom-8 duration-500">
-          
+      <div className={`min-h-screen p-6 flex flex-col items-center justify-start bg-slate-50`}>
+        <div className="w-full max-w-md space-y-6 animate-in slide-in-from-bottom-8 duration-500 mb-6">
                 <div className="text-center space-y-2">
         <div className="inline-block p-4 bg-white rounded-full shadow-xl mb-2">
           <Trophy size={48} className={
