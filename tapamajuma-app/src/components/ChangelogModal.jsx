@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import DOMPurify from "dompurify";
 import api from '@/lib/axios'; // Sesuaikan path axios kamu
 
 // Helper untuk memilih warna & icon berdasarkan tipe update
@@ -122,7 +123,9 @@ export default function ChangelogModal() {
                                 </div>
                                     <p 
                                     className="text-sm text-slate-600 leading-relaxed"
-                                    dangerouslySetInnerHTML={{ __html: item.text }}
+                                                                        dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(item.text)
+                                    }}
                                 />
                             </div>
                         </div>

@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Clock, ChevronLeft, ChevronRight, Send, AlertTriangle, Monitor } from 'lucide-react';
 import api from '@/lib/axios'; 
 import { toast } from 'sonner';
+import DOMPurify from "dompurify"; // Import DOMPurify untuk sanitasi HTML
 
 // 1. Tambahkan props { examData, onFinish }
 const CBTExam = ({ examData, onFinish }) => {
@@ -151,7 +152,7 @@ const handleSelect = (label) => {
           </div>
           <div 
             className={`font-bold transition-colors ${isSelected ? 'text-blue-800' : 'text-slate-600'}`} 
-            dangerouslySetInnerHTML={{ __html: value }} 
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }} 
           />
         </button>
       );
@@ -195,7 +196,7 @@ const handleSelect = (label) => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
-            <div className="text-xl text-slate-800 leading-relaxed mb-10 font-medium" dangerouslySetInnerHTML={{ __html: currentQ?.question_text }} />
+            <div className="text-xl text-slate-800 leading-relaxed mb-10 font-medium" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentQ?.question_text) }} />
             
             <div className="grid grid-cols-1 gap-3 max-w-3xl">
             {renderOptions()}

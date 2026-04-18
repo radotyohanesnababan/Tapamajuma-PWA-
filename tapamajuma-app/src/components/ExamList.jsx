@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Trash2, Eye, RefreshCw, X, Check, FileText, MonitorPlay, BarChart2 } from 'lucide-react';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
+import DOMPurify from "dompurify";
 
 const ExamList = ({ setView, setActiveExam }) => {
   const [exams, setExams] = useState([]);
@@ -170,7 +171,7 @@ const ExamList = ({ setView, setActiveExam }) => {
                            <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg uppercase">{q.type}</span>
                         </div>
                       </div>
-                      <div className="text-slate-800 text-lg leading-relaxed font-medium mb-8" dangerouslySetInnerHTML={{ __html: q.question_text }} />
+                      <div className="text-slate-800 text-lg leading-relaxed font-medium mb-8" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(q.question_text) }} />
                       {q.options && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {Object.entries(typeof q.options === 'string' ? JSON.parse(q.options) : q.options).map(([key, value]) => (

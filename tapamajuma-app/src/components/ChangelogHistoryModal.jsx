@@ -18,6 +18,7 @@ import {
     Loader2 
 } from "lucide-react";
 import api from '@/lib/axios';
+import DOMPurify from "dompurify";
 
 // Helper Warna (Sama seperti sebelumnya)
 const getTypeConfig = (type) => {
@@ -119,7 +120,9 @@ export default function ChangelogHistoryModal() {
                                                         </div>
                                                                                                             <span 
                                                             className="text-slate-600 leading-snug"
-                                                            dangerouslySetInnerHTML={{ __html: change.text }}
+                                                                dangerouslySetInnerHTML={{
+                                                                        __html: DOMPurify.sanitize(change.text)
+                                                                    }}
                                                         />
                                                     </div>
                                                 );

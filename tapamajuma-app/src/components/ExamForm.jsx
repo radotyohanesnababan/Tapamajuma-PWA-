@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Save, ListChecks, Shuffle, Filter, Search, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/axios';
+import DOMPurify from "dompurify";
 
 const ExamForm = ({ setView }) => {
   const [loading, setLoading] = useState(false);
@@ -267,7 +268,7 @@ const ExamForm = ({ setView }) => {
                           <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded">{q.type}</span>
                           <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded">{q.subject?.name}</span>
                         </div>
-                        <div className="text-slate-700 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: q.question_text }} />
+                        <div className="text-slate-700 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(q.question_text) }} />
                      </div>
                    </div>
                  )
