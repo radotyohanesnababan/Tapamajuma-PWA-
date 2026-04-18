@@ -14,6 +14,10 @@ import {
   Calendar
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+
+
+
 
 // ================= THEME CONFIGURATION =================
 const GAME_MODES = {
@@ -76,6 +80,7 @@ const getTodayMode = () => {
 // ================= MAIN COMPONENT =================
 export default function QuizEngine() {
   const navigate = useNavigate();
+  const {refreshUser} = useAuth();
   
   // Otomatis tentukan mode dari hari ini
   const [mode] = useState(getTodayMode());
@@ -87,6 +92,7 @@ export default function QuizEngine() {
   const ActiveIcon = activeTheme.icon;
 
   // --- STATE ---
+  
   const [gameState, setGameState] = useState("menu");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -205,6 +211,8 @@ export default function QuizEngine() {
         journal: journal,
         reading_content: `Latihan Soal ${activeTheme.title} - ${selectedSubject.name}`
       });
+
+      await refreshUser();
 
       toast.success("Latihan selesai! Hebat!");
       setIsRevealed(true);

@@ -24,6 +24,7 @@ export default function StudentDashboard() {
   
   // --- STATES ---
   const [activities, setActivities] = useState([]);
+  const [totalActivities, setTotalActivities] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [announcementText, setAnnouncementText] = useState("");
   const [isNisValid, setIsNisValid] = useState(true);
@@ -87,7 +88,10 @@ export default function StudentDashboard() {
       // Fetch activities terpisah jika NIS sudah ada
       if (user.nis) {
         api.get("/api/activities")
-          .then((res) => setActivities(res.data))
+          .then((res) => {
+            setActivities(res.data.data);
+            setTotalActivities(res.data.total);
+          })
           .catch((err) => console.error(err));
       }
     }
@@ -133,10 +137,10 @@ export default function StudentDashboard() {
     ); 
   }
 
-  const chartData = activities.map((act, index) => ({
+  const chartData = (activities || []).map((act, index) => ({
     name: `Aksi ${index + 1}`,
     skor: act.score,
-    yakin: act.confidence_level * 20, 
+    yakin: act.confidence_level * 20,
   }));
 
   const levelInfo = (lvl) => {
@@ -275,7 +279,7 @@ export default function StudentDashboard() {
                 <CardTitle className="text-[10px] font-bold uppercase opacity-80">Total Aksi</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-1">
-                <p className="text-3xl font-black">{activities.length}</p>
+                <p className="text-3xl font-black">{totalActivities}</p>
                 <p className="text-[9px] mt-1 opacity-80 italic">Hebat! Terus tingkatkan.</p>
             </CardContent>
           </Card>

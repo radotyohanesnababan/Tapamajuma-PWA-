@@ -1,44 +1,31 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs; // boleh tetap, tapi idealnya pindah ke App\Services
 
 use App\Models\DailyActivity;
 use App\Models\User;
 use App\Services\XpService;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class SimpanAktivitasSiswa implements ShouldQueue
+class SimpanAktivitasSiswa
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    protected array $data;
-
-    public function __construct(array $data)
-    {
-        $this->data = $data;
-    }
-
-    public function handle(): void
+    public static function handle(array $data): DailyActivity
     {
         try {
-            // 1. Simpan aktivitas ke database
-            $activity = DailyActivity::create($this->data);
+            // 1. Simpan aktivitas
+            $activity = DailyActivity::create($data);
 
-            $user = User::find($this->data['user_id']);
+            // 2. Ambil user dari relasi (lebih efisien)
+            $user = $activity->user;
 
             if ($user) {
-                // 2. Hitung XP baru dengan formula score × multiplier confidence
-                $score      = (int) ($this->data['score'] ?? 0);
-                $confidence = (int) ($this->data['confidence_level'] ?? 3);
+                // 3. Hitung XP
+                $score      = (int) ($activity->score ?? 0);
+                $confidence = (int) ($activity->confidence_level ?? 3);
 
                 $xp = XpService::fromActivity($score, $confidence);
 
-                // 3. Berikan XP ke siswa + catat log
+                // 4. Award XP
                 XpService::award(
                     userId:   $user->id,
                     xp:       $xp,
@@ -46,22 +33,28 @@ class SimpanAktivitasSiswa implements ShouldQueue
                     sourceId: $activity->id,
                 );
 
-                // 4. Hitung ulang level dari logika lama (tetap dipertahankan)
-                $totalXp       = $user->dailyActivities()->sum('score');
-                $literacyBonus = $user->dailyActivities()->where('type', 'literacy')->count() * 10;
-                $finalXp       = $totalXp + $literacyBonus;
-                $newLevel      = floor($finalXp / 100) + 1;
+                // 5. Hitung ulang level (sementara pakai cara lama)
+                $totalXp = $user->dailyActivities()->sum('score');
+
+                $literacyBonus = $user->dailyActivities()
+                    ->where('type', 'literacy')
+                    ->count() * 10;
+
+                $finalXp  = $totalXp + $literacyBonus;
+                $newLevel = floor($finalXp / 100) + 1;
 
                 if ($user->level != $newLevel) {
                     $user->level = $newLevel;
                     $user->save();
                 }
 
-                Log::info("XP awarded: user_id={$user->id} xp={$xp} level={$user->level} source=daily_activity activity_id={$activity->id}");
+                Log::info("XP awarded: user_id={$user->id} xp={$xp} level={$user->level} activity_id={$activity->id}");
             }
 
+            return $activity;
+
         } catch (\Exception $e) {
-            Log::error('SimpanAktivitasSiswa Job Error: ' . $e->getMessage());
+            Log::error('SimpanAktivitasSiswa Service Error: ' . $e->getMessage());
             throw $e;
         }
     }
