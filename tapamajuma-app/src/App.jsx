@@ -20,6 +20,8 @@ import SebPage from "./pages/SebPage";
 import GuestGuard from './components/GuestGuard';
 import SharedGallery from './pages/SharedGallery';
 import CBTManager from './pages/student/CBTManager';
+import Certificate from './pages/student/Certificate';
+import CertificateManagement from './pages/superadmin/CertificateManagement';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
@@ -144,6 +146,7 @@ function App() {
               <Route path="galeri" element={<GalleryStudent />} />
               <Route path="other" element={<OtherMenu />} />
               <Route path="presentation" element={<PresentationPage />} />
+              <Route path="certificates" element={<Certificate />} />
             </Route>
 
             {/* GRUP 2: HALAMAN GURU */}
@@ -207,6 +210,7 @@ function App() {
               <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
               <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
               <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
+              <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
               
               {/* GRUP 4.1: Laporan */}
               <Route path="activity-report/executive" element={<ExecutiveReport />} />

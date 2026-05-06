@@ -68,19 +68,18 @@ export default function OtherMenu() {
     },
     {
       title: "Siap Presentasi",
-      subtitle: "Laporan bulanan kamu (Aksi C.2)",
+      subtitle: "Laporan bulanan kamu",
       icon: <Presentation className="text-indigo-500" size={22} />,
       path: "/student/presentation",
       color: "bg-indigo-50",
-      badge: "C.2"
     },
     {
         title: "Koleksi Sertifikat",
-        subtitle: "Apresiasi atas kerja kerasmu",
+        subtitle: "Apresiasi atas kerja kerasmu!",
         icon: <Award className="text-amber-500" size={22} />,
         path: "/student/certificates",
         color: "bg-amber-50",
-        isComingSoon: true
+        badge: "Baru!"
     }
   ];
 
@@ -115,7 +114,7 @@ export default function OtherMenu() {
 
       {/* MENU LIST */}
       <div className="space-y-3">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-3 mb-4">Misi & Akun</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-3 mb-4">Pengaturan Akun</p>
         
         {menuItems.map((item, index) => (
           <Card 

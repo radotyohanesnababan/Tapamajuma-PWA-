@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\ChangelogController;
 use App\Http\Controllers\Admin\ClassMgmtController;
 use App\Http\Controllers\Admin\MorningSessionController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Admin\SubjectMgmtController;
 use App\Http\Controllers\Admin\TeacherMgmtController as AdminTeacherMgmtController;
 use App\Http\Controllers\Api\AIController as ApiAIController;
 use App\Http\Controllers\Api\CBTController;
+use App\Http\Controllers\Api\CertificateStudentController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
@@ -174,6 +176,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/verify-token-only', [CBTController::class, 'verifyTokenByCode']);
     });
 
+    //Sertifikat Siswa
+    Route::get('/certificates', [CertificateStudentController::class, 'index']);
+    Route::get('/certificates/{certificate}/download', [CertificateStudentController::class, 'download']);
+
     // Presensi Mandiri
     Route::get('/students', [MandiriSessionController::class, 'getStudents']);
     Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
@@ -262,6 +268,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('templates')->group(function () {
             Route::get('/download-template-student', [StudentMgmtController::class, 'downloadTemplateStudent']);
             Route::get('/download-template-teacher', [AdminTeacherMgmtController::class, 'downloadTemplateTeacher']);
+        });
+        // routes/api.php — grup admin
+        Route::prefix('certificates')->group(function () {
+            Route::get('/',                          [CertificateController::class, 'index']);
+            Route::post('/preview',                  [CertificateController::class, 'preview']);
+            Route::post('/generate',                 [CertificateController::class, 'generate']);
+            Route::get('/{batch}',                   [CertificateController::class, 'show']);
+            Route::post('/{batch}/mark-printed',     [CertificateController::class, 'markPrinted']);
+            Route::post('/{batch}/release',          [CertificateController::class, 'release']);
+            Route::post('/{batch}/generate-pdf', [CertificateController::class, 'generatePdf']);
+            Route::delete('/{batch}', [CertificateController::class, 'destroyBatch']);
+            Route::get('/cert/{certificate}/download', [CertificateController::class, 'download']);
+            Route::get('/verify/{certificate}', [CertificateController::class, 'verify'])->name('certificates.verify')->withoutMiddleware(['auth']);
         });
 
         // Ringkasan Siswa

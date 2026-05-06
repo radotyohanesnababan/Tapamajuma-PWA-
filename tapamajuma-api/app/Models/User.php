@@ -10,6 +10,7 @@ use App\Models\DailyActivity;
 use App\Models\ClassName;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -126,6 +127,10 @@ public function classes()
         ClassName::class,           // Model
         'class_id',
     )->withTimestamps();            // Opsional
+}
+public function classNameforCertificate(): BelongsTo
+{
+    return $this->belongsTo(ClassName::class, 'class_id');
 }
 
 
