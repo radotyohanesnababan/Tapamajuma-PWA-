@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Certificate extends Model
 {
     protected $fillable = [
-    'batch_id', 'nis', 'type', 'scope', 'scope_value',
+    'batch_id', 'user_id', 'type', 'scope', 'scope_value',
     'rank', 'score_label', 'period_label',  // ← tambah ini
     'start_date', 'end_date',
     'pdf_path', 'blockchain_tx',
@@ -23,7 +23,7 @@ class Certificate extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'nis', 'nis');
+        return $this->belongsTo(User::class);
     }
 
     public function isReleased(): bool

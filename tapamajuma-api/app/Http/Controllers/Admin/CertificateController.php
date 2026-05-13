@@ -137,9 +137,9 @@ class CertificateController extends Controller
             foreach ($entries as $index => $entry) {
                 Certificate::create([
                     'batch_id'    => $batch->id,
-                    'nis'     => is_array($entry)
-                        ? $entry['nis']
-                        : $entry->nis,
+                    'user_id' => is_array($entry)
+                    ? User::where('nis', $entry['nis'])->value('id')
+                    : $entry->id,
                     'type'        => $request->type,
                     'scope'       => $request->scope,
                     'scope_value' => $request->scope_value,
@@ -216,9 +216,7 @@ public function release(CertificateBatch $batch)
     // ============================================================
     public function show(CertificateBatch $batch)
     {
-        $batch->load(['certificates.user:id,name,avatar,class_id',
-                      'certificates.user.classNameforCertificate:id,name']);
-
+        $batch->load(['certificates.user', 'certificates.user.classNameforCertificate']);
         return response()->json(['data' => $batch]);
     }
 
@@ -238,7 +236,7 @@ public function release(CertificateBatch $batch)
         // Base query — selalu join class_names
         $base = fn() => User::where('users.role', 'student')
             ->join('class_names', 'users.class_id', '=', 'class_names.id')
-            ->select('users.id', 'users.name', 'class_names.name as class_name');
+            ->select('users.nis', 'users.id', 'users.name', 'class_names.name as class_name');
 
         // Filter scope
         $applyScope = function ($query) use ($scope, $scopeValue) {
