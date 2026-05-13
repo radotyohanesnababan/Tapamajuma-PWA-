@@ -54,8 +54,8 @@ class CertificateController extends Controller
             'type'        => 'required|in:' . implode(',', self::TYPES),
             'scope'       => 'required|in:' . implode(',', self::SCOPES),
             'scope_value' => 'nullable|string',
-            'start_date'  => 'required_unless:type,manual|date',
-            'end_date'    => 'required_unless:type,manual|date|after_or_equal:start_date',
+            'start_date'   => 'required_unless:type,manual|nullable|date',
+            'end_date'     => 'required_unless:type,manual|nullable|date|after_or_equal:start_date',
             'limit'       => 'integer|min:1|max:10',
         ]);
 
@@ -88,13 +88,13 @@ class CertificateController extends Controller
             'type'         => 'required|in:' . implode(',', self::TYPES),
             'scope'        => 'required|in:' . implode(',', self::SCOPES),
             'scope_value'  => 'nullable|string',
-            'start_date'   => 'required_unless:type,manual|date',
-            'end_date'     => 'required_unless:type,manual|date|after_or_equal:start_date',
+            'start_date'   => 'required_unless:type,manual|nullable|date',
+            'end_date'     => 'required_unless:type,manual|nullable|date|after_or_equal:start_date',
             'period_label' => 'required|string|max:100',
             'limit'        => 'integer|min:1|max:10',
             // Untuk manual
             'entries'      => 'required_if:type,manual|array',
-            'entries.*.user_id'     => 'required_if:type,manual|exists:users,id',
+            'entries.*.nis'     => 'required_if:type,manual|exists:users,nis',
             'entries.*.rank'        => 'required_if:type,manual|integer|min:1',
             'entries.*.score_label' => 'nullable|string|max:100',
         ]);
@@ -137,9 +137,9 @@ class CertificateController extends Controller
             foreach ($entries as $index => $entry) {
                 Certificate::create([
                     'batch_id'    => $batch->id,
-                    'user_id'     => is_array($entry)
-                        ? $entry['user_id']
-                        : $entry->id,
+                    'nis'     => is_array($entry)
+                        ? $entry['nis']
+                        : $entry->nis,
                     'type'        => $request->type,
                     'scope'       => $request->scope,
                     'scope_value' => $request->scope_value,

@@ -292,11 +292,17 @@ export default function WelcomeLayout({ title, children, auth }) {
                                     </a>
                                 </div>
                             </div>
+                            <div className="wl-footer-links" style={{ gridColumn: 'span 2', marginTop: '2rem' }}>
+                                <a href="/syarat-ketentuan" className="wl-footer-link" target="_blank" rel="noopener noreferrer">Syarat dan Ketentuan</a>  <a href="/kebijakan-privasi" className="wl-footer-link" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>
+                            </div>
                         </div>
                     </div>
 
                     <div className="wl-footer-bottom">
                         © {new Date().getFullYear()} TAPAMAJUMA — For SMP Negeri 1 Siborongborong. All rights reserved.
+                        <br />
+                        
+                        
                     </div>
                 </footer>
             </div>

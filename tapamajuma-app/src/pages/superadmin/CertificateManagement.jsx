@@ -71,7 +71,7 @@ function GenerateModal({ onClose, onSuccess }) {
   });
 
   const [manualEntries, setManualEntries] = useState([
-    { user_id: "", name: "", rank: 1, score_label: "" }
+    { nis: "", name: "", rank: 1, score_label: "" }
   ]);
 
   const [classes, setClasses] = useState([]);
@@ -83,17 +83,26 @@ function GenerateModal({ onClose, onSuccess }) {
   const isManual = form.type === "manual";
 
   const handlePreview = async () => {
+    // Jika manual, sebenarnya tidak perlu preview ranking, tapi jika tetap ingin panggil:
     if (!isManual && (!form.start_date || !form.end_date)) {
       toast.error("Isi rentang tanggal terlebih dahulu");
       return;
     }
+
     setLoading(true);
     try {
-      const res = await api.post("/api/admin/certificates/preview", form);
+      // Bersihkan payload: jika manual, paksa tanggal jadi null
+      const payload = {
+        ...form,
+        start_date: isManual ? null : form.start_date,
+        end_date: isManual ? null : form.end_date,
+      };
+
+      const res = await api.post("/api/admin/certificates/preview", payload);
       setPreviewData(res.data.data ?? []);
       setStep(2);
     } catch (e) {
-      toast.error("Gagal memuat preview");
+      toast.error(e?.response?.data?.message ?? "Gagal memuat preview");
     } finally {
       setLoading(false);
     }
@@ -102,20 +111,28 @@ function GenerateModal({ onClose, onSuccess }) {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const payload = isManual
-        ? { ...form, entries: manualEntries }
-        : form;
+      // Bersihkan payload sebelum kirim
+      const payload = {
+        ...form,
+        // KUNCI UTAMA: Ubah "" menjadi null agar lolos validasi 'nullable|date' di Laravel
+        start_date: isManual ? null : form.start_date,
+        end_date: isManual ? null : form.end_date,
+        entries: isManual ? manualEntries : undefined,
+      };
+
       await api.post("/api/admin/certificates/generate", payload);
       toast.success("Batch sertifikat berhasil dibuat!");
       onSuccess();
       onClose();
     } catch (e) {
-      toast.error(e?.response?.data?.message ?? "Gagal generate");
+      // Tampilkan error detail dari Laravel agar tahu field mana yang salah
+      const errorData = e?.response?.data;
+      toast.error(errorData?.message || "Gagal generate");
     } finally {
       setLoading(false);
     }
   };
-
+  
   const scopeNeedsValue = form.scope === "grade" || form.scope === "class";
 
   return (
@@ -270,16 +287,16 @@ function GenerateModal({ onClose, onSuccess }) {
                   {manualEntries.map((entry, i) => (
                     <div key={i} className="grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-1 text-center text-xs font-bold text-slate-400">{i + 1}</div>
-                      <input type="number" placeholder="User ID"
+                      <input type="number" placeholder="Masukkan NISN"
                         className="col-span-3 border border-slate-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        value={entry.user_id}
+                        value={entry.nis}
                         onChange={e => {
                           const n = [...manualEntries];
-                          n[i].user_id = e.target.value;
+                          n[i].nis = e.target.value;
                           setManualEntries(n);
                         }}
                       />
-                      <input type="text" placeholder="Keterangan"
+                      <input type="text" placeholder="Keterangan Penghargaan"
                         className="col-span-6 border border-slate-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         value={entry.score_label}
                         onChange={e => {
@@ -295,7 +312,7 @@ function GenerateModal({ onClose, onSuccess }) {
                     </div>
                   ))}
                   <button
-                    onClick={() => setManualEntries(e => [...e, { user_id: "", rank: e.length + 1, score_label: "" }])}
+                    onClick={() => setManualEntries(e => [...e, { nis: "", rank: e.length + 1, score_label: "" }])}
                     className="text-xs text-indigo-600 font-semibold hover:underline"
                   >
                     + Tambah Penerima
