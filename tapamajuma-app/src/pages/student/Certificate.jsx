@@ -12,10 +12,10 @@ import api from "@/lib/axios";
 
 // ── Helpers ──────────────────────────────────────────────────────
 const TYPE_LABELS = {
-  top_xp:             "Top XP Tertinggi",
+  top_xp:             "Skor Terbaik",
   top_active:         "Siswa Teraktif",
-  top_active_morning: "Rajin Sesi Pagi",
-  top_teladan:        "Siswa Terbaik",
+  top_active_morning: "Sesi Pagi Teraktif",
+  top_teladan:        "Siswa Teladan",
   manual:             "Penghargaan Khusus",
 };
 

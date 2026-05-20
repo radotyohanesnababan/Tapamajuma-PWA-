@@ -15,9 +15,9 @@ import api from "@/lib/axios";
 
 // ── Helpers ──────────────────────────────────────────────────────
 const TYPE_LABELS = {
-  top_xp:             { label: "Top XP Tertinggi",   icon: <TrendingUp size={14} />, color: "text-indigo-600 bg-indigo-50"  },
-  top_active:         { label: "Top Siswa Teraktif",  icon: <AwardIcon size={14} />,      color: "text-emerald-600 bg-emerald-50"},
-  top_active_morning: { label: "Top Rajin Sesi Pagi", icon: <Users size={14} />,      color: "text-orange-600 bg-orange-50"  },
+  top_xp:             { label: "Skor Terbaik",   icon: <TrendingUp size={14} />, color: "text-indigo-600 bg-indigo-50"  },
+  top_active:         { label: "Siswa Teraktif",  icon: <AwardIcon size={14} />,      color: "text-emerald-600 bg-emerald-50"},
+  top_active_morning: { label: "Sesi Pagi Teraktif", icon: <Users size={14} />,      color: "text-orange-600 bg-orange-50"  },
   top_teladan:        { label: "Siswa Teladan",       icon: <Medal size={14} />,      color: "text-amber-600 bg-amber-50"    },
   manual:             { label: "Penghargaan Manual",  icon: <FileText size={14} />,   color: "text-slate-600 bg-slate-100"   },
 };

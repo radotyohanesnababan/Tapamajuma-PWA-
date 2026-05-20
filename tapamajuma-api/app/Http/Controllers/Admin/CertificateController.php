@@ -324,56 +324,89 @@ public function release(CertificateBatch $batch)
 
 private function renderAndStorePdf(Certificate $certificate): void
 {
-    // 1. QR Code Dinamis (Raw SVG murni - tidak butuh imagick/gd sama sekali)
+    // 1. QR Code Dinamis (Raw SVG murni - DIRESTORE KEMBALI)
     $qrContent = route('certificates.verify', $certificate->id);
     $qrCode = QrCode::size(120)->generate($qrContent); 
 
     // 2. Label ranking
     $rankLabel = $this->buildRankLabel($certificate);
 
-    // 3. Encode gambar lokal ke Base64 (Path SUDAH BENAR pakai storage/images/)
+    // 3. Encode gambar lokal ke Base64 (Semua asset aman)
+    $background         = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/bg_sertif.jpg')));
     $logoKiri           = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/logo_pemkab.png')));
-    $logoKanan          = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/iconappp.png')));
-    $stempelImage       = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/stempel.png')));
+    $logoTengah         = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/logo_gls.png')));
+    $logoKanan          = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/iconappforcert.png')));
     $principalSignature = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/ttd_kepsek.png')));
+    $managerSignature   = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/ttd_manager.png')));
+    $stempelImage       = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/stempel.png')));
+    $frame              = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/frame.png')));
+    
+    // Stempel dipertahankan sesuai request sebelumnya
+    $stempelImage       = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('storage/images/stempel.png')));
 
-    // 4. Load View PDF
+    // 4. Menyusun Teks Deskripsi Panjang Prestasi
+    $achievementDesc = "Dalam mendukung Gerakan Literasi dan Numerasi pada SMP Negeri 1 Siborongborong melalui pemanfaatan Aplikasi TAPAMAJUMA sebagai tujuan mewujudkan Generasi Emas Tapanuli Utara.";
+
+    // 5. Load View PDF Baru 'pdf.certificate-new'
     $pdf = Pdf::loadView('pdf.certificate', [
-        'certificate'        => $certificate,
-        'rankLabel'          => $rankLabel,
-        'qrCode'             => $qrCode, // Ini sekarang berisi string XML <svg> murni
-        'logoKiri'           => $logoKiri,
-        'logoKanan'          => $logoKanan,
-        'schoolName'         => 'SMP Negeri 1 Siborongborong',
-        'schoolAddress'      => 'Jl Pacuan No. 02, Kecamatan Siborongborong, Kabupaten Tapanuli Utara, Sumatera Utara 22454',
-        'principalName'      => 'Marturak Lumbantoruan, S.Pd.',
-        'principalNip'       => '19650101 199203 1 001',
-        'principalSignature' => $principalSignature,
-        'stempelImage'       => $stempelImage,
+        // --- BACKGROUND & LOGOS ---
+        'background'           => $background,
+        'logoKiri'             => $logoKiri,
+        'logoTengah'           => $logoTengah,
+        'logoKanan'            => $logoKanan,
+        'frame'                => $frame,
+        // --- TITLE & SUBTITLE ---
+        'certificateTitle'     => 'SERTIFIKAT',
+        'certificateSubtitle'  => 'LITERASI DAN NUMERASI',
+
+        // --- RECIPIENT & ACHIEVEMENT ---
+        'givenToLabel'         => 'DIBERIKAN KEPADA :',
+        'recipientName'        => $certificate->user->name,
+        'achievementLabel'     => 'Atas Prestasi Sebagai :',
+        'rankLabel'            => $rankLabel,
+        'achievementDesc'      => $achievementDesc,
+        
+        // --- SIGNATURE LEFT: KEPALA SEKOLAH ---
+        'principalTitle'       => 'Kepala Sekolah',
+        'principalSchool'      => 'SMP Negeri 1 Siborongborong',
+        'principalSignature'   => $principalSignature,
+        'principalName'        => 'Marturak Lumbantoruan, S.Pd.',
+        'principalNip'         => 'NIP. 198212082011011006',
+
+        // --- SIGNATURE RIGHT: PENGELOLA APLIKASI ---
+        'managerTitle'         => 'Pengelola Aplikasi Tapamajuma',
+        'managerSchool'        => 'SMP N 1 Siborongborong',
+        'managerSignature'     => $managerSignature,
+        'managerName'          => 'Torus Manuntun Nababan, S.Pd., M.Pd.',
+        'managerNip'           => 'NIP. 197302282002121005',
+
+        // --- RETAINED FEATURES (STEMPEL & QR CODE) ---
+        'stempelImage'         => $stempelImage,
+        'qrCode'               => $qrCode, // Sekarang dikirim lagi ke Blade
     ])->setPaper('a4', 'landscape');
 
-    // 5. Simpan ke R2
+    // 6. Simpan ke R2 (Tetap aman untuk level prod)
     $path = "certificates/{$certificate->batch_id}/cert-{$certificate->id}-rank{$certificate->rank}.pdf";
     Storage::disk('r2')->put($path, $pdf->output());
 
-    // 6. Update database
+    // 7. Update database path
     $certificate->update(['pdf_path' => $path]);
 }
 
 private function buildRankLabel(Certificate $certificate): string
 {
     $scopeText = match($certificate->scope) {
-        'global' => 'Global Seluruh Siswa',
-        'grade'  => "Angkatan {$certificate->scope_value}",
+        'global' => 'Tingkat Sekolah',
+        'grade'  => "Tingkat {$certificate->scope_value}",
         'class'  => "Kelas {$certificate->scope_value}",
         default  => '',
     };
 
     $typeText = match($certificate->type) {
-        'top_xp'             => 'Top XP Tertinggi',
+        'top_xp'             => 'Skor Terbaik',
         'top_active'         => 'Siswa Teraktif',
-        'top_active_morning' => 'Rajin Sesi Pagi',
-        'top_teladan'        => 'Siswa Terbaik',
+        'top_active_morning' => 'Sesi Pagi Teraktif',
+        'top_teladan'        => 'Siswa Teladan',
         'manual'             => 'Penghargaan Khusus',
         default              => '',
     };

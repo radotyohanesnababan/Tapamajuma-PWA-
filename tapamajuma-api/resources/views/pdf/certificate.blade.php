@@ -1,4 +1,4 @@
-{{-- resources/views/pdf/certificate.blade.php --}}
+{{-- resources/views/pdf/certificate-new.blade.php --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,427 +12,420 @@
     width: 297mm;
     height: 210mm;
     font-family: 'DejaVu Serif', serif;
-    background: #f8f9fd;
     position: relative;
     overflow: hidden;
   }
 
-  /* ── Border luar & dalam ── */
+  /* ── Background ── */
+  .background {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .background img {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── FRAME: PALING BELAKANG & SEDIKIT LEBIH KECIL ── */
+  .frame {
+  position: absolute;
+  top: 0;           /* FULL */
+  left: 0;          /* FULL */
+  width: 100%;      /* FULL */
+  height: 100%;     /* FULL */
+  z-index: 1;       /* Di atas background, di bawah konten */
+  object-fit: cover;
+}
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;  /* JAGA ASPECT RATIO */
+  }
+
+  /* ── Main Container ── */
+  .container {
+    position: relative;
+    width: 297mm;
+    height: 210mm;
+    z-index: 1;
+  }
+
+  /* ── Border Frame (Gold) ── */
   .border-outer {
     position: absolute;
-    top: 7mm; left: 7mm; right: 7mm; bottom: 7mm;
-    border: 2pt solid #1a3a6b;
+    top: 8mm; left: 8mm; right: 8mm; bottom: 8mm;
+    border: 3pt solid #d4a746;
+    background: rgba(255, 255, 255, 0.75);
+    z-index: 3;  /* DI ATAS FRAME */
   }
   .border-inner {
     position: absolute;
-    top: 11mm; left: 11mm; right: 11mm; bottom: 11mm;
-    border: 0.8pt solid #c9a84c;
+    top: 12mm; left: 12mm; right: 12mm; bottom: 12mm;
+    border: 1.2pt solid #d4a746;
+    z-index: 3;  /* DI ATAS FRAME */
   }
 
-  /* ── Corner ornament ── */
-  .corner { position: absolute; width: 10mm; height: 10mm; }
-  .corner-tl { top: 4mm;  left: 4mm;  }
-  .corner-tr { top: 4mm;  right: 4mm; transform: scaleX(-1); }
-  .corner-bl { bottom: 4mm; left: 4mm;  transform: scaleY(-1); }
-  .corner-br { bottom: 4mm; right: 4mm; transform: scale(-1); }
-
-  /* ── Watermark ── */
-  .watermark {
+  /* ── Corner Ornaments ── */
+  .corner {
     position: absolute;
-    top: 75mm; left: 118mm;
-    width: 60mm; height: 60mm;
-    opacity: 0.04;
+    width: 20mm;
+    height: 20mm;
+    z-index: 4;  /* DI ATAS SEMUA */
   }
+  .corner-tl { top: 6mm; left: 6mm; }
+  .corner-tr { top: 6mm; right: 6mm; }
+  .corner-bl { bottom: 6mm; left: 6mm; }
+  .corner-br { bottom: 6mm; right: 6mm; }
 
-  /* ── Header navy bar ── */
-  .header {
+  /* ── HEADER TABLE: 3 LOGOS ── */
+  .header-wrapper {
     position: absolute;
-    top: 11mm; left: 11mm; right: 11mm;
-    height: 22mm;
-    background: #1a3a6b;
-    border-bottom: 2pt solid #c9a84c;
+    top: 15mm;
+    left: 48.5mm;
+    width: 200mm;
+    z-index: 5;  /* DI ATAS FRAME */
   }
-  .header table {
+  
+  .header-table {
     width: 100%;
-    height: 22mm;
     border-collapse: collapse;
   }
-  .header td { vertical-align: middle; padding: 0 3mm; }
-  .header .td-logo  { width: 22mm; text-align: center; }
-  .header .td-info  { text-align: center; }
-  .header .td-logo-r{ width: 22mm; text-align: center; }
-
-  .logo-wrap {
-    width: 16mm; height: 16mm;
-    background: #fff;
-    border-radius: 50%;
-    overflow: hidden;
-    margin: 0 auto;
-    border: 1.5pt solid #c9a84c;
+  
+  .header-table td {
+    vertical-align: middle;
+    text-align: center;
   }
-  .logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
-
-  .school-name {
-    font-size: 9.5pt;
-    font-weight: bold;
-    color: #f0d060;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  
+  .td-logo-left {
+    width: 24mm;
   }
-  .school-addr {
-    font-size: 6pt;
-    color: #a8c4e8;
-    margin-top: 1mm;
-    letter-spacing: 0.03em;
+  
+  .td-logo-center {
+    width: auto;
+  }
+  
+  .td-logo-right {
+    width: 24mm;
+  }
+  
+  .logo-img {
+    width: 24mm;
+    height: 24mm;
+  }
+  
+  .logo-center-img {
+    width: 45mm;
+    height: 26mm;
   }
 
-  /* ── Content area ── */
+  /* ── Content Area ── */
   .content {
     position: absolute;
-    top: 35mm; left: 13mm; right: 13mm; bottom: 13mm;
-  }
-
-  /* ── Divider ── */
-  .divider {
-    width: 100%;
-    border-top: 0.6pt solid #c9a84c;
-    margin: 1.5mm 0;
+    top: 48mm;
+    left: 15mm;
+    right: 15mm;
+    text-align: center;
+    z-index: 5;  /* DI ATAS FRAME */
   }
 
   /* ── Title ── */
   .title {
-    font-size: 26pt;
+    font-size: 32pt;
     font-weight: bold;
-    color: #1a3a6b;
-    letter-spacing: 0.18em;
+    color: #1e4d8b;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
-    text-align: center;
     line-height: 1;
-    margin-top: 2mm;
+    margin-bottom: 2mm;
   }
-  .title-sub {
-    font-size: 9pt;
-    font-style: italic;
-    color: #c9a84c;
-    letter-spacing: 0.22em;
-    text-align: center;
-    margin-top: 1mm;
+  .subtitle {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #1e4d8b;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6mm;
   }
 
   /* ── Recipient ── */
   .diberikan {
-    font-size: 7pt;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #999;
-    text-align: center;
-    margin-top: 3mm;
-  }
-  .recipient {
-    font-size: 22pt;
-    font-weight: bold;
-    color: #1a3a6b;
-    text-align: center;
-    line-height: 1.1;
-    margin-top: 1mm;
-  }
-  .recipient-meta {
     font-size: 8pt;
-    color: #888;
-    text-align: center;
-    margin-top: 1mm;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #333;
+    margin-bottom: 2mm;
+  }
+  .recipient-name {
+    font-size: 28pt;
+    font-weight: bold;
+    color: #000;
+    line-height: 1.2;
+    margin-bottom: 1mm;
+    border-bottom: 1.5pt dotted #999;
+    padding-bottom: 2mm;
+    display: inline-block;
+    min-width: 180mm;
   }
 
-  /* ── Achievement box ── */
-  .ach-wrap {
-    margin-top: 3mm;
-    border-top: 0.5pt solid #c9a84c;
-    border-bottom: 0.5pt solid #c9a84c;
-    padding: 2mm 0;
-    text-align: center;
-  }
-  .ach-label {
-    font-size: 6.5pt;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #999;
-  }
-  .ach-rank {
-    font-size: 13pt;
-    font-weight: bold;
-    color: #1a3a6b;
-    margin-top: 0.8mm;
-  }
-  .ach-score {
+  /* ── Achievement ── */
+  .achievement-label {
     font-size: 8pt;
-    font-style: italic;
-    color: #c9a84c;
-    margin-top: 0.5mm;
+    color: #333;
+    margin-top: 5mm;
+    margin-bottom: 2mm;
+  }
+  .achievement-rank {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #000;
+    letter-spacing: 0.08em;
+    margin-bottom: 4mm;
   }
 
-  /* ── Footer table — hanya TTD di tengah ── */
-  .footer-table {
+  /* ── Description ── */
+  .description {
+    font-size: 8pt;
+    color: #333;
+    line-height: 1.6;
+    text-align: center;
+    max-width: 240mm;
+    margin: 0 auto;
+    padding: 0 10mm;
+  }
+
+  /* ── Footer: Dual Signature (TABLE) ── */
+  .footer {
+    position: absolute;
+    bottom: 15mm;
+    left: 15mm;
+    right: 15mm;
+    z-index: 5;  /* DI ATAS FRAME */
+  }
+  
+  .signature-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 3mm;
   }
-  .footer-table td { vertical-align: bottom; padding: 0; }
-  .td-spacer-l { width: 15%; }
-  .td-ttd      { width: 70%; text-align: center; }
-  .td-spacer-r { width: 15%; }
+  
+  .signature-table td {
+    width: 50%;
+    vertical-align: bottom;
+    text-align: center;
+    padding: 0 5mm;
+  }
 
-  /* TTD tengah — besar dan mencolok */
-  .ttd-city { font-size: 8pt; color: #444; text-align: center; }
-  .ttd-role { font-size: 8pt; color: #444; margin-top: 0.8mm; text-align: center; }
-
-  .ttd-space-wrap {
+  /* ── Signature Box ── */
+  .sig-title {
+    font-size: 8pt;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5mm;
+  }
+  .sig-school {
+    font-size: 7.5pt;
+    color: #555;
+    margin-bottom: 3mm;
+  }
+  
+  /* ── SIGNATURE SPACE ── */
+  .sig-space {
+    height: 28mm;
     position: relative;
-    width: 70mm;
-    height: 30mm;
-    margin: 1.5mm auto 0;
+    margin-bottom: 2mm;
   }
-  .ttd-line {
+  
+  .sig-line {
     position: absolute;
-    bottom: 0; left: 8mm; right: 8mm;
-    border-bottom: 0.8pt solid #1a3a6b;
+    bottom: 0;
+    left: 12mm;
+    right: 12mm;
+    border-bottom: 1pt solid #333;
   }
-  /* Stempel overlap pojok kiri, menimpa TTD dan garis */
-  .stempel-wrap {
-    position: absolute;
-    left: 0; top: 0;
-    width: 30mm; height: 30mm;
-    opacity: 0.65;
-  }
-  /* TTD gambar — tengah, besar */
-  .ttd-img-wrap {
+  
+  /* TTD GAMBAR */
+  .sig-image {
     position: absolute;
     bottom: 2mm;
-    left: 0; right: 0;
-    text-align: center;
-  }
-  .ttd-img-wrap img {
-    width: 46mm;
+    left: 50%;
+    margin-left: -27.5mm;
+    width: 55mm;
     height: auto;
-    opacity: 0.93;
+    opacity: 0.92;
+    z-index: 6;  /* DI ATAS FRAME */
   }
-
-  .ttd-name {
+  
+  /* STEMPEL */
+  .stempel-wrap {
+    position: absolute;
+    left: 12mm;
+    bottom: 4mm;
+    width: 32mm;
+    height: 32mm;
+    opacity: 0.68;
+    z-index: 5;  /* DI ATAS FRAME TAPI DI BAWAH TTD */
+  }
+  
+  .sig-name {
     font-size: 9pt;
     font-weight: bold;
-    color: #1a3a6b;
-    margin-top: 1.5mm;
-    text-align: center;
+    color: #000;
+    margin-bottom: 0.5mm;
   }
-  .ttd-nip {
+  .sig-nip {
     font-size: 7pt;
-    color: #666;
-    margin-top: 0.5mm;
-    text-align: center;
+    color: #555;
   }
 
-  /* ── Footer kecil absolute — periode kiri, QR kanan ── */
-  .footer-small {
-    position: absolute;
-    bottom: 13mm; left: 14mm; right: 14mm;
-  }
-  .footer-small table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .footer-small td { vertical-align: bottom; padding: 0; }
-  .fs-left  { width: 50%; text-align: left; }
-  .fs-right { width: 50%; text-align: right; }
-
-  .fs-period-label {
-    font-size: 5.5pt;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #aaa;
-  }
-  .fs-period-value {
-    font-size: 6.5pt;
-    color: #1a3a6b;
-    font-weight: bold;
-    margin-top: 0.3mm;
-  }
-  .fs-period-dates {
-    font-size: 6pt;
-    font-style: italic;
-    color: #c9a84c;
-    margin-top: 0.3mm;
-  }
-
-  /* QR kecil di kanan bawah */
-  .qr-box {
-    width: 18mm; height: 18mm;
-    border: 0.6pt solid #1a3a6b;
-    padding: 1mm;
-    background: #fff;
-    margin: 0 0 0 auto;
-  }
-  .qr-box img { width: 100%; height: 100%; }
-  .qr-label {
-    font-size: 5pt;
-    color: #888;
-    margin-top: 0.5mm;
-    text-align: right;
-  }
-
-  /* ── Blockchain badge ── */
-  .blockchain {
-    position: absolute;
-    bottom: 8.5mm; left: 14mm;
-    font-size: 4.5pt;
-    color: #c9a84c;
-    letter-spacing: 0.04em;
-    font-family: 'DejaVu Sans Mono', monospace;
-  }
 </style>
 </head>
 <body>
 
-{{-- Watermark --}}
-<svg class="watermark" viewBox="0 0 100 100">
-  <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="#1a3a6b"/>
-</svg>
-
-{{-- Border --}}
-<div class="border-outer"></div>
-<div class="border-inner"></div>
-
-{{-- Corner ornaments --}}
-@foreach(['corner-tl','corner-tr','corner-bl','corner-br'] as $c)
-<svg class="corner {{ $c }}" viewBox="0 0 30 30" fill="none">
-  <path d="M2 28 L2 2 L28 2" stroke="#1a3a6b" stroke-width="1.5"/>
-  <path d="M2 2 L8 8" stroke="#c9a84c" stroke-width="0.8"/>
-  <circle cx="2" cy="2" r="2" fill="#c9a84c"/>
-</svg>
-@endforeach
-
-{{-- Header --}}
-<div class="header">
-  <table>
-    <tr>
-      <td class="td-logo">
-        <div class="logo-wrap">
-          <img src="{{ $logoKiri }}" alt="Logo">
-        </div>
-      </td>
-      <td class="td-info">
-        <div class="school-name">{{ $schoolName }}</div>
-        <div class="school-addr">{{ $schoolAddress }}</div>
-      </td>
-      <td class="td-logo-r">
-        <div class="logo-wrap">
-          <img src="{{ $logoKanan }}" alt="Logo App">
-        </div>
-      </td>
-    </tr>
-  </table>
+{{-- Background Image --}}
+<div class="background">
+  @if(!empty($background))
+  <img src="{{ $background }}" alt="Background">
+  @endif
 </div>
 
-{{-- Content --}}
-<div class="content">
+{{-- Frame Ornament (PALING BELAKANG & SEDIKIT LEBIH KECIL) --}}
+<div class="frame">
+  @if(!empty($frame))
+  <img src="{{ $frame }}" alt="Frame">
+  @endif
+</div>
 
-  <div class="divider"></div>
+<div class="container">
 
-  <div class="title">Sertifikat</div>
-  <div class="title-sub">Penghargaan Prestasi Siswa</div>
+  {{-- Border Frame --}}
+  <div class="border-outer"></div>
+  <div class="border-inner"></div>
 
-  <div class="diberikan">Diberikan kepada</div>
-  <div class="recipient">{{ $certificate->user->name }}</div>
-  <div class="recipient-meta">
-    Kelas {{ $certificate->user->className->name ?? '-' }}
-    &nbsp;&middot;&nbsp;
-    NISN: {{ $certificate->user->nis ?? '-' }}
+  {{-- Corner Ornaments --}}
+  <svg class="corner corner-tl" viewBox="0 0 100 100" fill="none">
+    <path d="M10,90 L10,10 L90,10" stroke="#d4a746" stroke-width="5" fill="none"/>
+    <circle cx="10" cy="10" r="6" fill="#d4a746"/>
+    <path d="M10,10 L30,30" stroke="#d4a746" stroke-width="3"/>
+  </svg>
+  
+  <svg class="corner corner-tr" viewBox="0 0 100 100" fill="none">
+    <path d="M90,90 L90,10 L10,10" stroke="#d4a746" stroke-width="5" fill="none"/>
+    <circle cx="90" cy="10" r="6" fill="#d4a746"/>
+    <path d="M90,10 L70,30" stroke="#d4a746" stroke-width="3"/>
+  </svg>
+  
+  <svg class="corner corner-bl" viewBox="0 0 100 100" fill="none">
+    <path d="M10,10 L10,90 L90,90" stroke="#d4a746" stroke-width="5" fill="none"/>
+    <circle cx="10" cy="90" r="6" fill="#d4a746"/>
+    <path d="M10,90 L30,70" stroke="#d4a746" stroke-width="3"/>
+  </svg>
+  
+  <svg class="corner corner-br" viewBox="0 0 100 100" fill="none">
+    <path d="M90,10 L90,90 L10,90" stroke="#d4a746" stroke-width="5" fill="none"/>
+    <circle cx="90" cy="90" r="6" fill="#d4a746"/>
+    <path d="M90,90 L70,70" stroke="#d4a746" stroke-width="3"/>
+  </svg>
+
+  {{-- Header: 3 Logos dengan TABLE --}}
+  <div class="header-wrapper">
+    <table class="header-table">
+      <tr>
+        <td class="td-logo-left">
+          @if(!empty($logoKiri))
+          <img src="{{ $logoKiri }}" alt="Logo Kiri" class="logo-img">
+          @endif
+        </td>
+        
+        <td class="td-logo-center">
+          @if(!empty($logoTengah))
+          <img src="{{ $logoTengah }}" alt="Logo Tengah" class="logo-center-img">
+          @endif
+        </td>
+        
+        <td class="td-logo-right">
+          @if(!empty($logoKanan))
+          <img src="{{ $logoKanan }}" alt="Logo Kanan" class="logo-img">
+          @endif
+        </td>
+      </tr>
+    </table>
   </div>
 
-  <div class="ach-wrap">
-    <div class="ach-label">Atas pencapaian sebagai</div>
-    <div class="ach-rank">{{ $rankLabel }}</div>
-    <div class="ach-score">
-      {{ $certificate->score_label }}
-      &nbsp;&middot;&nbsp;
-      {{ $certificate->period_label }}
+  {{-- Content --}}
+  <div class="content">
+    <div class="title">{{ $certificateTitle ?? 'SERTIFIKAT' }}</div>
+    <div class="subtitle">{{ $certificateSubtitle ?? 'LITERASI DAN NUMERASI' }}</div>
+
+    <div class="diberikan">{{ $givenToLabel ?? 'DIBERIKAN KEPADA :' }}</div>
+    <div class="recipient-name">{{ $recipientName ?? 'John Doe' }}</div>
+
+    <div class="achievement-label">{{ $achievementLabel ?? 'Atas Prestasi Sebagai :' }}</div>
+    <div class="achievement-rank">{{ $rankLabel ?? 'Juara 1 Kelas VII-7' }}</div>
+
+    @if(!empty($achievementDesc))
+    <div class="description">
+      {{ $achievementDesc }}
     </div>
+    @endif
   </div>
 
-  <div class="divider" style="margin-top:3mm"></div>
-
-  {{-- Footer: hanya TTD di tengah --}}
-  <table class="footer-table">
-    <tr>
-      <td class="td-spacer-l"></td>
-
-      {{-- TTD Tengah — mencolok --}}
-      <td class="td-ttd">
-        <div class="ttd-city">
-          Siborongborong, {{ \Carbon\Carbon::parse($certificate->released_at ?? now())->translatedFormat('d F Y') }}
-        </div>
-        <div class="ttd-role">Kepala Sekolah,</div>
-
-        <div class="ttd-space-wrap">
-          <div class="ttd-line"></div>
-
-          {{-- Stempel kiri overlap --}}
-          @if(!empty($stempelImage))
-          <img src="{{ $stempelImage }}" alt="Stempel" class="stempel-wrap">
-          @else
-          <svg class="stempel-wrap" viewBox="0 0 60 60" fill="none">
-            <circle cx="30" cy="30" r="27" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <circle cx="30" cy="30" r="20" stroke="#1a3a6b" stroke-width="1"/>
-            <text x="30" y="26" text-anchor="middle" font-size="6" fill="#1a3a6b" font-family="serif" font-weight="bold">SMPN 1</text>
-            <text x="30" y="34" text-anchor="middle" font-size="4.5" fill="#1a3a6b" font-family="serif">SIBORONGBORONG</text>
-          </svg>
-          @endif
-
-          {{-- TTD gambar besar di tengah --}}
-          @if(!empty($principalSignature))
-          <div class="ttd-img-wrap">
-            <img src="{{ $principalSignature }}" alt="TTD Kepala Sekolah">
+  {{-- Footer: Dual Signature dengan TABLE --}}
+  <div class="footer">
+    <table class="signature-table">
+      <tr>
+        {{-- Signature Left: Kepala Sekolah (DENGAN STEMPEL) --}}
+        <td>
+          <div class="sig-title">{{ $principalTitle ?? 'Kepala Sekolah' }}</div>
+          <div class="sig-school">{{ $principalSchool ?? 'SMP Negeri 1 Siborongborong' }}</div>
+          
+          <div class="sig-space">
+            <div class="sig-line"></div>
+            
+            {{-- STEMPEL --}}
+            @if(!empty($stempelImage))
+            <img src="{{ $stempelImage }}" alt="Stempel" class="stempel-wrap">
+            @else
+            <svg class="stempel-wrap" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" stroke="#1a3a6b" stroke-width="2" fill="none" opacity="0.6"/>
+              <circle cx="50" cy="50" r="35" stroke="#1a3a6b" stroke-width="1.5" fill="none" opacity="0.5"/>
+              <text x="50" y="45" text-anchor="middle" font-size="10" fill="#1a3a6b" font-weight="bold">SMPN 1</text>
+              <text x="50" y="58" text-anchor="middle" font-size="7" fill="#1a3a6b">SIBORONGBORONG</text>
+            </svg>
+            @endif
+            
+            {{-- TTD GAMBAR --}}
+            @if(!empty($principalSignature))
+            <img src="{{ $principalSignature }}" alt="TTD Kepala Sekolah" class="sig-image">
+            @endif
           </div>
-          @endif
-        </div>
+          
+          <div class="sig-name">{{ $principalName ?? 'Nama Kepala Sekolah, S.Pd.' }}</div>
+          <div class="sig-nip">{{ $principalNip ?? 'NIP. -' }}</div>
+        </td>
 
-        <div class="ttd-name">{{ $principalName }}</div>
-        <div class="ttd-nip">NIP. {{ $principalNip }}</div>
-      </td>
-
-      <td class="td-spacer-r"></td>
-    </tr>
-  </table>
+        {{-- Signature Right: Pengelola Aplikasi --}}
+        <td>
+          <div class="sig-title">{{ $managerTitle ?? 'Pengelola Aplikasi Tapamajuma' }}</div>
+          <div class="sig-school">{{ $managerSchool ?? 'SMP N 1 Siborongborong' }}</div>
+          
+          <div class="sig-space">
+            <div class="sig-line"></div>
+            
+            {{-- TTD GAMBAR SAJA --}}
+            @if(!empty($managerSignature))
+            <img src="{{ $managerSignature }}" alt="TTD Pengelola" class="sig-image">
+            @endif
+          </div>
+          
+          <div class="sig-name">{{ $managerName ?? 'Nama Pengelola, S.Pd., M.Pd.' }}</div>
+          <div class="sig-nip">{{ $managerNip ?? 'NIP. -' }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
 
 </div>
-
-{{-- Footer kecil absolute: periode kiri, QR kanan --}}
-<div class="footer-small">
-  <table>
-    <tr>
-      <td class="fs-left">
-        <div class="fs-period-label">Periode Penilaian</div>
-        <div class="fs-period-value">{{ $certificate->period_label }}</div>
-        <div class="fs-period-dates">
-          {{ \Carbon\Carbon::parse($certificate->start_date)->translatedFormat('d F Y') }}
-          &ndash;
-          {{ \Carbon\Carbon::parse($certificate->end_date)->translatedFormat('d F Y') }}
-        </div>
-      </td>
-      <td class="fs-right">
-        <div class="qr-box">
-          <img src="data:image/svg+xml;base64,{{ base64_encode($qrCode) }}" alt="QR" style="width:100%;height:100%;">
-        </div>
-        <div class="qr-label">Scan verifikasi</div>
-      </td>
-    </tr>
-  </table>
-</div>
-
-{{-- Blockchain badge kecil --}}
-@if(!empty($certificate->blockchain_tx))
-<div class="blockchain">
-  &#9679; Verified on Polygon &nbsp;&middot;&nbsp; TX: {{ Str::limit($certificate->blockchain_tx, 42) }}
-</div>
-@endif
 
 </body>
 </html>
