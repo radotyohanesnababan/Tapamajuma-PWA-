@@ -32,7 +32,7 @@ export default function PeerFeed() {
 
   const fetchFeeds = async () => {
     try {
-      const res = await api.get('/api/peer-feed');
+      const res = await api.get('/api/reflections/peer-feed');
       setFeeds(res.data);
     } catch (err) {
       console.error("Gagal mengambil feed", err);
