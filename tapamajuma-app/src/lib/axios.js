@@ -7,23 +7,22 @@ import { Capacitor } from "@capacitor/core";
 // =================================================================
 const PROD_URL = "https://tapamajuma-api.my.id";
 const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
-const isDevelopment = import.meta.env.DEV;
 
 const getEnvUrl = () => {
-  if (Capacitor.isNativePlatform()) return PROD_URL;
-  if (isDevelopment) {
-    const currentHostname = window.location.hostname;
-    return `http://${currentHostname}:8000`;
+  if (Capacitor.isNativePlatform()) {
+    return import.meta.env.VITE_API_URL;
   }
-  return PROD_URL;
+
+  return import.meta.env.VITE_API_URL;
 };
+
+let currentBaseUrl = getEnvUrl();
 
 // Bagian ini di-comment agar tidak mengambil URL backup yang lama
 // const savedBaseUrl = !isDevelopment && !Capacitor.isNativePlatform()
 //   ? localStorage.getItem("active_base_url")
 //   : null;
 
-let currentBaseUrl = getEnvUrl(); // Dipaksa selalu mulai dari DomCloud/Localhost
 
 const api = axios.create({
   baseURL: currentBaseUrl,
