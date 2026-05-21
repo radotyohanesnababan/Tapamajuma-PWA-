@@ -6,57 +6,21 @@ export function cn(...inputs) {
 }
 
 export const getStorageUrl = (path) => {
-  console.log(import.meta.env);
   if (!path) return null;
 
-  const isDev = import.meta.env.DEV;
+  const isProd = import.meta.env.MODE === "production";
 
   const STORAGE_URL =
     import.meta.env.VITE_STORAGE_URL ||
     "https://cdn.tapamajuma-api.my.id";
 
-  const API_URL =
-    sessionStorage.getItem("active_base_url") ||
-    import.meta.env.VITE_API_URL;
-
-  // URL penuh
-  if (path.startsWith("http")) {
-    try {
-      const urlObj = new URL(path);
-
-      if (
-        !isDev &&
-        [
-          "127.0.0.1",
-          "localhost",
-          "tapamajuma-api.my.id",
-        ].includes(urlObj.hostname)
-      ) {
-        const cleanPath = urlObj.pathname
-          .replace(/^\/storage\//, "") // buang /storage
-          .replace(/^\//, "");
-
-        return `${STORAGE_URL}/${cleanPath}`;
-      }
-
-      return path;
-    } catch {
-      return path;
-    }
-  }
-
-  // bersihkan path lokal
   const finalPath = path
-    .replace(/^\/?storage\//, "") // buang storage/
+    .replace(/^\/?storage\//, "")
     .replace(/^\//, "");
 
-  // LOCAL
-  if (isDev) {
-    return `${API_URL.replace(/\/api$/, "")}/storage/${finalPath}`;
-    
+  if (!isProd) {
+    return `http://127.0.0.1:8000/storage/${finalPath}`;
   }
 
-  // PROD — TANPA /storage
   return `${STORAGE_URL}/${finalPath}`;
-  
 };
