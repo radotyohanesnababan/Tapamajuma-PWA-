@@ -13,7 +13,7 @@ export const getStorageUrl = (path) => {
   const CDN_URL = "https://cdn.tapamajuma-api.my.id";
   
   // 2. Tentukan API Domain Aktif (untuk Failover)
-  const activeApiUrl = sessionStorage.getItem("active_base_url") || import.meta.env.VITE_API_URL || "https://tapamajuma-api.my.id";
+  const activeApiUrl = sessionStorage.getItem("active_base_url") || import.meta.env.VITE_API_URL || "https://cdn.tapamajuma-api.my.id";
   const domainApi = activeApiUrl.replace(/\/api$/, "");
 
   // 3. JIKA PATH ADALAH URL UTUH (Handle Link Hantu 127.0.0.1 di Prod)

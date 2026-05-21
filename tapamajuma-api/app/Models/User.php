@@ -188,7 +188,8 @@ public function studentClass()
 protected function phoneNumber(): Attribute
 {
     return Attribute::make(
-        set: fn (string $value) => $this->formatPhoneNumber($value),
+        set: fn (?string $value) =>
+            $value ? $this->formatPhoneNumber($value) : null,
     );
 }
 /**
