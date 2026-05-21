@@ -30,7 +30,11 @@ import { getStorageUrl } from '@/lib/utils';
 export default function OtherMenu() {
 
   const { user } = useAuth();
-  const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
+const [previewUrl, setPreviewUrl] = useState(
+  user?.avatar
+    ? getStorageUrl(user.avatar)
+    : null
+);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
