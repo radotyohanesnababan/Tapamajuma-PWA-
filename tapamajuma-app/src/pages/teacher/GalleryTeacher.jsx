@@ -34,6 +34,9 @@ export default function GalleryTeacher() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("all"); 
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+
   // State Preview
   const [selectedItem, setSelectedItem] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -42,34 +45,48 @@ export default function GalleryTeacher() {
     fetchGalleries();
   }, []);
 
-const fetchGalleries = async () => {
-  try {
-    const res = await api.get('/api/teacher/galleries');
-    const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
-    console.log('Raw API Response:', res.data); // DEBUG
-    
-    // Handle berbagai struktur response
-    let galleriesData = [];
-    
-    if (Array.isArray(res.data)) {
-      galleriesData = res.data;
-    } else if (res.data.data && Array.isArray(res.data.data)) {
-      galleriesData = res.data.data;
-    } else {
-      console.error('Unexpected response structure:', res.data);
+  const fetchGalleries = async (page = 1) => {
+    try {
+      setLoading(true);
+
+      const res = await api.get(
+        `/api/teacher/galleries?page=${page}&search=${searchQuery}&class_id=${selectedClassId}`
+      );
+
+      setItems(res.data.data);
+      setCurrentPage(res.data.current_page);
+      setLastPage(res.data.last_page);
+
+    } catch (error) {
+      toast.error("Gagal memuat galeri");
+    } finally {
+      setLoading(false);
     }
-    
-    console.log('Galleries Data:', galleriesData); // DEBUG
-    setItems(galleriesData);
-    
-  } catch (error) {
-    console.error('Fetch error:', error);
-    toast.error("Gagal memuat galeri");
-    setItems([]); // Tetap set array kosong saat error
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+  useEffect(() => {
+    fetchGalleries(1);
+  }, [searchQuery, selectedClassId]);
+
+  const getPageNumbers = () => {
+    const pages = [];
+
+    let start = Math.max(currentPage - 2, 1);
+    let end = Math.min(currentPage + 2, lastPage);
+
+    if (currentPage <= 3) {
+      end = Math.min(5, lastPage);
+    }
+
+    if (currentPage >= lastPage - 2) {
+      start = Math.max(lastPage - 4, 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   // --- 1. LOGIKA EKSTRAK KELAS ---
   const availableClasses = useMemo(() => {
@@ -239,7 +256,7 @@ const fullPath = item.file_url || item.file_path;
       {/* GRID CONTENT */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredItems.length > 0 ? (
-          filteredItems.map((item) => {
+          items.map((item) => {
             // Kita definisikan nama kelas di sini (di dalam loop)
             const className = item.user?.student_class?.name || "Tanpa Kelas";
 
@@ -296,6 +313,43 @@ const fullPath = item.file_url || item.file_path;
             <p>Tidak ada karya ditemukan.</p>
           </div>
         )}
+      </div>
+
+      <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+
+        {/* Tombol kiri */}
+        <Button
+          variant="outline"
+          disabled={currentPage === 1}
+          onClick={() => fetchGalleries(currentPage - 1)}
+        >
+          ←
+        </Button>
+
+        {/* Halaman */}
+        {getPageNumbers().map(page => (
+          <Button
+            key={page}
+            onClick={() => fetchGalleries(page)}
+            className={
+              currentPage === page
+                ? "bg-indigo-600 text-white"
+                : "bg-white"
+            }
+          >
+            {page}
+          </Button>
+        ))}
+
+        {/* Tombol kanan */}
+        <Button
+          variant="outline"
+          disabled={currentPage === lastPage}
+          onClick={() => fetchGalleries(currentPage + 1)}
+        >
+          →
+        </Button>
+
       </div>
 
       {/* --- ALERT DIALOG DELETE --- */}

@@ -40,37 +40,89 @@ class GalleryController extends Controller
 }
 
     public function indexfortc(Request $request)
-    {
-        $user = $request->user();
-        $allowedClassIds = $user->accessible_classes ?? [];
-        $query = Gallery::query();
-        
-        if ($user->role !== 'superadmin') {
-            $query->whereHas('user', function($q) use ($allowedClassIds) {
-                $q->whereIn('class_id', $allowedClassIds);
-            });
-        }
-        
-        $filterName = $request->query('class_id'); 
-        if ($filterName && !in_array(strtolower($filterName), ['all'])) {
-            $query->whereHas('user.studentClass', function($q) use ($filterName) {
-                $q->where('name', $filterName);
-            });
-        }
-        
-        $galleries = $query->with([
-            'user' => function($q) {
-                $q->select('id', 'name', 'class_id')->with('studentClass:id,name');
+{
+    $user = $request->user();
+    $allowedClassIds = $user->accessible_classes ?? [];
+
+    $query = Gallery::query();
+
+    // Batasi kelas guru
+    if ($user->role !== 'superadmin') {
+        $query->whereHas('user', function ($q) use ($allowedClassIds) {
+            $q->whereIn('class_id', $allowedClassIds);
+        });
+    }
+
+    // Filter kelas
+    $filterName = $request->query('class_id');
+
+    if (
+        $filterName &&
+        strtolower($filterName) !== 'all'
+    ) {
+        $query->whereHas(
+            'user.studentClass',
+            function ($q) use ($filterName) {
+                $q->where(
+                    'name',
+                    $filterName
+                );
+            }
+        );
+    }
+
+    // Search
+    if ($request->filled('search')) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->where(
+                'title',
+                'like',
+                "%{$search}%"
+            )
+            ->orWhereHas(
+                'user',
+                fn($u) =>
+                    $u->where(
+                        'name',
+                        'like',
+                        "%{$search}%"
+                    )
+            );
+        });
+    }
+
+    $perPage = $request->get('per_page', 12);
+
+    $galleries = $query
+        ->with([
+            'user' => function ($q) {
+                $q->select(
+                    'id',
+                    'name',
+                    'class_id'
+                )->with(
+                    'studentClass:id,name'
+                );
             }
         ])
-        ->latest()->get()
-        ->map(function($item) {
-            $item->file_url = $this->formatGalleryUrl($item);
+        ->latest()
+        ->paginate($perPage);
+
+    // map khusus isi data paginator
+    $galleries->getCollection()
+        ->transform(function ($item) {
+            $item->file_url =
+                $this->formatGalleryUrl($item);
+
             return $item;
         });
-        
-        return response()->json($galleries);
-    }
+
+    return response()->json(
+        $galleries
+    );
+}
 
     public function destroy($id)
     {
