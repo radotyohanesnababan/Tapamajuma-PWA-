@@ -34,8 +34,11 @@ import { getStorageUrl } from '@/lib/utils';
 export default function OtherMenu() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
-
+  const [previewUrl, setPreviewUrl] = useState(
+    user?.avatar
+      ? getStorageUrl(user.avatar)
+      : null
+  );
   const handleLogout = async () => {
     // 1. Kabari Backend (Sopan santun)
     try {
