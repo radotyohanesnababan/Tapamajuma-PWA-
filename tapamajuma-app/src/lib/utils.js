@@ -8,47 +8,52 @@ export function cn(...inputs) {
 export const getStorageUrl = (path) => {
   if (!path) return null;
 
-  // 1. Deteksi Lingkungan
-  const isDev = import.meta.env.DEV; 
-  const CDN_URL = "https://cdn.tapamajuma-api.my.id";
-  
-  // 2. Tentukan API Domain Aktif (untuk Failover)
-  const activeApiUrl = sessionStorage.getItem("active_base_url") || import.meta.env.VITE_STORAGE_URL || "https://cdn.tapamajuma-api.my.id";
-  const domainApi = activeApiUrl.replace(/\/api$/, "");
+  const isDev = import.meta.env.DEV;
 
-  // 3. JIKA PATH ADALAH URL UTUH (Handle Link Hantu 127.0.0.1 di Prod)
-  if (path.startsWith('http')) {
+  const STORAGE_URL =
+    import.meta.env.VITE_STORAGE_URL ||
+    "https://cdn.tapamajuma-api.my.id";
+
+  const API_URL =
+    sessionStorage.getItem("active_base_url") ||
+    import.meta.env.VITE_API_URL;
+
+  // URL penuh
+  if (path.startsWith("http")) {
     try {
       const urlObj = new URL(path);
-      
-      // Jika di PRODUCTION tapi ada link localhost yang nyasar dari database
-      if (!isDev && (urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost')) {
-         const cleanPath = urlObj.pathname.includes('/storage/') 
-            ? urlObj.pathname.split('/storage/')[1] 
-            : urlObj.pathname.replace(/^\//, "");
-         
-         return `${CDN_URL}/${cleanPath}`;
+
+      if (
+        !isDev &&
+        [
+          "127.0.0.1",
+          "localhost",
+          "tapamajuma-api.my.id",
+        ].includes(urlObj.hostname)
+      ) {
+        const cleanPath = urlObj.pathname
+          .replace(/^\/storage\//, "") // buang /storage
+          .replace(/^\//, "");
+
+        return `${STORAGE_URL}/${cleanPath}`;
       }
-      
-      return path; 
+
+      return path;
     } catch {
       return path;
     }
   }
 
-  // 4. Pembersihan Path
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const finalPath = cleanPath.replace(/^storage\//, "");
+  // bersihkan path lokal
+  const finalPath = path
+    .replace(/^\/?storage\//, "") // buang storage/
+    .replace(/^\//, "");
 
-  // ==========================================
-  // LOGIC PEMISAH LOKAL vs PRODUKSI
-  // ==========================================
+  // LOCAL
   if (isDev) {
-    // DI LOCAL: Tetap pakai storage lokal (untuk simulasi upload)
-    return `${domainApi}/storage/${finalPath}`;
-  } else {
-    // DI PRODUCTION: SEMUANYA (termasuk folder images/) ambil dari CDN R2
-    // Kita tidak pakai domainApi lagi di sini supaya nggak nyasar ke DomCloud/Render
-    return `${CDN_URL}/${finalPath}`;
+    return `${API_URL.replace(/\/api$/, "")}/storage/${finalPath}`;
   }
+
+  // PROD — TANPA /storage
+  return `${STORAGE_URL}/${finalPath}`;
 };

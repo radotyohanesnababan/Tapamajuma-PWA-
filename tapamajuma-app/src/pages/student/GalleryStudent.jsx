@@ -50,7 +50,7 @@ const fetchGalleries = async (page = 1) => {
     if (page === 1) {
         setItems(res.data.data);
     } else {
-        setItems(prev => [...prev, ...res.data.data]); // load more style
+        setItems(prev => [...prev, ...res.data.data]);
     }
     setCurrentPage(res.data.current_page);
     setLastPage(res.data.last_page);
@@ -256,7 +256,7 @@ function TikTokPreview({ url }) {
     formData.append('title', title);
     // Kirim data sesuai tipe
   if (uploadType === 'link') {
-    formData.append('type', 'link'); // Beritahu backend ini adalah link
+    formData.append('type', 'link'); 
     formData.append('url', linkUrl); // Kirim URL-nya
   } else {
     formData.append('type', 'file');
@@ -292,7 +292,7 @@ function TikTokPreview({ url }) {
     const storageUrl = import.meta.env.VITE_STORAGE_URL;
 
     if (item.file_type === 'link') {
-      const videoId = getYoutubeId(item.file_path); // file_path isinya URL Youtube
+      const videoId = getYoutubeId(item.file_path); 
 
       // A. Jika Link Youtube Valid -> Tampilkan Thumbnail Asli
       if (videoId) {
