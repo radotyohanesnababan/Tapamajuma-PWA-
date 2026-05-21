@@ -6,6 +6,7 @@ export function cn(...inputs) {
 }
 
 export const getStorageUrl = (path) => {
+  console.log(import.meta.env);
   if (!path) return null;
 
   const isDev = import.meta.env.DEV;
@@ -52,8 +53,10 @@ export const getStorageUrl = (path) => {
   // LOCAL
   if (isDev) {
     return `${API_URL.replace(/\/api$/, "")}/storage/${finalPath}`;
+    
   }
 
   // PROD — TANPA /storage
   return `${STORAGE_URL}/${finalPath}`;
+  
 };

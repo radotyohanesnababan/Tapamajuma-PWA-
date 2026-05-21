@@ -25,7 +25,11 @@ export default function EditProfileStandalone() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-  const [previewUrl, setPreviewUrl] = useState(user?.avatar ? `http://tapamajuma-api.my.id/storage/${user.avatar}` : null);
+  const [previewUrl, setPreviewUrl] = useState(
+  user?.avatar
+    ? getStorageUrl(user.avatar)
+    : null
+);
   const [selectedFile, setSelectedFile] = useState(null);
 
   const [formData, setFormData] = useState({
