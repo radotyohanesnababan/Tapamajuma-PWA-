@@ -245,21 +245,23 @@
   }
   
   /* TTD GAMBAR */
-  .sig-image {
+.sig-image {
     position: absolute;
-    bottom: 5mm;
     left: 50%;
-    margin-left: -27.5mm;
-    width: 55mm;
+    bottom: 2mm;
+    transform: translateX(-50%);
+    max-width: 75mm;
+    max-height: 30mm;
+    width: auto;
     height: auto;
     opacity: 0.92;
-    z-index: 6;  /* DI ATAS FRAME */
-  }
+    z-index: 6;
+}
   
   /* STEMPEL */
   .stempel-wrap {
     position: absolute;
-    left: 12mm;
+    left: 25mm;
     bottom: 4mm;
     width: 32mm;
     height: 32mm;
