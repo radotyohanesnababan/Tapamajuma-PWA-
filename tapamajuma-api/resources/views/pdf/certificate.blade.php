@@ -247,7 +247,7 @@
   /* TTD GAMBAR */
   .sig-image {
     position: absolute;
-    bottom: 2mm;
+    bottom: 5mm;
     left: 50%;
     margin-left: -27.5mm;
     width: 55mm;
