@@ -8,6 +8,7 @@
 /.fleet
 /.idea
 /.nova
+/node_module
 /.phpunit.cache
 /.vscode
 /.zed
