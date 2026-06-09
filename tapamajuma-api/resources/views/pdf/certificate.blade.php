@@ -255,7 +255,7 @@
     width: auto;
     height: auto;
     opacity: 0.92;
-    z-index: 6;
+    z-index: 5;
 }
   
   /* STEMPEL */
@@ -266,7 +266,7 @@
     width: 32mm;
     height: 32mm;
     opacity: 0.68;
-    z-index: 5;  /* DI ATAS FRAME TAPI DI BAWAH TTD */
+    z-index: 6;  /* DI ATAS TTD */
   }
   
   .sig-name {
@@ -360,7 +360,7 @@
     <div class="subtitle">{{ $certificateSubtitle ?? 'LITERASI DAN NUMERASI' }}</div>
 
     <div class="diberikan">{{ $givenToLabel ?? 'DIBERIKAN KEPADA :' }}</div>
-    <div class="recipient-name">{{ $recipientName ?? 'John Doe' }}</div>
+    <div class="recipient-name">{{ $recipientName ?? 'John Doe' }} ({{ $recipientClass }})</div>
 
     <div class="achievement-label">{{ $achievementLabel ?? 'Atas Prestasi Sebagai :' }}</div>
     <div class="achievement-rank">{{ $rankLabel ?? 'Juara 1 Kelas VII-7' }}</div>

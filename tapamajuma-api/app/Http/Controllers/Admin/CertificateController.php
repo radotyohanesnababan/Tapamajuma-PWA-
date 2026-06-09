@@ -362,6 +362,7 @@ private function renderAndStorePdf(Certificate $certificate): void
         // --- RECIPIENT & ACHIEVEMENT ---
         'givenToLabel'         => 'DIBERIKAN KEPADA :',
         'recipientName'        => $certificate->user->name,
+        'recipientClass'       => $certificate->user->classNameforCertificate->name,
         'achievementLabel'     => 'Atas Prestasi Sebagai :',
         'rankLabel'            => $rankLabel,
         'achievementDesc'      => $achievementDesc,
