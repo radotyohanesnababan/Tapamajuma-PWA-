@@ -8,7 +8,7 @@
 /.fleet
 /.idea
 /.nova
-/node_module
+/node_modules
 /.phpunit.cache
 /.vscode
 /.zed
@@ -23,3 +23,4 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+

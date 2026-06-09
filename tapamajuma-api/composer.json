@@ -20,7 +20,8 @@
         "minishlink/web-push": "^10.0",
         "predis/predis": "^3.4",
         "sentry/sentry-laravel": "^4.20",
-        "simplesoftwareio/simple-qrcode": "*"
+        "simplesoftwareio/simple-qrcode": "*",
+        "spatie/browsershot": "^5.4"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.2",

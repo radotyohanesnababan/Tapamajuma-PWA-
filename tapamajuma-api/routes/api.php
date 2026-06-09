@@ -35,11 +35,26 @@ use App\Http\Controllers\Teacher\QuestionBankController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes (Tanpa Autentikasi)
 |--------------------------------------------------------------------------
 */
+use Spatie\Browsershot\Browsershot;
+
+Route::get('/test-pdf', function () {
+
+    $path = storage_path('app/test.pdf');
+
+    Browsershot::html('<h1>Hello World</h1>')
+        ->save($path);
+
+    return response()->json([
+        'exists' => file_exists($path),
+        'size' => filesize($path),
+    ]);
+});
 
 Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
 Route::get('/public/gallery/{token}', [GalleryController::class, 'showPublic']);
