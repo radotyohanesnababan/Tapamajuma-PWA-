@@ -49,19 +49,23 @@ class ReportController extends Controller
         // BAGIAN 1: RINGKASAN UTAMA
         // Semua dihitung langsung di DB, tidak ada Collection besar
         // --------------------------------------------------------
+        $activitySummary = DailyActivity::whereBetween('created_at', [$startDate, $endDate])
+    ->select(
+        DB::raw('COUNT(DISTINCT user_id) as siswa_aktif'),
+        DB::raw('SUM(CASE WHEN type = "literacy" THEN 1 ELSE 0 END) as total_literasi'),
+        DB::raw('SUM(CASE WHEN type = "numeracy" THEN 1 ELSE 0 END) as total_numerasi'),
+        DB::raw('SUM(CASE WHEN type = "tka"      THEN 1 ELSE 0 END) as total_tka')
+    )
+    ->first();
         $summary = [
             'total_siswa'        => User::where('role', 'student')->count(),
             'total_guru'         => User::where('role', 'teacher')->count(),
-            'siswa_aktif_sistem' => DailyActivity::whereBetween('created_at', [$startDate, $endDate])
-                                        ->distinct('user_id')->count('user_id'),
             'guru_aktif_sesi'    => SelfStudySession::whereBetween('started_at', [$startDate, $endDate])
                                         ->distinct('teacher_id')->count('teacher_id'),
-            'total_literasi'     => DailyActivity::where('type', 'literacy')
-                                        ->whereBetween('created_at', [$startDate, $endDate])->count(),
-            'total_numerasi'     => DailyActivity::where('type', 'numeracy')
-                                        ->whereBetween('created_at', [$startDate, $endDate])->count(),
-            'total_tka'          => DailyActivity::where('type', 'tka')
-                                        ->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'siswa_aktif_sistem'        => $activitySummary->siswa_aktif,
+            'total_literasi'     => $activitySummary->total_literasi,
+            'total_numerasi'     => $activitySummary->total_numerasi,
+            'total_tka'          => $activitySummary->total_tka,
             'top_mapel'          => DailyActivity::whereBetween('created_at', [$startDate, $endDate])
                                         ->select('subject', DB::raw('count(*) as total'))
                                         ->groupBy('subject')
@@ -111,36 +115,63 @@ class ReportController extends Controller
         // Masing-masing langsung query ke DB dengan limit(5),
         // tidak lagi load semua siswa ke RAM lalu filter Collection
         // --------------------------------------------------------
-                $topPerAngkatan = [];
+        // --------------------------------------------------------
+        // --------------------------------------------------------
         $gradeMap = ['Kelas 7' => 'VII-', 'Kelas 8' => 'VIII-', 'Kelas 9' => 'IX-'];
 
-        foreach ($gradeMap as $label => $roman) {
-            $baseQuery = fn() => User::where('users.role', 'student')
-                ->join('class_names', 'users.class_id', '=', 'class_names.id')
-                ->where('class_names.name', 'like', "{$roman}%")
-                ->select('users.id', 'users.name', 'class_names.name as class_name');
+        $gradeClassifier = fn($className) => match(true) {
+            str_starts_with($className, 'IX-')   => 'Kelas 9',
+            str_starts_with($className, 'VIII-') => 'Kelas 8',
+            str_starts_with($className, 'VII-')  => 'Kelas 7',
+            default                              => null,
+        };
 
+        $gradeBaseQuery = fn() => User::where('users.role', 'student')
+            ->join('class_names', 'users.class_id', '=', 'class_names.id')
+            ->where(function ($q) {
+                $q->where('class_names.name', 'like', 'VII-%')
+                ->orWhere('class_names.name', 'like', 'VIII-%')
+                ->orWhere('class_names.name', 'like', 'IX-%');
+            })
+            ->select('users.id', 'users.name', 'class_names.name as class_name');
+
+        // Query 1 — teraktif (berdasarkan jumlah aktivitas)
+        $teraktifAll = $gradeBaseQuery()
+            ->withCount(['dailyActivities as total_keaktifan' => fn($q) =>
+                $q->whereBetween('created_at', [$startDate, $endDate])])
+            ->orderByDesc('total_keaktifan')
+            ->get()
+            ->groupBy(fn($u) => $gradeClassifier($u->class_name));
+
+        // Query 2 — tertinggi (berdasarkan XP periode)
+        $tertinggiAll = $gradeBaseQuery()
+            ->addSelect(DB::raw('(
+                SELECT COALESCE(SUM(xp), 0)
+                FROM xp_logs
+                WHERE xp_logs.user_id = users.id
+                AND xp_logs.created_at BETWEEN "' . $startDate . '" AND "' . $endDate . '"
+            ) as xp_periode'))
+            ->orderByDesc('xp_periode')
+            ->get()
+            ->groupBy(fn($u) => $gradeClassifier($u->class_name));
+
+        // Query 3 — teraktif pagi (berdasarkan jumlah sesi pagi aktif)
+        $teraktifPagiAll = $gradeBaseQuery()
+            ->withCount(['attendances as total_sesi_pagi' => fn($q) =>
+                $q->where('is_active', 1)
+                ->whereBetween('created_at', [$startDate, $endDate])])
+            ->having('total_sesi_pagi', '>', 0)
+            ->orderByDesc('total_sesi_pagi')
+            ->get()
+            ->groupBy(fn($u) => $gradeClassifier($u->class_name));
+
+        // Rebuild $topPerAngkatan dari hasil groupBy
+        $topPerAngkatan = [];
+        foreach (array_keys($gradeMap) as $label) {
             $topPerAngkatan[$label] = [
-                'teraktif' => $baseQuery()
-                    ->withCount(['dailyActivities as total_keaktifan' => fn($q) =>
-                        $q->whereBetween('created_at', [$startDate, $endDate])])
-                    ->orderByDesc('total_keaktifan')
-                    ->limit(5)
-                    ->get(),
-
-                            'tertinggi' => $baseQuery()
-                ->addSelect(DB::raw('(SELECT COALESCE(SUM(xp), 0) FROM xp_logs WHERE xp_logs.user_id = users.id AND xp_logs.created_at BETWEEN "' . $startDate . '" AND "' . $endDate . '") as xp_periode'))
-                ->orderByDesc('xp_periode')
-                ->limit(5)
-                ->get(),
-
-                'teraktif_pagi' => $baseQuery()
-                    ->withCount(['attendances as total_sesi_pagi' => fn($q) =>
-                        $q->where('is_active', 1)->whereBetween('created_at', [$startDate, $endDate])])
-                    ->having('total_sesi_pagi', '>', 0)
-                    ->orderByDesc('total_sesi_pagi')
-                    ->limit(5)
-                    ->get(),
+                'teraktif'      => ($teraktifAll[$label]    ?? collect())->take(5),
+                'tertinggi'     => ($tertinggiAll[$label]   ?? collect())->take(5),
+                'teraktif_pagi' => ($teraktifPagiAll[$label] ?? collect())->take(5),
             ];
         }
 
@@ -361,37 +392,74 @@ class ReportController extends Controller
     }
 
     public function sessionEffectiveness()
-    {
-        $sessions = SelfStudySession::with(['teacher:id,name', 'students:id,name'])
-            ->orderByDesc('started_at')
-            ->limit(10)
-            ->get()
-            ->map(function ($session) {
-                $studentList = $session->students->pluck('name');
-                $realCount   = $session->students->count();
-                $startTime   = Carbon::parse($session->started_at);
-                $endTime     = $startTime->copy()->addHours(2);
+{
+    $sessions = SelfStudySession::with(['teacher:id,name', 'students:id,name'])
+        ->orderByDesc('started_at')
+        ->limit(10)
+        ->get();
 
-                $generatedActivities = DailyActivity::whereBetween('created_at', [$startTime, $endTime])->count();
-                $conversionRate      = $realCount > 0
-                    ? round(($generatedActivities / $realCount) * 100)
-                    : 0;
-
-                return [
-                    'id'                   => $session->id,
-                    'topic'                => $session->topic,
-                    'teacher'              => $session->teacher->name,
-                    'date'                 => $startTime->format('d M Y, H:i'),
-                    'class_name'           => $session->class_name,
-                    'attendees_count'      => $realCount,
-                    'attendees_list'       => $studentList,
-                    'activities_generated' => $generatedActivities,
-                    'conversion_rate'      => $conversionRate,
-                ];
-            });
-
-        return response()->json($sessions);
+    if ($sessions->isEmpty()) {
+        return response()->json([]);
     }
+
+    // Kumpulkan semua student_id yang hadir di semua sesi
+    $allStudentIds = $sessions
+        ->flatMap(fn($s) => $s->students->pluck('id'))
+        ->unique()
+        ->values();
+
+    // Kumpulkan rentang waktu terluas dari semua sesi
+    $earliestStart = $sessions
+        ->map(fn($s) => Carbon::parse($s->started_at))
+        ->min();
+
+    $latestEnd = $sessions
+        ->map(fn($s) => Carbon::parse($s->started_at)->addHours(2))
+        ->max();
+
+    // Satu query — hanya siswa yang hadir, dalam rentang semua sesi
+    $allActivities = DailyActivity::whereIn('user_id', $allStudentIds)
+        ->whereBetween('created_at', [$earliestStart, $latestEnd])
+        ->select('user_id', 'created_at')
+        ->get();
+
+    // Hitung per sesi di PHP, tidak ada query di dalam loop
+    $result = $sessions->map(function ($session) use ($allActivities) {
+        $startTime   = Carbon::parse($session->started_at);
+        $endTime     = $startTime->copy()->addHours(2);
+        $studentIds  = $session->students->pluck('id');
+        $studentList = $session->students->pluck('name');
+        $realCount   = $session->students->count();
+
+        // Filter dari collection:
+        // 1. Hanya siswa yang HADIR di sesi ini
+        // 2. Hanya dalam rentang waktu sesi ini
+        $generatedActivities = $allActivities
+            ->filter(fn($a) =>
+                $studentIds->contains($a->user_id) &&
+                Carbon::parse($a->created_at)->between($startTime, $endTime)
+            )
+            ->count();
+
+        $conversionRate = $realCount > 0
+            ? round(($generatedActivities / $realCount) * 100)
+            : 0;
+
+        return [
+            'id'                   => $session->id,
+            'topic'                => $session->topic,
+            'teacher'              => $session->teacher->name,
+            'date'                 => $startTime->format('d M Y, H:i'),
+            'class_name'           => $session->class_name,
+            'attendees_count'      => $realCount,
+            'attendees_list'       => $studentList,
+            'activities_generated' => $generatedActivities,
+            'conversion_rate'      => $conversionRate,
+        ];
+    });
+
+    return response()->json($result);
+}
 
     public function classSummary()
     {
