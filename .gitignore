@@ -7,3 +7,4 @@ tapamajuma-app/.env.development
 # Golang
 /tapamajuma-logger/tapamajuma-logger
 /tapamajuma-logger/.env
+/node_modules

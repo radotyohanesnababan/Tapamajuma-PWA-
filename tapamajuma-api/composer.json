@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "barryvdh/laravel-snappy": "^1.0",
         "dedoc/scramble": "^0.13.26",
         "ezyang/htmlpurifier": "^4.19",
         "google-gemini-php/client": "^2.7",

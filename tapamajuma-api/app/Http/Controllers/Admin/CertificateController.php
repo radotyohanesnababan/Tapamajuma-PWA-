@@ -8,6 +8,7 @@ use App\Models\Certificate;
 use App\Models\CertificateBatch;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -328,6 +329,74 @@ public function generatePdf(CertificateBatch $batch)
         'message' => 'PDF berhasil digenerate'
     ]);
 }
+
+private function renderAndStorePdfSnappy(
+    Certificate $certificate,
+    array $assets
+): void {
+    $rankLabel       = $this->buildRankLabel($certificate);
+    $achievementDesc = "Dalam mendukung Gerakan Literasi dan Numerasi pada SMP Negeri 1 Siborongborong melalui pemanfaatan Aplikasi TAPAMAJUMA sebagai tujuan mewujudkan Generasi Emas Tapanuli Utara.";
+
+    $start = microtime(true);
+
+    // ✅ Ganti Browsershot dengan Snappy
+    $pdf = SnappyPdf::loadView('pdf.certificate', [
+        'background'          => $assets['background'],
+        'logoKiri'            => $assets['logoKiri'],
+        'logoTengah'          => $assets['logoTengah'],
+        'logoKanan'           => $assets['logoKanan'],
+        'frame'               => $assets['frame'],
+        'certificateTitle'    => 'SERTIFIKAT',
+        'certificateSubtitle' => 'LITERASI DAN NUMERASI',
+        'givenToLabel'        => 'DIBERIKAN KEPADA :',
+        'recipientName'       => $certificate->user->name,
+        'recipientClass'      => $certificate->user->classNameforCertificate->name,
+        'achievementLabel'    => 'Atas Prestasi Sebagai :',
+        'rankLabel'           => $rankLabel,
+        'achievementDesc'     => $achievementDesc,
+        'principalTitle'      => 'Kepala Sekolah',
+        'principalSchool'     => 'SMP Negeri 1 Siborongborong',
+        'principalSignature'  => $assets['principalSignature'],
+        'principalName'       => 'Marturak Lumbantoruan, S.Pd.',
+        'principalNip'        => 'NIP. 198212082011011006',
+        'managerTitle'        => 'Pengelola Aplikasi Tapamajuma',
+        'managerSchool'       => 'SMP N 1 Siborongborong',
+        'managerSignature'    => $assets['managerSignature'],
+        'managerName'         => 'Torus Manuntun Nababan, S.Pd., M.Pd.',
+        'managerNip'          => 'NIP. 197302282002121005',
+        'stempelImage'        => $assets['stempelImage'],
+    ])
+    ->setPaper('a4')
+    ->setOrientation('landscape')
+    ->setOption('no-outline', true)
+    ->setOption('disable-javascript', true)
+    ->setOption('encoding', 'UTF-8')
+    ->setOption('margin-top', '0mm')
+    ->setOption('margin-right', '0mm')
+    ->setOption('margin-bottom', '0mm')
+    ->setOption('margin-left', '0mm'); // margin 0 karena certificate full background
+
+    $pdfContent = $pdf->output();
+
+    Log::info('Snappy Certificate Render', [
+        'certificate' => $certificate->id,
+        'seconds'     => round(microtime(true) - $start, 2),
+        'size_kb'     => round(strlen($pdfContent) / 1024, 2),
+    ]);
+
+    $path = "certificates/{$certificate->batch_id}/cert-{$certificate->id}-rank{$certificate->rank}.pdf";
+
+    $uploadStart = microtime(true);
+    Storage::disk('r2')->put($path, $pdfContent);
+
+    Log::info('R2 Upload', [
+        'certificate' => $certificate->id,
+        'seconds'     => round(microtime(true) - $uploadStart, 2),
+    ]);
+
+    $certificate->update(['pdf_path' => $path]);
+}
+
 private function renderAndStorePdfBrowsershot(
     Certificate $certificate,
     array $assets
@@ -387,10 +456,18 @@ private function renderAndStorePdfBrowsershot(
     $start = microtime(true);
 
     Browsershot::html($html)
-        ->format('A4')
-        ->landscape()
-        ->showBackground()
-        ->save($tempFile);
+    ->setNodeModulePath(env('BROWSERSHOT_NODE_MODULES', base_path('../node_modules')))
+    ->setChromePath(env('BROWSERSHOT_CHROMIUM_PATH', '/usr/bin/chromium'))
+    ->addChromiumArguments([
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+    ])
+    ->format('A4')
+    ->landscape()
+    ->showBackground()
+    ->save($tempFile);
 
     Log::info('Browsershot Render', [
         'certificate' => $certificate->id,
@@ -615,35 +692,35 @@ private function getCertificateAssets(): array
 
     return [
         'background' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/bg_sertif.jpg'))
+            file_get_contents(public_path('images/bg_sertif.jpg'))
         ),
 
         'logoKiri' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/logo_pemkab.png'))
+            file_get_contents(public_path('images/logo_pemkab.png'))
         ),
 
         'logoTengah' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/logo_gls.png'))
+            file_get_contents(public_path('images/logo_gls.png'))
         ),
 
         'logoKanan' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/iconappforcert.png'))
+            file_get_contents(public_path('images/iconappforcert.png'))
         ),
 
         'principalSignature' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/ttd_kepsek.png'))
+            file_get_contents(public_path('images/ttd_kepsek.png'))
         ),
 
         'managerSignature' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/ttd_manager.png'))
+            file_get_contents(public_path('images/ttd_manager.png'))
         ),
 
         'stempelImage' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/stempel.png'))
+            file_get_contents(public_path('images/stempel.png'))
         ),
 
         'frame' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('storage/images/frame.png'))
+            file_get_contents(public_path('images/frame.png'))
         ),
     ];
 }
