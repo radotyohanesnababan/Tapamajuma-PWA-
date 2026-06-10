@@ -458,15 +458,17 @@ private function renderAndStorePdfBrowsershot(
     Browsershot::html($html)
     ->setNodeModulePath(env('BROWSERSHOT_NODE_MODULES', base_path('../node_modules')))
     ->setChromePath(env('BROWSERSHOT_CHROMIUM_PATH', '/usr/bin/chromium'))
+    ->noSandbox()
+    ->dismissDialogs()
+    ->disableGpu()
     ->addChromiumArguments([
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
+        'disable-setuid-sandbox',
+        'disable-dev-shm-usage',
     ])
     ->format('A4')
     ->landscape()
     ->showBackground()
+    ->timeout(60)
     ->save($tempFile);
 
     Log::info('Browsershot Render', [
