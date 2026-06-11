@@ -30,4 +30,10 @@ class DailyActivity extends Model
     {
         return $this->hasOne(Reflection::class, 'activity_id');
     }
+
+    public function xpLog()
+    {
+        return $this->hasOne(XpLog::class, 'source_id')
+                    ->where('source', 'daily_activity');
+    }
 }
