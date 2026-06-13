@@ -384,11 +384,11 @@
           <div class="sig-space">
             <div class="sig-line"></div>
             
-            {{-- STEMPEL --}}
+            {{-- STEMPEL
             @if(!empty($stempelImage))
             <img src="{{ $stempelImage }}" alt="Stempel" class="stempel-wrap">
             @else
-            @endif
+            @endif --}}
             
             {{-- TTD GAMBAR --}}
             @if(!empty($principalSignature))
