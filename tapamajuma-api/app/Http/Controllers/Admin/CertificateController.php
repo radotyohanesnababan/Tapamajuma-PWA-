@@ -364,7 +364,7 @@ private function renderAndStorePdfSnappy(
         'managerSignature'    => $assets['managerSignature'],
         'managerName'         => 'Torus Manuntun Nababan, S.Pd., M.Pd.',
         'managerNip'          => 'NIP. 197302282002121005',
-        'stempelImage'        => $assets['stempelImage'],
+        //'stempelImage'        => $assets['stempelImage'],
     ])
     ->setPaper('a4')
     ->setOrientation('landscape')
@@ -717,9 +717,9 @@ private function getCertificateAssets(): array
             file_get_contents(public_path('images/ttd_manager.png'))
         ),
 
-        'stempelImage' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('images/stempel.png'))
-        ),
+        // 'stempelImage' => 'data:image/png;base64,' . base64_encode(
+        //     file_get_contents(public_path('images/stempel.png'))
+        // ),
 
         'frame' => 'data:image/png;base64,' . base64_encode(
             file_get_contents(public_path('images/frame.png'))

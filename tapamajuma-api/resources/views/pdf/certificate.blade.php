@@ -388,12 +388,6 @@
             @if(!empty($stempelImage))
             <img src="{{ $stempelImage }}" alt="Stempel" class="stempel-wrap">
             @else
-            <svg class="stempel-wrap" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" stroke="#1a3a6b" stroke-width="2" fill="none" opacity="0.6"/>
-              <circle cx="50" cy="50" r="35" stroke="#1a3a6b" stroke-width="1.5" fill="none" opacity="0.5"/>
-              <text x="50" y="45" text-anchor="middle" font-size="10" fill="#1a3a6b" font-weight="bold">SMPN 1</text>
-              <text x="50" y="58" text-anchor="middle" font-size="7" fill="#1a3a6b">SIBORONGBORONG</text>
-            </svg>
             @endif
             
             {{-- TTD GAMBAR --}}
