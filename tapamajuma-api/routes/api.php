@@ -178,6 +178,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Galeri Karya Siswa
     Route::prefix('galleries')->group(function () {
+        Route::get('/subjects', [GalleryController::class, 'subjects']);
         Route::get('/', [GalleryController::class, 'index']);
         Route::post('/', [GalleryController::class, 'store']);
         Route::post('/{id}/share', [GalleryController::class, 'share']);

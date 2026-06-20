@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReactPlayer from 'react-player';
 import { InstagramEmbed, FacebookEmbed } from 'react-social-media-embed';
 import ShareButton from '@/components/ShareButton';
+import { SlidersHorizontal, X } from "lucide-react";
 
 export default function GalleryStudent() {
   const { user } = useAuth();
@@ -32,11 +33,12 @@ export default function GalleryStudent() {
   const audioChunksRef = useRef([]);
 
   const [selectedItem, setSelectedItem] = useState(null);
-    const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  useEffect(() => {
-    fetchGalleries();
-  }, []);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null); 
+  const [subjectId, setSubjectId] = useState("");
 
   //State Pagination
   const [items, setItems] = useState([]);
@@ -44,9 +46,14 @@ const [currentPage, setCurrentPage] = useState(1);
 const [lastPage, setLastPage] = useState(1);
 const [loading, setLoading] = useState(false);
 
-const fetchGalleries = async (page = 1) => {
+const [quota, setQuota] = useState(null);
+
+const fetchGalleries = async (page = 1, subjectId = selectedSubjectId) => {
     setLoading(true);
-    const res = await api.get(`/api/galleries?page=${page}`);
+    const params = new URLSearchParams({ page });
+    if (subjectId) params.append('subject_id', subjectId);
+
+    const res = await api.get(`/api/galleries?${params}`);
     if (page === 1) {
         setItems(res.data.data);
     } else {
@@ -54,12 +61,21 @@ const fetchGalleries = async (page = 1) => {
     }
     setCurrentPage(res.data.current_page);
     setLastPage(res.data.last_page);
+    if (res.data.quota) setQuota(res.data.quota); 
+
     setLoading(false);
 };
 
-useEffect(() => {
-    fetchGalleries(1);
-}, []);
+  useEffect(() => {
+        fetchGalleries(1);
+        // ✅ Fix — tambah catch + log
+    api.get('/api/galleries/subjects')
+    .then(res => {
+        console.log('subjects:', res.data); // cek isinya dulu
+        setSubjects(res.data);
+    })
+    .catch(err => console.error('subjects error:', err));
+    }, []);
 
   useEffect(() => {
   if (selectedItem?.file_path?.includes('tiktok.com')) {
@@ -235,53 +251,51 @@ function TikTokPreview({ url }) {
   );
 }
 
-  const handleUpload = async (e) => {
+ const handleUpload = async (e) => {
     e.preventDefault();
-    /// 1. Validasi Judul (Wajib untuk semua)
     if (!title) return toast.error("Judul karya wajib diisi!");
+    if (!subjectId) return toast.error("Pilih mata pelajaran dulu!"); // ← tambah
 
-    // 2. Validasi Berdasarkan Tipe Upload
     if (uploadType === 'link') {
-        // Kalau tipe LINK, yang dicek linkUrl-nya
         if (!linkUrl) return toast.error("Masukkan link video dulu!");
     } else {
-        // Kalau tipe FILE atau RECORD, yang dicek file-nya
         if (!file) return toast.error("Pilih file atau rekam suara dulu!");
     }
 
     setUploading(true);
-
     const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('title', title);
-    // Kirim data sesuai tipe
-  if (uploadType === 'link') {
-    formData.append('type', 'link'); 
-    formData.append('url', linkUrl); // Kirim URL-nya
-  } else {
-    formData.append('type', 'file');
-    formData.append('file', file);
-  }
+    formData.append('subject_id', subjectId); // ← tambah
+
+    if (uploadType === 'link') {
+        formData.append('type', 'link');
+        formData.append('url', linkUrl);
+    } else {
+        formData.append('type', 'file');
+        formData.append('file', file);
+    }
 
     try {
-      await api.post('/api/galleries', formData, {
-        headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` },
-        
-      });
-      toast.success("Karya berhasil diunggah!");
-      setOpen(false);
-      setTitle("");
-      setFile(null);
-      setAudioUrl(null); // Reset preview audio
-      setLinkUrl("");
-      setUploadType("file");
-      fetchGalleries();
-    } catch {
-      toast.error("Gagal mengunggah karya");
+        await api.post('/api/galleries', formData, {
+            headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` },
+        });
+        toast.success("Karya berhasil diunggah!");
+        setOpen(false);
+        setTitle("");
+        setFile(null);
+        setAudioUrl(null);
+        setLinkUrl("");
+        setUploadType("file");
+        setSubjectId(""); // ← tambah
+        fetchGalleries();
+    } catch (err) {
+        const message = err.response?.data?.message || "Gagal mengunggah karya";
+        toast.error(message);
     } finally {
-      setUploading(false);
+        setUploading(false);
     }
-  };
+};
 
 
 
@@ -410,145 +424,195 @@ return (
           <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Aksi Bulanan Siswa</p>
         </div>
       </div>
-
-      <Dialog open={open} onOpenChange={(val) => { setOpen(val); if(!val) setAudioUrl(null); }}>
-        <DialogTrigger asChild>
-          <Button className="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-100 h-12 w-12 p-0 border-none transition-transform active:scale-90">
-            <Plus size={24} className="text-white" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] border-none shadow-2xl">
-          <DialogHeader className="items-center pb-2">
-            <div className="bg-indigo-50 p-3 rounded-2xl mb-2">
-              <Rocket className="text-indigo-600" size={28} />
-            </div>
-            <DialogTitle className="text-xl font-black text-slate-800">Unggah Karya Terbaik</DialogTitle>
-            <DialogDescription className="text-xs text-center font-medium">
-              Siap menginspirasi teman-temanmu hari ini?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleUpload} className="space-y-5 pt-2">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Judul Keren</Label>
-              <Input 
-                className="rounded-2xl bg-slate-50 border-none h-12 focus-visible:ring-indigo-500 shadow-inner" 
-                placeholder="Apa nama karyamu?" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-              />
-            </div>
-
-            <Tabs value={uploadType} onValueChange={setUploadType} className="w-full">
-  <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-2xl p-1 h-auto shadow-inner">
-    {/* TAMBAHKAN type="button" DI SINI */}
-    <TabsTrigger 
-      type="button" 
-      value="file" 
-      className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      <div className='flex gap-2'>
+         <Button
+        onClick={() => setFilterOpen(true)}
+        className={`rounded-2xl h-12 w-12 p-0 border-none relative transition-all
+            ${selectedSubjectId
+                ? 'bg-indigo-600 shadow-lg shadow-indigo-100'
+                : 'bg-white shadow-sm'}`}
+        variant="ghost"
     >
-      📁 FILES
-    </TabsTrigger>
-    
-    <TabsTrigger 
-      type="button" 
-      value="record" 
-      className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
-    >
-      🎙️ VOICE
-    </TabsTrigger>
-    
-    <TabsTrigger 
-      type="button" 
-      value="link" 
-      className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
-    >
-      🔗 LINKS
-    </TabsTrigger>
-  </TabsList>
-  
-  {/* ISI CONTENT TETAP SAMA NAMUN DENGAN STYLE YANG LEBIH EMPUK */}
-  <TabsContent value="file" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-    <div className="border-2 border-dashed rounded-[2.5rem] p-8 flex flex-col items-center bg-white border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group relative">
-      <FileUp className="text-slate-300 group-hover:text-indigo-500 transition-colors mb-3" size={40} />
-      <p className="text-[11px] font-black text-slate-400 uppercase tracking-tighter">Ketuk untuk pilih file</p>
-      <input 
-        type="file" 
-        accept=".jpg,.png,.mp3,.pdf" 
-        onChange={(e) => setFile(e.target.files[0])} 
-        className="absolute inset-0 opacity-0 cursor-pointer" 
-      />
-      {file && (
-        <div className="mt-3 flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-bold shadow-lg shadow-emerald-100 animate-bounce">
-          <span>✅ {file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name}</span>
-        </div>
-      )}
-    </div>
-  </TabsContent>
-
-  <TabsContent value="record" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-    <div className="flex flex-col items-center p-8 bg-indigo-50/50 rounded-[2.5rem] border-2 border-indigo-100 border-dashed relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-10">
-        <Mic size={100} />
-      </div>
-      
-      {!audioUrl ? (
-        <Button 
-          type="button" // Pastikan ini juga type="button"
-          onClick={isRecording ? stopRecording : startRecording} 
-          className={`rounded-full w-16 h-16 shadow-2xl transition-all duration-300 ${isRecording ? 'bg-rose-500 animate-pulse scale-110 ring-4 ring-rose-100' : 'bg-indigo-600 hover:scale-110 shadow-indigo-200'}`}
-        >
-          {isRecording ? <Square size={24} fill="white" /> : <Mic size={28} />}
-        </Button>
-      ) : (
-        <div className="w-full space-y-4 z-10">
-          <div className="bg-white p-2 rounded-2xl shadow-sm">
-            <audio src={audioUrl} controls className="w-full h-10" />
-          </div>
-          <Button 
-            type="button" 
-            variant="ghost" 
-            className="w-full text-[10px] font-black text-rose-500 hover:bg-rose-100 rounded-xl" 
-            onClick={() => {setAudioUrl(null); setFile(null);}}
-          >
-            HAPUS & REKAM ULANG
-          </Button>
-        </div>
-      )}
-      <p className={`text-[10px] mt-6 font-black uppercase tracking-widest z-10 ${isRecording ? 'text-rose-500' : 'text-indigo-400'}`}>
-        {isRecording ? "Sedang Merekam..." : audioUrl ? "Rekaman Siap!" : "Klik Mic untuk Bicara"}
-      </p>
-    </div>
-  </TabsContent>
-
-  <TabsContent value="link" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-    <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4">
-      <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alamat Link (URL)</Label>
-        <Input 
-          className="rounded-2xl bg-slate-50 border-none h-12 shadow-inner focus-visible:ring-indigo-500" 
-          placeholder="Tempel link YT/IG/Tiktok di sini..."
-          value={linkUrl}
-          onChange={(e) => setLinkUrl(e.target.value)}
+        <SlidersHorizontal
+            size={20}
+            className={selectedSubjectId ? 'text-white' : 'text-slate-600'}
         />
+        {/* Dot merah kalau filter aktif */}
+        {selectedSubjectId && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-400 rounded-full ring-2 ring-white" />
+        )}
+    </Button>
+      <Dialog open={open} onOpenChange={(val) => { setOpen(val); 
+        if(!val) 
+        setAudioUrl(null) 
+        setSubjectId(""); }}>
+          <DialogTrigger asChild>
+            <Button className="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-100 h-12 w-12 p-0 border-none transition-transform active:scale-90">
+              <Plus size={24} className="text-white" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] border-none shadow-2xl">
+            <DialogHeader className="items-center pb-2">
+              <div className="bg-indigo-50 p-3 rounded-2xl mb-2">
+                <Rocket className="text-indigo-600" size={28} />
+              </div>
+              <DialogTitle className="text-xl font-black text-slate-800">Unggah Karya Terbaik</DialogTitle>
+              <DialogDescription className="text-xs text-center font-medium">
+                Siap menginspirasi teman-temanmu hari ini?
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleUpload} className="space-y-5 pt-2">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Judul Keren</Label>
+                <Input 
+                  className="rounded-2xl bg-slate-50 border-none h-12 focus-visible:ring-indigo-500 shadow-inner" 
+                  placeholder="Apa nama karyamu?" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                />
+              </div>
+              <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mata Pelajaran</Label>
+                  <select
+                      value={subjectId}
+                      onChange={(e) => setSubjectId(e.target.value)}
+                      className="w-full rounded-2xl bg-slate-50 border-none h-12 px-4 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner appearance-none"
+                  >
+                      <option value="">-- Pilih Mata Pelajaran --</option>
+                      {subjects.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                  </select>
+              </div>
+
+              <Tabs value={uploadType} onValueChange={setUploadType} className="w-full">
+    <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-2xl p-1 h-auto shadow-inner">
+      {/* TAMBAHKAN type="button" DI SINI */}
+      <TabsTrigger 
+        type="button" 
+        value="file" 
+        className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      >
+        📁 FILES
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        type="button" 
+        value="record" 
+        className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      >
+        🎙️ VOICE
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        type="button" 
+        value="link" 
+        className="rounded-xl py-2.5 text-[10px] font-black data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      >
+        🔗 LINKS
+      </TabsTrigger>
+    </TabsList>
+    
+    {/* ISI CONTENT TETAP SAMA NAMUN DENGAN STYLE YANG LEBIH EMPUK */}
+    <TabsContent value="file" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="border-2 border-dashed rounded-[2.5rem] p-8 flex flex-col items-center bg-white border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group relative">
+        <FileUp className="text-slate-300 group-hover:text-indigo-500 transition-colors mb-3" size={40} />
+        <p className="text-[11px] font-black text-slate-400 uppercase tracking-tighter">Ketuk untuk pilih file</p>
+        <input 
+          type="file" 
+          accept=".jpg,.png,.mp3,.pdf" 
+          onChange={(e) => setFile(e.target.files[0])} 
+          className="absolute inset-0 opacity-0 cursor-pointer" 
+        />
+        {file && (
+          <div className="mt-3 flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-bold shadow-lg shadow-emerald-100 animate-bounce">
+            <span>✅ {file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name}</span>
+          </div>
+        )}
       </div>
-      <div className="bg-amber-50 p-4 rounded-[1.5rem] flex gap-3 border border-amber-100">
-        <Sparkles className="text-amber-500 shrink-0" size={18} />
-        <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-          PENTING: Pastikan videomu diatur sebagai "Publik" agar bisa dilihat guru dan teman sekelas!
+    </TabsContent>
+
+    <TabsContent value="record" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex flex-col items-center p-8 bg-indigo-50/50 rounded-[2.5rem] border-2 border-indigo-100 border-dashed relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Mic size={100} />
+        </div>
+        
+        {!audioUrl ? (
+          <Button 
+            type="button" // Pastikan ini juga type="button"
+            onClick={isRecording ? stopRecording : startRecording} 
+            className={`rounded-full w-16 h-16 shadow-2xl transition-all duration-300 ${isRecording ? 'bg-rose-500 animate-pulse scale-110 ring-4 ring-rose-100' : 'bg-indigo-600 hover:scale-110 shadow-indigo-200'}`}
+          >
+            {isRecording ? <Square size={24} fill="white" /> : <Mic size={28} />}
+          </Button>
+        ) : (
+          <div className="w-full space-y-4 z-10">
+            <div className="bg-white p-2 rounded-2xl shadow-sm">
+              <audio src={audioUrl} controls className="w-full h-10" />
+            </div>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full text-[10px] font-black text-rose-500 hover:bg-rose-100 rounded-xl" 
+              onClick={() => {setAudioUrl(null); setFile(null);}}
+            >
+              HAPUS & REKAM ULANG
+            </Button>
+          </div>
+        )}
+        <p className={`text-[10px] mt-6 font-black uppercase tracking-widest z-10 ${isRecording ? 'text-rose-500' : 'text-indigo-400'}`}>
+          {isRecording ? "Sedang Merekam..." : audioUrl ? "Rekaman Siap!" : "Klik Mic untuk Bicara"}
         </p>
       </div>
-    </div>
-  </TabsContent>
-</Tabs>
+    </TabsContent>
 
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-2xl font-black shadow-lg shadow-indigo-100" disabled={uploading}>
-              {uploading ? <Loader2 className="animate-spin mr-2" /> : "PUBLIKASIKAN KARYA 🚀"}
-            </Button>
-          </form>
-        </DialogContent>
+    <TabsContent value="link" className="pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alamat Link (URL)</Label>
+          <Input 
+            className="rounded-2xl bg-slate-50 border-none h-12 shadow-inner focus-visible:ring-indigo-500" 
+            placeholder="Tempel link YT/IG/Tiktok di sini..."
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+          />
+        </div>
+        <div className="bg-amber-50 p-4 rounded-[1.5rem] flex gap-3 border border-amber-100">
+          <Sparkles className="text-amber-500 shrink-0" size={18} />
+          <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
+            PENTING: Pastikan videomu diatur sebagai "Publik" agar bisa dilihat guru dan teman sekelas!
+          </p>
+        </div>
+      </div>
+    </TabsContent>
+  </Tabs>
+
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-2xl font-black shadow-lg shadow-indigo-100" disabled={uploading}>
+                {uploading ? <Loader2 className="animate-spin mr-2" /> : "PUBLIKASIKAN KARYA 🚀"}
+              </Button>
+            </form>
+          </DialogContent>
       </Dialog>
+      </div>
+     
     </div>
+
+    {quota && (
+    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[11px] font-bold
+        ${quota.remaining === 0 
+            ? 'bg-rose-50 text-rose-500' 
+            : 'bg-emerald-50 text-emerald-600'}`}>
+        <span>{quota.remaining === 0}</span>
+        <span>
+            {quota.remaining === 0 
+                ? 'Kuota minggu ini sudah habis' 
+                : `Sisa kuota upload minggu ini: ${quota.remaining}/${quota.max}`}
+        </span>
+    </div>
+)}
+
 
     {/* NAVIGATION TABS - Dibuat Lebih "Smooth" */}
     <Tabs defaultValue="all" className="w-full">
@@ -562,6 +626,17 @@ return (
       </TabsList>
 
 <TabsContent value="all" className="grid grid-cols-2 gap-4 mt-6">
+    {selectedSubjectId && (
+        <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-[10px] font-black">
+                <span>{subjects.find(s => s.id === selectedSubjectId)?.name}</span>
+                <button onClick={() => { setSelectedSubjectId(null); fetchGalleries(1, null); }}>
+                    <X size={10} />
+                </button>
+            </div>
+            <span className="text-[10px] text-slate-400 font-bold">{items.length} karya</span>
+        </div>
+    )}
     {items.map((item) => (
         <Card key={item.id} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white hover:scale-105 transition-transform group" onClick={() => handleOpenPreview(item)}>
             <div className="aspect-square flex items-center justify-center overflow-hidden relative">
@@ -788,6 +863,66 @@ return (
         )}
       </DialogContent>
     </Dialog>
+
+    {filterOpen && (
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+        {/* Overlay */}
+        <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setFilterOpen(false)}
+        />
+
+        {/* Sheet */}
+        <div className="relative bg-white rounded-t-[2.5rem] p-6 space-y-5
+            animate-in slide-in-from-bottom duration-300 z-[70]">
+
+            {/* Handle bar */}
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto" />
+
+            <div className="flex items-center justify-between">
+                <h3 className="font-black text-slate-800 text-lg">Filter Mata Pelajaran</h3>
+                {selectedSubjectId && (
+                    <button
+                        onClick={() => { setSelectedSubjectId(null); fetchGalleries(1, null); setFilterOpen(false); }}
+                        className="text-[10px] font-black text-rose-500 uppercase tracking-widest"
+                    >
+                        Reset
+                    </button>
+                )}
+            </div>
+
+            {/* Chips */}
+            <div className="flex flex-wrap gap-2 pb-4">
+                <button
+                    onClick={() => { setSelectedSubjectId(null); fetchGalleries(1, null); setFilterOpen(false); }}
+                    className={`px-4 py-2 rounded-full text-xs font-bold border transition-all
+                        ${!selectedSubjectId
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                            : 'bg-white text-slate-500 border-slate-200'}`}
+                >
+                    Semua
+                </button>
+                {subjects.map(s => (
+                    <button
+                        key={s.id}
+                        onClick={() => {
+                            setSelectedSubjectId(s.id);
+                            fetchGalleries(1, s.id);
+                            setFilterOpen(false);
+                        }}
+                        className={`px-4 py-2 rounded-full text-xs font-bold border transition-all
+                            ${selectedSubjectId === s.id
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                                : 'bg-white text-slate-500 border-slate-200'}`}
+                    >
+                        {s.name}
+                    </button>
+                ))}
+            </div>
+        </div>
+
+    </div>
+)}
   </div>
 );
 }

@@ -15,6 +15,7 @@ class Gallery extends Model
         'title',
         'file_path',
         'file_type',
+        'subject_id',
         'share_token',
         'is_published'
     ];
@@ -34,6 +35,16 @@ class Gallery extends Model
     {
         return $this->belongsTo(DailyActivity::class, 'activity_id');
     }
+
+    /**
+     * Relasi ke Subject (Mata pelajaran terkait)
+     */
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
+
+
 
     public function getPublicUrlAttribute()
     {
