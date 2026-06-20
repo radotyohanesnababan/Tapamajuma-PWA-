@@ -364,7 +364,7 @@ private function renderAndStorePdfSnappy(
         'managerSignature'    => $assets['managerSignature'],
         'managerName'         => 'Torus Manuntun Nababan, S.Pd., M.Pd.',
         'managerNip'          => 'NIP. 197302282002121005',
-        'stempelImage'        => $assets['stempelImage'],
+        //'stempelImage'        => $assets['stempelImage'],
     ])
     ->setPaper('a4')
     ->setOrientation('landscape')
@@ -445,7 +445,7 @@ private function renderAndStorePdfBrowsershot(
         'managerNip'         => 'NIP. 197302282002121005',
 
         // STEMPEL
-        'stempelImage'       => $assets['stempelImage'],
+        //'stempelImage'       => $assets['stempelImage'],
 
     ])->render();
 
@@ -508,7 +508,7 @@ private function renderAndStorePdf(Certificate $certificate, array $assets): voi
     // 2. Label ranking
     $rankLabel = $this->buildRankLabel($certificate);
     // Stempel dipertahankan sesuai request sebelumnya
-    $stempelImage       = $assets['stempelImage'];
+    //$stempelImage       = $assets['stempelImage'];
 
     // 4. Menyusun Teks Deskripsi Panjang Prestasi
     $achievementDesc = "Dalam mendukung Gerakan Literasi dan Numerasi pada SMP Negeri 1 Siborongborong melalui pemanfaatan Aplikasi TAPAMAJUMA sebagai tujuan mewujudkan Generasi Emas Tapanuli Utara.";
@@ -549,7 +549,7 @@ private function renderAndStorePdf(Certificate $certificate, array $assets): voi
         'managerNip'           => 'NIP. 197302282002121005',
 
         // --- RETAINED FEATURES (STEMPEL & QR CODE) ---
-        'stempelImage'         => $stempelImage,
+        //'stempelImage'         => $stempelImage,
         //'qrCode'               => $qrCode, // Sekarang dikirim lagi ke Blade
     ])->setPaper('a4', 'landscape');
     $pdfContent = $pdf->output();
@@ -717,9 +717,9 @@ private function getCertificateAssets(): array
             file_get_contents(public_path('images/ttd_manager.png'))
         ),
 
-        'stempelImage' => 'data:image/png;base64,' . base64_encode(
-            file_get_contents(public_path('images/stempel.png'))
-        ),
+        // 'stempelImage' => 'data:image/png;base64,' . base64_encode(
+        //     file_get_contents(public_path('images/stempel.png'))
+        // ),
 
         'frame' => 'data:image/png;base64,' . base64_encode(
             file_get_contents(public_path('images/frame.png'))

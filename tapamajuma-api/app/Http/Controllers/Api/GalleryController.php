@@ -10,9 +10,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Services\XpService;
+use Carbon\Carbon;
+use App\Models\Subject;
 
 class GalleryController extends Controller
 {
+    public function subjects()
+{
+    return response()->json(
+        Subject::orderBy('name')->get(['id', 'name'])
+    );
+}
     private function formatGalleryUrl($gallery)
     {
         // Jika tipenya 'link' (YouTube/IG), biarkan URL aslinya
@@ -24,19 +32,47 @@ class GalleryController extends Controller
         return $gallery->file_path ? Storage::url($gallery->file_path) : null;
     }
 
-   public function index(Request $request)
+public function index(Request $request)
 {
-    $galleries = Gallery::with('user:id,name,class_id')
-        ->where('is_published', true)
-        ->latest()
-        ->paginate(10);
+    $user = $request->user();
+    // Hitung sisa kuota
+    $quota = null;
+    if (!in_array($user->role, ['teacher', 'superadmin'])) {
+        $startOfWeek = now('Asia/Jakarta')->copy()->startOfWeek(Carbon::MONDAY)->utc();
+        $endOfWeek   = now('Asia/Jakarta')->copy()->endOfWeek(Carbon::SUNDAY)->utc();
+        
+        $uploaded = Gallery::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->count();
 
-    $galleries->getCollection()->transform(function($item) {
+        $quota = [
+            'used'      => $uploaded,
+            'max'       => self::MAX_UPLOAD_PER_WEEK,
+            'remaining' => max(0, self::MAX_UPLOAD_PER_WEEK - $uploaded),
+        ];
+    }
+    $query = Gallery::with([
+            'user:id,name,class_id',
+            'subject:id,name', 
+        ])
+        ->where('is_published', true);
+
+    
+    if ($request->filled('subject_id')) {
+        $query->where('subject_id', $request->subject_id);
+    }
+
+    $galleries = $query->latest()->paginate(10);
+
+    $galleries->getCollection()->transform(function ($item) {
         $item->file_url = $this->formatGalleryUrl($item);
         return $item;
     });
 
-    return response()->json($galleries);
+    return response()->json([
+        'quota' => $quota,
+        ...$galleries->toArray(),
+    ]);
 }
 
     public function indexfortc(Request $request)
@@ -93,6 +129,11 @@ class GalleryController extends Controller
         });
     }
 
+    // Subject filter
+    if ($request->filled('subject_id')) {
+    $query->where('subject_id', $request->subject_id);
+    }   
+
     $perPage = $request->get('per_page', 12);
 
     $galleries = $query
@@ -105,7 +146,9 @@ class GalleryController extends Controller
                 )->with(
                     'studentClass:id,name'
                 );
-            }
+
+            },
+            'subject:id,name'
         ])
         ->latest()
         ->paginate($perPage);
@@ -191,7 +234,16 @@ class GalleryController extends Controller
             'title'       => 'required|string|max:255',
             'activity_id' => 'nullable',
             'type'        => 'required|in:file,link', 
+            'subject_id'  => 'nullable|exists:subjects,id',
         ]);
+        
+        $eligibilityError = $this->checkUploadEligibility(Auth::user());
+        if ($eligibilityError) {
+            return response()->json(
+                ['message' => $eligibilityError['message']],
+                $eligibilityError['status']
+            );
+        }
 
         $filePath = null;
         $fileType = null;
@@ -232,7 +284,9 @@ class GalleryController extends Controller
             'title'        => $request->title,
             'file_path'    => $filePath,
             'file_type'    => $fileType,
+            'subject_id'   => $request->subject_id,
             'is_published' => true, 
+
         ]);
       
         XpService::award(
@@ -248,4 +302,63 @@ class GalleryController extends Controller
             'url'     => $this->formatGalleryUrl($gallery) 
         ], 201);
     }
+
+const MAX_UPLOAD_PER_WEEK = 3;
+
+const UPLOAD_SCHEDULE = [
+    7 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
+    8 => ['day' => Carbon::THURSDAY,  'label' => 'Kamis'],
+    9 => ['day' => Carbon::FRIDAY,    'label' => 'Jumat'],
+];
+
+    private function checkUploadEligibility(User $user): ?array
+{
+    if (in_array($user->role, ['teacher', 'superadmin'])) {
+        return null;
+    }
+
+        $user->loadMissing('studentClass');
+        $className = $user->studentClass->name ?? '';
+
+        $romanMap = [
+            'VII'  => 7,
+            'VIII' => 8,
+            'IX'   => 9,
+        ];
+        
+        $romanPart = explode('-', trim($className))[0];
+        $grade = $romanMap[$romanPart] ?? null;
+
+        // Sisanya tidak berubah
+        if (!$grade || !isset(self::UPLOAD_SCHEDULE[$grade])) {
+            return null;
+        }
+
+    $schedule = self::UPLOAD_SCHEDULE[$grade];
+    $nowWib   = now('Asia/Jakarta');
+    $today    = $nowWib->dayOfWeek;
+
+    if ($today !== $schedule['day']) {
+        return [
+            'status'  => 403,
+            'message' => "Kelas {$grade} hanya bisa upload pada hari {$schedule['label']}. 🗓️",
+        ];
+    }
+
+    $startOfWeek = $nowWib->copy()->startOfWeek(Carbon::MONDAY)->utc();
+    $endOfWeek   = $nowWib->copy()->endOfWeek(Carbon::SUNDAY)->utc();
+
+    $uploadedThisWeek = Gallery::where('user_id', $user->id)
+        ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        ->count();
+
+    if ($uploadedThisWeek >= self::MAX_UPLOAD_PER_WEEK) {
+        return [
+            'status'  => 429,
+            'message' => "Kuota minggu ini sudah penuh (maks. " . self::MAX_UPLOAD_PER_WEEK . " karya/minggu). Sampai {$schedule['label']} depan ya! ",
+        ];
+    }
+
+    return null;
+}
 }

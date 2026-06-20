@@ -174,12 +174,13 @@ Route::middleware('tenant')->group(function () {
             Route::post('/{id}/peer-feedback', [ReflectionController::class, 'storePeerFeedback']);
         });
 
-        // Galeri Karya Siswa
-        Route::prefix('galleries')->group(function () {
-            Route::get('/', [GalleryController::class, 'index']);
-            Route::post('/', [GalleryController::class, 'store']);
-            Route::post('/{id}/share', [GalleryController::class, 'share']);
-        });
+    // Galeri Karya Siswa
+    Route::prefix('galleries')->group(function () {
+        Route::get('/subjects', [GalleryController::class, 'subjects']);
+        Route::get('/', [GalleryController::class, 'index']);
+        Route::post('/', [GalleryController::class, 'store']);
+        Route::post('/{id}/share', [GalleryController::class, 'share']);
+    });
 
         // CBT Siswa
         Route::middleware('check.seb')->prefix('cbt')->group(function () {
