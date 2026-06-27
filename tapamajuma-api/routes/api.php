@@ -12,11 +12,13 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StudentMgmtController;
 use App\Http\Controllers\Admin\SubjectMgmtController;
 use App\Http\Controllers\Admin\TeacherMgmtController as AdminTeacherMgmtController;
+use App\Http\Controllers\Api\AcademicPeriodController;
 use App\Http\Controllers\Api\AIController as ApiAIController;
 use App\Http\Controllers\Api\CBTController;
 use App\Http\Controllers\Api\CertificateStudentController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\LiteracyCardController;
 use App\Http\Controllers\Api\NisController;
@@ -292,6 +294,21 @@ Route::middleware('tenant')->group(function () {
                 Route::get('/template', [ControllersAdminNisController::class, 'downloadTemplate']);
                 Route::post('/import', [ControllersAdminNisController::class, 'import']);
                 Route::post('/{id}/unbind', [ControllersAdminNisController::class, 'unbind']);
+            });
+            // Academic Period
+            Route::prefix('academic-periods')->group(function () {
+                Route::get('/', [AcademicPeriodController::class, 'index']);
+                Route::post('/', [AcademicPeriodController::class, 'store']);
+                Route::get('/{id}', [AcademicPeriodController::class, 'show']);
+                Route::post('/{id}/activate', [AcademicPeriodController::class, 'activate']);
+            });
+
+            // Enrollment & Promotion
+            Route::prefix('enrollments')->group(function () {
+                Route::get('/promotion-preview', [EnrollmentController::class, 'promotionPreview']);
+                Route::post('/promote-all', [EnrollmentController::class, 'promoteAll']);
+                Route::patch('/{id}/set-next-class', [EnrollmentController::class, 'setNextClass']);
+                Route::post('/enroll', [EnrollmentController::class, 'enroll']);
             });
 
             Route::prefix('announcements')->group(function () {

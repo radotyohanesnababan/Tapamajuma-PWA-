@@ -12,231 +12,202 @@ use Illuminate\Support\Str;
 use App\Services\XpService;
 use Carbon\Carbon;
 use App\Models\Subject;
+use App\Models\AcademicPeriod;
 
 class GalleryController extends Controller
 {
     public function subjects()
-{
-    return response()->json(
-        Subject::orderBy('name')->get(['id', 'name'])
-    );
-}
+    {
+        return response()->json(
+            Subject::orderBy('name')->get(['id', 'name'])
+        );
+    }
+
     private function formatGalleryUrl($gallery)
     {
-        // Jika tipenya 'link' (YouTube/IG), biarkan URL aslinya
         if ($gallery->file_type === 'link') {
             return $gallery->file_path;
         }
 
-        
         return $gallery->file_path ? Storage::url($gallery->file_path) : null;
     }
 
-public function index(Request $request)
-{
-    $user = $request->user();
-    // Hitung sisa kuota
-    $quota = null;
-    if (!in_array($user->role, ['teacher', 'superadmin'])) {
-        $startOfWeek = now('Asia/Jakarta')->copy()->startOfWeek(Carbon::MONDAY)->utc();
-        $endOfWeek   = now('Asia/Jakarta')->copy()->endOfWeek(Carbon::SUNDAY)->utc();
-        
-        $uploaded = Gallery::where('user_id', $user->id)
-            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
-            ->count();
+    public function index(Request $request)
+    {
+        $user = $request->user();
 
-        $quota = [
-            'used'      => $uploaded,
-            'max'       => self::MAX_UPLOAD_PER_WEEK,
-            'remaining' => max(0, self::MAX_UPLOAD_PER_WEEK - $uploaded),
-        ];
+        // Hitung sisa kuota (hanya untuk student)
+        $quota = null;
+        if (!in_array($user->role, ['teacher', 'superadmin'])) {
+            $startOfWeek = now('Asia/Jakarta')->copy()->startOfWeek(Carbon::MONDAY)->utc();
+            $endOfWeek   = now('Asia/Jakarta')->copy()->endOfWeek(Carbon::SUNDAY)->utc();
+
+            $uploaded = Gallery::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->count();
+
+            $quota = [
+                'used'      => $uploaded,
+                'max'       => self::MAX_UPLOAD_PER_WEEK,
+                'remaining' => max(0, self::MAX_UPLOAD_PER_WEEK - $uploaded),
+            ];
+        }
+
+        $query = Gallery::with([
+                'user:id,name',
+                'subject:id,name',
+            ])
+            ->where('is_published', true);
+
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
+
+        $galleries = $query->latest()->paginate(10);
+
+        $galleries->getCollection()->transform(function ($item) {
+            $item->file_url = $this->formatGalleryUrl($item);
+            return $item;
+        });
+
+        return response()->json([
+            'quota' => $quota,
+            ...$galleries->toArray(),
+        ]);
     }
-    $query = Gallery::with([
-            'user:id,name,class_id',
-            'subject:id,name', 
-        ])
-        ->where('is_published', true);
-
-    
-    if ($request->filled('subject_id')) {
-        $query->where('subject_id', $request->subject_id);
-    }
-
-    $galleries = $query->latest()->paginate(10);
-
-    $galleries->getCollection()->transform(function ($item) {
-        $item->file_url = $this->formatGalleryUrl($item);
-        return $item;
-    });
-
-    return response()->json([
-        'quota' => $quota,
-        ...$galleries->toArray(),
-    ]);
-}
 
     public function indexfortc(Request $request)
-{
-    $user = $request->user();
-    $allowedClassIds = $user->accessible_classes ?? [];
+    {
+        $user = $request->user();
 
-    $query = Gallery::query();
+        // accessible_classes tetap dipakai untuk teacher (array of class_name_id)
+        $allowedClassIds = $user->accessible_classes ?? [];
 
-    // Batasi kelas guru
-    if ($user->role !== 'superadmin') {
-        $query->whereHas('user', function ($q) use ($allowedClassIds) {
-            $q->whereIn('class_id', $allowedClassIds);
-        });
-    }
+        $query = Gallery::query();
 
-    // Filter kelas
-    $filterName = $request->query('class_id');
+        // Batasi gallery berdasarkan kelas yang boleh diakses teacher
+        // Sekarang join ke student_enrollments, bukan class_id di users
+        if ($user->role !== 'superadmin') {
+            $query->whereHas('user.activeEnrollment', function ($q) use ($allowedClassIds) {
+                $q->whereIn('class_name_id', $allowedClassIds);
+            });
+        }
 
-    if (
-        $filterName &&
-        strtolower($filterName) !== 'all'
-    ) {
-        $query->whereHas(
-            'user.studentClass',
-            function ($q) use ($filterName) {
-                $q->where(
-                    'name',
-                    $filterName
-                );
-            }
-        );
-    }
+        // Filter kelas spesifik (dari ?class_id=1)
+        if ($request->filled('class_id') && strtolower($request->class_id) !== 'all') {
+            $classId = $request->class_id;
+            $query->whereHas('user.activeEnrollment', function ($q) use ($classId) {
+                $q->where('class_name_id', $classId);
+            });
+        }
 
-    // Search
-    if ($request->filled('search')) {
-        $search = $request->search;
+        // Search by judul atau nama siswa
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
 
-        $query->where(function ($q) use ($search) {
-            $q->where(
-                'title',
-                'like',
-                "%{$search}%"
-            )
-            ->orWhereHas(
-                'user',
-                fn($u) =>
-                    $u->where(
-                        'name',
-                        'like',
-                        "%{$search}%"
-                    )
-            );
-        });
-    }
+        // Filter subject
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
 
-    // Subject filter
-    if ($request->filled('subject_id')) {
-    $query->where('subject_id', $request->subject_id);
-    }   
+        $perPage = $request->get('per_page', 12);
 
-    $perPage = $request->get('per_page', 12);
+        $galleries = $query
+            ->with([
+                // Load user + enrollment aktif + nama kelas dari enrollment
+                'user' => function ($q) {
+                    $q->select('id', 'name')
+                      ->with([
+                          'activeEnrollment' => function ($eq) {
+                              $eq->with('className:id,name');
+                          }
+                      ]);
+                },
+                'subject:id,name',
+            ])
+            ->latest()
+            ->paginate($perPage);
 
-    $galleries = $query
-        ->with([
-            'user' => function ($q) {
-                $q->select(
-                    'id',
-                    'name',
-                    'class_id'
-                )->with(
-                    'studentClass:id,name'
-                );
+        $galleries->getCollection()->transform(function ($item) {
+            $item->file_url = $this->formatGalleryUrl($item);
 
-            },
-            'subject:id,name'
-        ])
-        ->latest()
-        ->paginate($perPage);
-
-    // map khusus isi data paginator
-    $galleries->getCollection()
-        ->transform(function ($item) {
-            $item->file_url =
-                $this->formatGalleryUrl($item);
+            // Tambah class_name langsung di item supaya frontend tidak perlu
+            // drill ke user.activeEnrollment.className.name
+            $item->class_name = $item->user?->activeEnrollment?->className?->name;
 
             return $item;
         });
 
-    return response()->json(
-        $galleries
-    );
-}
+        return response()->json($galleries);
+    }
 
     public function destroy($id)
     {
         $gallery = Gallery::findOrFail($id);
 
         XpService::deduct(
-        userId:   $gallery->user_id,
-        xp:       XpService::XP_GALLERY,
-        source:   'gallery',
-        sourceId: $gallery->id,
-    );
+            userId:   $gallery->user_id,
+            xp:       XpService::XP_GALLERY,
+            source:   'gallery',
+            sourceId: $gallery->id,
+        );
 
-        // PERBAIKAN: Hapus dari disk default (R2) jika tipe adalah file
         if ($gallery->file_type !== 'link' && $gallery->file_path) {
             Storage::delete($gallery->file_path);
         }
-        
 
         $gallery->delete();
         return response()->json(['message' => 'Karya berhasil dihapus']);
     }
+
     public function share(Request $request, $id)
     {
         $gallery = Gallery::findOrFail($id);
 
-        // Opsional: Cek apakah user punya hak akses (misal hanya user login yang bisa share)
-        // if (!Auth::check()) abort(401);
-
-        // 1. Jika belum punya token, buatkan sekarang
         if (!$gallery->share_token) {
             $gallery->update([
-                'share_token' => Str::random(32), // Token unik 32 karakter
-                'is_public' => true // Pastikan statusnya public
+                'share_token' => Str::random(32),
+                'is_public'   => true,
             ]);
         }
 
-        // 2. Return URL Frontend yang siap dicopy
-        // Pastikan FRONTEND_URL ada di .env (misal: https://tapamajuma.my.id)
         $shareUrl = config('app.frontend_url') . '/s/' . $gallery->share_token;
 
         return response()->json([
             'message' => 'Link siap dibagikan!',
-            'url' => $shareUrl
+            'url'     => $shareUrl,
         ]);
     }
-    public function showPublic($token)
-{
-    // Cari token, kalau gak ada error 404
-    $gallery = Gallery::where('share_token', $token)
-                      ->where('is_published', true)
-                      ->firstOrFail();
 
-    return response()->json([
-        'title' => $gallery->title,
-        'type' => $gallery->file_type,
-        // Pastikan url ini menghasilkan link yang benar
-        'url' => $this->formatGalleryUrl($gallery), 
-        'owner_name' => $gallery->user->name ?? 'Anonim',
-        'created_at' => $gallery->created_at->isoFormat('D MMMM Y'),
-    ]);
-}
+    public function showPublic($token)
+    {
+        $gallery = Gallery::where('share_token', $token)
+                          ->where('is_published', true)
+                          ->firstOrFail();
+
+        return response()->json([
+            'title'      => $gallery->title,
+            'type'       => $gallery->file_type,
+            'url'        => $this->formatGalleryUrl($gallery),
+            'owner_name' => $gallery->user->name ?? 'Anonim',
+            'created_at' => $gallery->created_at->isoFormat('D MMMM Y'),
+        ]);
+    }
 
     public function store(Request $request)
     {
         $request->validate([
             'title'       => 'required|string|max:255',
             'activity_id' => 'nullable',
-            'type'        => 'required|in:file,link', 
+            'type'        => 'required|in:file,link',
             'subject_id'  => 'nullable|exists:subjects,id',
         ]);
-        
+
         $eligibilityError = $this->checkUploadEligibility(Auth::user());
         if ($eligibilityError) {
             return response()->json(
@@ -258,40 +229,42 @@ public function index(Request $request)
             ]);
 
             if ($request->hasFile('file')) {
-                $file = $request->file('file');
+                $file      = $request->file('file');
                 $extension = strtolower($file->getClientOriginalExtension());
-                
-                // PERBAIKAN: Hapus 'public', biarkan mengikuti disk default R2
-                $path = $file->store('galleries'); 
-                $filePath = ltrim($path, '/'); // Bersihkan slash di depan agar tidak double slash
+                $path      = $file->store('galleries');
+                $filePath  = ltrim($path, '/');
 
-                // Deteksi Tipe File
                 if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                     $fileType = 'image';
-                } elseif (in_array($extension, ['mp3', 'wav', 'webm', 'm4a', 'mpga'])) {
+                } elseif (in_array($extension, ['mp3', 'wav', 'webm', 'm4a', 'mpga', 'ogg'])) {
                     $fileType = 'audio';
                 } elseif ($extension === 'pdf') {
                     $fileType = 'pdf';
+                } elseif ($extension === 'mov') {
+                    $fileType = 'video';
                 } else {
                     $fileType = 'document';
                 }
             }
         }
 
-        $gallery = Gallery::create([
-            'user_id'      => Auth::id(),
-            'activity_id'  => $request->activity_id,
-            'title'        => $request->title,
-            'file_path'    => $filePath,
-            'file_type'    => $fileType,
-            'subject_id'   => $request->subject_id,
-            'is_published' => true, 
+        // Ambil academic_period_id yang aktif saat ini
+        $activePeriod = AcademicPeriod::current();
 
+        $gallery = Gallery::create([
+            'user_id'            => Auth::id(),
+            'activity_id'        => $request->activity_id,
+            'title'              => $request->title,
+            'file_path'          => $filePath,
+            'file_type'          => $fileType,
+            'subject_id'         => $request->subject_id,
+            'is_published'       => true,
+            'academic_period_id' => $activePeriod?->id, // nullable, aman kalau belum ada periode
         ]);
-      
+
         XpService::award(
             userId:   Auth::id(),
-            xp:       XpService::XP_GALLERY,   
+            xp:       XpService::XP_GALLERY,
             source:   'gallery',
             sourceId: $gallery->id,
         );
@@ -299,66 +272,65 @@ public function index(Request $request)
         return response()->json([
             'message' => 'Karya berhasil dipublikasikan!',
             'data'    => $gallery,
-            'url'     => $this->formatGalleryUrl($gallery) 
+            'url'     => $this->formatGalleryUrl($gallery),
         ], 201);
     }
 
-const MAX_UPLOAD_PER_WEEK = 3;
+    const MAX_UPLOAD_PER_WEEK = 3;
 
-const UPLOAD_SCHEDULE = [
-    7 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
-    8 => ['day' => Carbon::THURSDAY,  'label' => 'Kamis'],
-    9 => ['day' => Carbon::FRIDAY,    'label' => 'Jumat'],
-];
+    const UPLOAD_SCHEDULE = [
+        7 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
+        8 => ['day' => Carbon::THURSDAY,  'label' => 'Kamis'],
+        9 => ['day' => Carbon::FRIDAY,    'label' => 'Jumat'],
+    ];
 
     private function checkUploadEligibility(User $user): ?array
-{
-    if (in_array($user->role, ['teacher', 'superadmin'])) {
-        return null;
-    }
+    {
+        if (in_array($user->role, ['teacher', 'superadmin'])) {
+            return null;
+        }
 
-        $user->loadMissing('studentClass');
-        $className = $user->studentClass->name ?? '';
+        // DIUBAH: pakai currentClass() dari enrollment, bukan studentClass dari class_id
+        $className = $user->currentClass()?->name ?? '';
 
         $romanMap = [
             'VII'  => 7,
             'VIII' => 8,
             'IX'   => 9,
         ];
-        
-        $romanPart = explode('-', trim($className))[0];
-        $grade = $romanMap[$romanPart] ?? null;
 
-        // Sisanya tidak berubah
+        $romanPart = explode('-', trim($className))[0];
+        $grade     = $romanMap[$romanPart] ?? null;
+
         if (!$grade || !isset(self::UPLOAD_SCHEDULE[$grade])) {
             return null;
         }
 
-    $schedule = self::UPLOAD_SCHEDULE[$grade];
-    $nowWib   = now('Asia/Jakarta');
-    $today    = $nowWib->dayOfWeek;
+        $schedule = self::UPLOAD_SCHEDULE[$grade];
+        $nowWib   = now('Asia/Jakarta');
+        $today    = $nowWib->dayOfWeek;
 
-    if ($today !== $schedule['day']) {
-        return [
-            'status'  => 403,
-            'message' => "Kelas {$grade} hanya bisa upload pada hari {$schedule['label']}. 🗓️",
-        ];
+        if ($today !== $schedule['day']) {
+            return [
+                'status'  => 403,
+                'message' => "Kelas {$grade} hanya bisa upload pada hari {$schedule['label']}. 🗓️",
+            ];
+        }
+
+        $startOfWeek = $nowWib->copy()->startOfWeek(Carbon::MONDAY)->utc();
+        $endOfWeek   = $nowWib->copy()->endOfWeek(Carbon::SUNDAY)->utc();
+
+        $uploadedThisWeek = Gallery::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->count();
+
+        if ($uploadedThisWeek >= self::MAX_UPLOAD_PER_WEEK) {
+            return [
+                'status'  => 429,
+                'message' => "Kuota minggu ini sudah penuh (maks. " . self::MAX_UPLOAD_PER_WEEK . " karya/minggu). Sampai {$schedule['label']} depan ya! ",
+            ];
+        }
+
+        return null;
     }
-
-    $startOfWeek = $nowWib->copy()->startOfWeek(Carbon::MONDAY)->utc();
-    $endOfWeek   = $nowWib->copy()->endOfWeek(Carbon::SUNDAY)->utc();
-
-    $uploadedThisWeek = Gallery::where('user_id', $user->id)
-        ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
-        ->count();
-
-    if ($uploadedThisWeek >= self::MAX_UPLOAD_PER_WEEK) {
-        return [
-            'status'  => 429,
-            'message' => "Kuota minggu ini sudah penuh (maks. " . self::MAX_UPLOAD_PER_WEEK . " karya/minggu). Sampai {$schedule['label']} depan ya! ",
-        ];
-    }
-
-    return null;
-}
 }

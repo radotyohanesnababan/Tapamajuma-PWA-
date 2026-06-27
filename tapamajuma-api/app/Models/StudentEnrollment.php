@@ -17,6 +17,7 @@ class StudentEnrollment extends Model
         'is_active',
         'enrolled_at',
         'left_at',
+        'next_class_id',
     ];
 
     protected $casts = [
@@ -33,6 +34,11 @@ class StudentEnrollment extends Model
     public function className(): BelongsTo
     {
         return $this->belongsTo(ClassName::class, 'class_name_id');
+    }
+    // Tambah relasi ini di bawah relasi className()
+    public function nextClass(): BelongsTo
+    {
+        return $this->belongsTo(ClassName::class, 'next_class_id');
     }
 
     public function academicPeriod(): BelongsTo

@@ -30,6 +30,10 @@ const api = axios.create({
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
+  // Hanya kirim ?tenant= di development
+  params: import.meta.env.DEV 
+    ? { tenant: import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong' } 
+    : {},
   timeout: 120000,
 });
 
