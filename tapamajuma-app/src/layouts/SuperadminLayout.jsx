@@ -6,6 +6,9 @@ import {
   LayoutDashboard, Users, BookOpen, Settings,
   LogOut, Menu, Bell, UserSquare, Book,
   BookAIcon, ActivityIcon, ChevronDown,
+  GraduationCap,
+  Calendar,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
@@ -26,6 +29,14 @@ const menuItems = [
       { name: "Manajemen Guru",   path: "/superadmin/teacher-mgmt",  icon: <UserSquare size={16} /> },
       { name: "Manajemen Kelas",  path: "/superadmin/class-mgmt",    icon: <Book size={16} /> },
     ],
+  },
+  {
+  name: "Manajemen Tahun Ajaran",
+  icon: <GraduationCap size={20} />,
+  children: [
+    { name: "Periode Akademik", path: "/superadmin/academic-periods", icon: <Calendar size={16} /> },
+    { name: "Kenaikan Kelas", path: "/superadmin/enrollment-promotion", icon: <ArrowRight size={16} /> },
+  ],
   },
   {
     name: "Mapel & Bank Soal",

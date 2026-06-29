@@ -309,6 +309,7 @@ Route::middleware('tenant')->group(function () {
                 Route::post('/promote-all', [EnrollmentController::class, 'promoteAll']);
                 Route::patch('/{id}/set-next-class', [EnrollmentController::class, 'setNextClass']);
                 Route::post('/enroll', [EnrollmentController::class, 'enroll']);
+                Route::get('/promotion-preview-by-class', [EnrollmentController::class, 'promotionPreviewByClass']);
             });
 
             Route::prefix('announcements')->group(function () {

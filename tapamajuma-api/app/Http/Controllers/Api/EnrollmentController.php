@@ -59,38 +59,45 @@ class EnrollmentController extends Controller
      * Bulk isi next_class_id otomatis berdasarkan mapping tingkat:
      * VII → VIII (nama huruf sama), VIII → IX (nama huruf sama), IX → null (lulus)
      */
-    public function promoteAll()
+    public function promoteAll(Request $request)
     {
+        $request->validate([
+            'class_name_id' => 'nullable|exists:class_names,id',
+        ]);
+
         $currentPeriod = AcademicPeriod::current();
 
         if (!$currentPeriod) {
             return response()->json(['message' => 'Tidak ada periode aktif.'], 422);
         }
 
-        // Ambil semua class_names untuk mapping
-        $allClasses = ClassName::all()->keyBy('name'); // ['VII-A' => ClassName, ...]
+        $allClasses = ClassName::all()->keyBy('name');
 
-        $enrollments = StudentEnrollment::where('academic_period_id', $currentPeriod->id)
+        $query = StudentEnrollment::where('academic_period_id', $currentPeriod->id)
             ->where('is_active', true)
             ->whereHas('user', fn($q) => $q->where('role', 'student'))
-            ->with('className:id,name')
-            ->get();
+            ->with('className:id,name');
+
+        // Filter per kelas kalau ada
+        if ($request->filled('class_name_id')) {
+            $query->where('class_name_id', $request->class_name_id);
+        }
+
+        $enrollments = $query->get();
 
         $updated = 0;
         $lulus   = 0;
-        $gagal   = []; // kelas tujuan tidak ditemukan di class_names
+        $gagal   = [];
 
         foreach ($enrollments as $enrollment) {
-            $currentName = $enrollment->className->name; // contoh: VII-A
+            $currentName = $enrollment->className->name;
 
-            // Siswa IX → lulus, next_class_id = null
             if ($this->isGradeIX($currentName)) {
                 $enrollment->update(['next_class_id' => null]);
                 $lulus++;
                 continue;
             }
 
-            // Mapping nama kelas: VII-A → VIII-A, VIII-B → IX-B
             $nextName = $this->getNextClassName($currentName);
 
             if (!$nextName || !isset($allClasses[$nextName])) {
@@ -103,10 +110,56 @@ class EnrollmentController extends Controller
         }
 
         return response()->json([
-            'message'  => "Promote all selesai.",
-            'updated'  => $updated,
-            'lulus'    => $lulus,
-            'gagal'    => $gagal, // kosong kalau semua kelas tujuan ada di class_names
+            'message' => "Promote selesai.",
+            'updated' => $updated,
+            'lulus'   => $lulus,
+            'gagal'   => $gagal,
+        ]);
+    }
+
+    /// ── API untuk halaman superadmin: Kenaikan Kelas ─────────────────────────────
+    public function promotionPreviewByClass(Request $request)
+    {
+        $request->validate([
+            'class_name_id' => 'required|exists:class_names,id',
+        ]);
+
+        $currentPeriod = AcademicPeriod::current();
+
+        if (!$currentPeriod) {
+            return response()->json(['message' => 'Tidak ada periode aktif.'], 422);
+        }
+
+        $enrollments = StudentEnrollment::where('academic_period_id', $currentPeriod->id)
+            ->where('is_active', true)
+            ->where('class_name_id', $request->class_name_id)
+            ->whereHas('user', fn($q) => $q->where('role', 'student'))
+            ->with([
+                'user:id,name,nis',
+                'className:id,name',
+                'nextClass:id,name',
+            ])
+            ->get()
+            ->map(fn($e) => [
+                'enrollment_id'   => $e->id,
+                'user_id'         => $e->user_id,
+                'name'            => $e->user->name,
+                'nis'             => $e->user->nis,
+                'current_class'   => $e->className->name,
+                'next_class_id'   => $e->next_class_id,
+                'next_class_name' => $e->nextClass?->name ?? ($this->isGradeIX($e->className->name) ? 'Lulus' : 'Belum ditentukan'),
+            ]);
+
+        $belumDitentukan = $enrollments->filter(
+            fn($e) => $e['next_class_name'] === 'Belum ditentukan'
+        )->count();
+
+        return response()->json([
+            'period'                 => $currentPeriod->name,
+            'total_siswa'            => $enrollments->count(),
+            'total_belum_ditentukan' => $belumDitentukan,
+            'ready_to_promote'       => $belumDitentukan === 0,
+            'data'                   => $enrollments,
         ]);
     }
 

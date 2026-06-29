@@ -7,6 +7,8 @@ import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
 
 
 
+
+
 // ==========================================
 // 1. IMPORT SINKRON (Critical Load)
 // ==========================================
@@ -79,6 +81,8 @@ const SessionReport = lazy(() => import("./pages/superadmin/SessionReport"));
 const ClassSummary = lazy(() => import("./pages/superadmin/ClassSummary"));
 const TeacherSummary = lazy(() => import("./pages/superadmin/TeacherSummary"));
 const MorningSessionStudent = lazy(() => import("./pages/superadmin/MorningSessionStudent"));
+const AcademicPeriodPage = lazy(() => import("./pages/superadmin/AcademicPeriodPage"));
+const EnrollmentPromotionPage = lazy(() => import("./pages/superadmin/EnrollmentPromotionPage"));
 
 // -- Games --
 const MathGame = lazy(() => import("./components/games/MathGame"));
@@ -215,6 +219,9 @@ function App() {
               <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
               <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
               <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
+              <Route path="academic-periods" element={<div className="p-4"><AcademicPeriodPage /></div>} />
+              <Route path="enrollment-promotion" element={<div className="p-4"><EnrollmentPromotionPage /></div>} />
+              
               
               {/* GRUP 4.1: Laporan */}
               <Route path="activity-report/executive" element={<ExecutiveReport />} />
