@@ -12,21 +12,30 @@ class ResolveTenant
     public function handle(Request $request, Closure $next)
     {
         $host = $request->getHost();
-        $slug = explode('.', $host)[0];
 
         // Lokal: pakai query param ?tenant=smpn1siborongborong
         // supaya bisa test tanpa subdomain
         if (app()->isLocal() && $request->has('tenant')) {
             $slug = $request->query('tenant');
-        }
-
-        $school = School::where('slug', $slug)
-            ->where('is_active', true)
-            ->first();
-        if (!$school) {
+            
+            $school = School::where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
+        } else {
+            // PRIORITAS 1: Cek domain penuh (untuk sekolah dengan domain sendiri)
             $school = School::where('domain', $host)
-            ->where('is_active', true)
-            ->first();
+                ->where('is_active', true)
+                ->first();
+            
+            // PRIORITAS 2: Fallback ke slug dari subdomain
+            if (!$school) {
+                $parts = explode('.', $host);
+                $slug = $parts[0];
+                
+                $school = School::where('slug', $slug)
+                    ->where('is_active', true)
+                    ->first();
+            }
         }
 
         if (!$school) {
