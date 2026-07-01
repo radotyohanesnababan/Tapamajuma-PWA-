@@ -23,6 +23,11 @@ class ResolveTenant
         $school = School::where('slug', $slug)
             ->where('is_active', true)
             ->first();
+        if (!$school) {
+            $school = School::where('domain', $host)
+            ->where('is_active', true)
+            ->first();
+        }
 
         if (!$school) {
             return response()->json(['message' => 'School not found'], 404);
