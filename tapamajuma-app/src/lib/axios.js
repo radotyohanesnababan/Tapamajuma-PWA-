@@ -3,26 +3,37 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 
 // =================================================================
-// 1. CONFIG URL
+// 1. TENANT SLUG DETECTION
 // =================================================================
-const PROD_URL = "https://tapamajuma-api.my.id";
-const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
+const getSlugFromHost = () => {
+  // Local dev atau native app: pakai env
+  if (import.meta.env.DEV || Capacitor.isNativePlatform()) {
+    return import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong';
+  }
 
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+
+  // Format: smpn3siborongborong.tapamajuma.my.id → "smpn3siborongborong"
+  if (hostname.endsWith('tapamajuma.my.id')) {
+    return parts[0];
+  }
+
+  // Format: tapamajuma.smpn1siborongborong.sch.id → pakai env
+  return import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong';
+};
+
+// =================================================================
+// 2. CONFIG URL
+// =================================================================
 const getEnvUrl = () => {
   if (Capacitor.isNativePlatform()) {
     return import.meta.env.VITE_API_URL;
   }
-
   return import.meta.env.VITE_API_URL;
 };
 
 let currentBaseUrl = getEnvUrl();
-
-// Bagian ini di-comment agar tidak mengambil URL backup yang lama
-// const savedBaseUrl = !isDevelopment && !Capacitor.isNativePlatform()
-//   ? localStorage.getItem("active_base_url")
-//   : null;
-
 
 const api = axios.create({
   baseURL: currentBaseUrl,
@@ -30,21 +41,22 @@ const api = axios.create({
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
+  params: { tenant: getSlugFromHost() },
   timeout: 120000,
 });
 
 // =================================================================
-// 2. INTERCEPTOR REQUEST
+// 3. INTERCEPTOR REQUEST
 // =================================================================
 api.interceptors.request.use(
   (config) => {
     config.baseURL = currentBaseUrl;
+
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Cache buster biar request-nya kelihatan terus di Network Tab
     if (config.method === 'get') {
       config.params = { ...config.params, _t: Date.now() };
     }
@@ -55,44 +67,19 @@ api.interceptors.request.use(
 );
 
 // =================================================================
-// 3. INTERCEPTOR RESPONSE
+// 4. INTERCEPTOR RESPONSE
 // =================================================================
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // const originalRequest = error.config;
     const status = error.response ? error.response.status : null;
 
-    /* --- LOGIC FAILOVER (OFF SEMENTARA) ---
-    if (!isDevelopment && !Capacitor.isNativePlatform()) {
-      const isUsingBackup = currentBaseUrl === BACKUP_URL;
-      const isServerError = !error.response || (status >= 500 && status <= 599);
-
-      if (!isUsingBackup && isServerError && !originalRequest._retry) {
-        console.warn("🚨 FAILOVER DIAKTIFKAN...");
-        originalRequest._retry = true;
-        currentBaseUrl = BACKUP_URL;
-        api.defaults.baseURL = BACKUP_URL;
-        // localStorage.setItem("active_base_url", BACKUP_URL); 
-        toast.error("Server Utama gangguan. Dialihkan ke cadangan...", { duration: 10000 });
-        originalRequest.baseURL = BACKUP_URL;
-        if (originalRequest.url.startsWith("http")) {
-          const urlObj = new URL(originalRequest.url);
-          originalRequest.url = urlObj.pathname + urlObj.search;
-        }
-        return api(originalRequest);
-      }
-    }
-    */
-
-    // Jika terjadi error, kita beri notifikasi toast biasa agar tahu ada masalah
     if (!error.response) {
       toast.error("Koneksi terputus atau server tidak merespon.");
     } else if (status >= 500) {
       toast.error(`Server Utama Error: ${status}`);
     }
 
-    // Auto logout 401
     if (status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
