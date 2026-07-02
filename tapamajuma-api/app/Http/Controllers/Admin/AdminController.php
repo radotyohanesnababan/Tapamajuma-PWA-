@@ -23,28 +23,25 @@ class AdminController extends Controller
             ->orderBy('total', 'desc')
             ->get();
 
-        $recentActivities = DailyActivity::with('user')
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(function($activity) {
-                // ✅ Ambil XP dari xp_logs
-                $xp = DB::table('xp_logs')
-                    ->where('source', 'daily_activity')
-                    ->where('source_id', $activity->id)
-                    ->value('xp') ?? 0;
-
-                return [
-                    'id'           => $activity->id,
-                    'student_name' => $activity->user->name ?? 'Siswa',
-                    'type'         => $activity->type,
-                    'subject'      => $activity->subject,
-                    'score'        => $activity->score,
-                    'xp'           => $xp, // ✅ tambah ini
-                    'avatar'       => $activity->user->avatar ?? null,
-                    'time_ago'     => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),
-                ];
-            });
+        $recentActivities = DailyActivity::with([
+        'user',
+        'xpLog' 
+        ])
+        ->latest()
+        ->limit(5)
+        ->get()
+        ->map(function($activity) {
+            return [
+                'id'           => $activity->id,
+                'student_name' => $activity->user->name ?? 'Siswa',
+                'type'         => $activity->type,
+                'subject'      => $activity->subject,
+                'score'        => $activity->score,
+                'xp'           => $activity->xpLog->xp ?? 0,
+                'avatar'       => $activity->user->avatar ?? null,
+                'time_ago'     => $activity->created_at->setTimezone('Asia/Jakarta')->diffForHumans(),
+            ];
+        });
 
         return response()->json([
             'total_students'   => $totalStudents,

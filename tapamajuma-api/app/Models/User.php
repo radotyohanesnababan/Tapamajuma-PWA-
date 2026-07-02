@@ -11,6 +11,8 @@ use App\Models\ClassName;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -211,6 +213,45 @@ protected function phoneNumber(): Attribute
         // Jika nama kolom pembuatnya bukan 'creator_id', ubah juga bagian ini.
         return $this->hasMany(\App\Models\QuestionBank::class, 'creator_id'); 
     }
+
+    /**
+     * Semua riwayat enrollment siswa ini (semua periode).
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+ 
+    /**
+     * Enrollment yang aktif SEKARANG, di periode yang aktif sekarang.
+     * Ini pengganti akses langsung ke class_id.
+     */
+    public function activeEnrollment(): HasOne
+    {
+        return $this->hasOne(StudentEnrollment::class)
+            ->where('is_active', true)
+            ->whereHas('academicPeriod', function ($query) {
+                $query->where('is_active', true);
+            });
+    }
+ 
+    /**
+     * Helper: ambil ClassName siswa ini untuk periode aktif sekarang.
+     * Menggantikan studentClass() lama secara bertahap.
+     *
+     * Pakai method, bukan relasi langsung, karena ini sebenarnya
+     * "relasi tidak langsung" lewat student_enrollments — bukan FK langsung.
+     */
+    public function currentClass(): ?\App\Models\ClassName
+    {
+        return $this->activeEnrollment?->className;
+    }
+ 
+    // Relasi lama, DIPERTAHANKAN untuk sementara sebagai fallback / komparasi:
+    // public function studentClass()
+    // {
+    //     return $this->belongsTo(ClassName::class, 'class_id');
+    // }
 
 // Helper function untuk ubah 08 jadi 628
 private function formatPhoneNumber($number)

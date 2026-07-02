@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Announcement extends Model
 {
-    protected $fillable = ['content', 'is_active'];
+    protected $fillable = ['content', 'is_active', 'expires_at'];
 }

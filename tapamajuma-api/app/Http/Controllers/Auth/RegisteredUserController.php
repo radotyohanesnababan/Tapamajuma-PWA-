@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
 use App\Models\User;
-use App\Models\AllowedNis; 
+use App\Models\AllowedNis;
+use App\Models\StudentEnrollment;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,27 +58,42 @@ class RegisteredUserController extends Controller
 
         // 2. Gunakan DB Transaction
         DB::transaction(function () use ($request, $accessibleClasses, $allowedNis) {
-            
-            // A. Buat User Baru
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->string('password')),
-                'role' => $request->role,
-                'phone_number' => $request->phone_number,
-                'class_id' => $request->class_id,
-                'nis' => $request->nis,
-                'accessible_classes' => $accessibleClasses, 
-            ]);
+    
+    // A. Buat User Baru
+    $user = User::create([
+        'name'               => $request->name,
+        'email'              => $request->email,
+        'password'           => Hash::make($request->string('password')),
+        'role'               => $request->role,
+        'phone_number'       => $request->phone_number,
+        'class_id'           => $request->class_id,
+        'nis'                => $request->nis,
+        'accessible_classes' => $accessibleClasses,
+    ]);
 
-            // B. Jika user memasukkan NIS yang valid, tandai terpakai & catat ID-nya
-            if ($allowedNis) {
-                $allowedNis->update([
-                    'is_used' => true,
-                    'used_by' => $user->id
-                ]);
-            }
-        });
+    // B. Tandai NIS terpakai
+    if ($allowedNis) {
+        $allowedNis->update([
+            'is_used' => true,
+            'used_by' => $user->id,
+        ]);
+    }
+
+    // C. Buat enrollment ke periode aktif (hanya untuk student yang pilih kelas)
+    if ($request->role === 'student' && $request->class_id) {
+        $activePeriod = AcademicPeriod::current();
+
+        if ($activePeriod) {
+            StudentEnrollment::create([
+                'user_id'            => $user->id,
+                'class_name_id'      => $request->class_id,
+                'academic_period_id' => $activePeriod->id,
+                'is_active'          => true,
+                'enrolled_at'        => now(),
+            ]);
+        }
+    }
+});
 
         // event(new Registered($user)); // Tetap matikan dulu
         // Auth::login($user);

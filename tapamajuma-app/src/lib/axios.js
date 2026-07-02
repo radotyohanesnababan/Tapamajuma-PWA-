@@ -5,27 +5,9 @@ import { Capacitor } from "@capacitor/core";
 // =================================================================
 // 1. TENANT SLUG DETECTION
 // =================================================================
-const getSlugFromHost = () => {
-  // Local dev atau native app: pakai env
-  if (import.meta.env.DEV || Capacitor.isNativePlatform()) {
-    return import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong';
-  }
+const PROD_URL = "https://tapamajuma-api.my.id";
+const BACKUP_URL = "https://tapamajuma-pwa.onrender.com";
 
-  const hostname = window.location.hostname;
-  const parts = hostname.split('.');
-
-  // Format: smpn3siborongborong.tapamajuma.my.id → "smpn3siborongborong"
-  if (hostname.endsWith('tapamajuma.my.id')) {
-    return parts[0];
-  }
-
-  // Format: tapamajuma.smpn1siborongborong.sch.id → pakai env
-  return import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong';
-};
-
-// =================================================================
-// 2. CONFIG URL
-// =================================================================
 const getEnvUrl = () => {
   if (Capacitor.isNativePlatform()) {
     return import.meta.env.VITE_API_URL;

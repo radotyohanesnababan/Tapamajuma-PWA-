@@ -17,7 +17,9 @@ class Gallery extends Model
         'file_type',
         'subject_id',
         'share_token',
-        'is_published'
+        'is_published',
+        'academic_period_id',
+        'view_count',
     ];
 
     /**
