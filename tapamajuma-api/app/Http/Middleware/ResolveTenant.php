@@ -11,41 +11,46 @@ class ResolveTenant
 {
     public function handle(Request $request, Closure $next)
     {
-        $host = $request->getHost();
+        $school = null;
 
-        // Lokal: pakai query param ?tenant=smpn1siborongborong
-        // supaya bisa test tanpa subdomain
+        // 1. Lokal: pakai query param ?tenant=xxx
         if (app()->isLocal() && $request->has('tenant')) {
             $slug = $request->query('tenant');
             
             $school = School::where('slug', $slug)
                 ->where('is_active', true)
                 ->first();
-        } else {
-            // PRIORITAS 1: Cek domain penuh (untuk sekolah dengan domain sendiri)
-            $school = School::where('domain', $host)
+        }
+        
+        // 2. Production: cek header X-Tenant-Slug
+        if (!$school && $request->hasHeader('X-Tenant-Slug')) {
+            $slug = $request->header('X-Tenant-Slug');
+            
+            $school = School::where('slug', $slug)
                 ->where('is_active', true)
                 ->first();
+        }
+        
+        // 3. Fallback: cek query param ?tenant=xxx (untuk production juga)
+        if (!$school && $request->has('tenant')) {
+            $slug = $request->query('tenant');
             
-            // PRIORITAS 2: Fallback ke slug dari subdomain
-            if (!$school) {
-                $parts = explode('.', $host);
-                $slug = $parts[0];
-                
-                $school = School::where('slug', $slug)
-                    ->where('is_active', true)
-                    ->first();
-            }
+            $school = School::where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
         }
 
         if (!$school) {
-            return response()->json(['message' => 'School not found'], 404);
+            return response()->json([
+                'message' => 'School not found',
+                'hint' => 'Send X-Tenant-Slug header or ?tenant=xxx query param'
+            ], 404);
         }
 
-        // Bind ke container — bisa diakses dari mana saja
+        // Bind ke container
         app()->instance('currentSchool', $school);
 
-        // Switch default connection ke tenant DB sekolah ini
+        // Switch database connection
         config(['database.connections.tenant' => [
             'driver'    => 'mysql',
             'host'      => $school->db_host,
