@@ -286,7 +286,7 @@ export default function StudentDashboard() {
 
           <Card className="border-none bg-white shadow-sm border border-slate-100">
             <CardHeader className="p-4 pb-0">
-                <CardTitle className="text-[10px] font-bold uppercase text-slate-400">Poin XP</CardTitle>
+                <CardTitle className="text-[10px] font-bold uppercase text-slate-400">Poin XP Semester Ini</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-1">
                 <p className="text-3xl font-black text-slate-800">{user?.xp_points ?? 0}</p>
