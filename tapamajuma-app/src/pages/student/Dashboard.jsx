@@ -35,6 +35,18 @@ export default function StudentDashboard() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
 
+
+const [showAnnouncementModal, setShowAnnouncementModal] = useState(() => {
+  const lastSeen = localStorage.getItem('announcement_seen');
+  const today = new Date().toDateString();
+  return lastSeen !== today; // Muncul kalau belum dilihat hari ini
+});
+
+const handleCloseAnnouncement = () => {
+  localStorage.setItem('announcement_seen', new Date().toDateString());
+  setShowAnnouncementModal(false);
+};
+
   // --- 1. FUNGSI FETCH UTAMA (Didefinisikan di luar agar bisa dipanggil ulang) ---
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -153,6 +165,47 @@ export default function StudentDashboard() {
   return (
 
     <>
+
+{showAnnouncementModal && (
+  <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+    <div className="bg-white w-full sm:w-[90vw] sm:max-w-3xl h-[92vh] sm:h-[90vh] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-400">
+      
+      {/* Header Modal */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-widest text-slate-500">
+            Pengumuman Semester Baru
+          </span>
+        </div>
+        <button
+          onClick={handleCloseAnnouncement}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all active:scale-90 font-bold text-lg leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* iframe konten HTML */}
+      <iframe
+        src="/specialchangelog/taganjil2728.html"
+        className="w-full flex-1 border-none"
+        title="Pengumuman Semester Baru"
+      />
+
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-slate-100 flex-shrink-0">
+        <button
+          onClick={handleCloseAnnouncement}
+          className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all active:scale-95"
+        >
+          Sudah Baca, Tutup ✓
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
 {showNisModal && (
   <div className="fixed inset-0 z-[99] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
     <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm p-8 relative overflow-hidden text-center animate-in fade-in zoom-in duration-300">
@@ -240,6 +293,8 @@ export default function StudentDashboard() {
     </div>
   </div>
 )}
+
+
 
         <div className="space-y-6 pb-24 p-4 bg-slate-50 min-h-screen"> 
       {/* RUNNING ANNOUNCEMENT */}

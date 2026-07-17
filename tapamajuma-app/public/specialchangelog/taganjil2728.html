@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Semester Ganjil 25/26 - TAPAMAJUMA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Lexend:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-bright": "#f8f9ff",
+          "on-error-container": "#93000a",
+          "primary-container": "#ffd700",
+          "on-tertiary-fixed": "#002113",
+          "background": "#f8f9ff",
+          "on-background": "#0b1c30",
+          "primary-fixed-dim": "#e9c400",
+          "on-tertiary-container": "#006d4a",
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#d3e4fe",
+          "on-secondary-container": "#fefcff",
+          "surface-container-high": "#dce9ff",
+          "tertiary-fixed-dim": "#4edea3",
+          "error": "#ba1a1a",
+          "on-primary-container": "#705e00",
+          "outline-variant": "#d0c6ab",
+          "surface-container-lowest": "#ffffff",
+          "on-primary-fixed-variant": "#544600",
+          "surface-container-low": "#eff4ff",
+          "surface-tint": "#705d00",
+          "secondary-container": "#2170e4",
+          "on-secondary": "#ffffff",
+          "on-secondary-fixed": "#001a42",
+          "surface-container": "#e5eeff",
+          "surface-container-highest": "#d3e4fe",
+          "secondary-fixed-dim": "#adc6ff",
+          "on-secondary-fixed-variant": "#004395",
+          "secondary-fixed": "#d8e2ff",
+          "on-primary": "#ffffff",
+          "tertiary-fixed": "#6ffbbe",
+          "inverse-primary": "#e9c400",
+          "tertiary-container": "#65f2b5",
+          "on-tertiary-fixed-variant": "#005236",
+          "outline": "#7e775f",
+          "inverse-surface": "#213145",
+          "primary": "#705d00",
+          "tertiary": "#006c49",
+          "secondary": "#0058be",
+          "inverse-on-surface": "#eaf1ff",
+          "on-surface": "#0b1c30",
+          "surface-dim": "#cbdbf5",
+          "error-container": "#ffdad6",
+          "on-primary-fixed": "#221b00",
+          "on-surface-variant": "#4d4732",
+          "on-error": "#ffffff",
+          "primary-fixed": "#ffe16d",
+          "surface": "#f8f9ff"
+        },
+        "borderRadius": {
+          "DEFAULT": "1rem",
+          "lg": "2rem",
+          "xl": "3rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "lg": "40px",
+          "xs": "4px",
+          "margin-desktop": "120px",
+          "sm": "12px",
+          "margin-mobile": "20px",
+          "xl": "64px",
+          "base": "8px",
+          "md": "24px",
+          "gutter": "16px"
+        },
+        "fontFamily": {
+          "label-sm": ["Lexend"],
+          "headline-lg": ["Plus Jakarta Sans"],
+          "headline-lg-mobile": ["Plus Jakarta Sans"],
+          "display-lg": ["Plus Jakarta Sans"],
+          "title-md": ["Plus Jakarta Sans"],
+          "body-md": ["Lexend"],
+          "body-lg": ["Lexend"],
+          "label-md": ["Lexend"]
+        },
+        "fontSize": {
+          "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+          "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+          "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+          "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+          "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+          "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+          "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+          "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}]
+        }
+      },
+    },
+  }
+</script>
+<style>
+  body { background-color: #f8f9ff; color: #0b1c30; -webkit-font-smoothing: antialiased; }
+  .glass-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+  .super-ellipse { border-radius: 2rem; }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .step-line::after {
+    content: '';
+    position: absolute;
+    left: 20px; top: 40px; bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(to bottom, #dce9ff 0, #dce9ff 8px, transparent 8px, transparent 16px);
+  }
+  @media (min-width: 1024px) {
+    .step-line::after { left: 50%; transform: translateX(-50%); }
+  }
+  .day-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+  }
+</style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+
+<main class="relative">
+
+  <!-- Floating Accents -->
+  <div class="absolute top-20 left-20 text-primary-container animate-float opacity-30 hidden lg:block">
+    <span class="material-symbols-outlined" style="font-size:80px;">grade</span>
+  </div>
+  <div class="absolute top-60 right-20 text-tertiary-container animate-float opacity-30 hidden lg:block" style="animation-delay:1s;">
+    <span class="material-symbols-outlined" style="font-size:64px;">flare</span>
+  </div>
+
+  <!-- Hero -->
+  <section class="pt-20 pb-16 text-center px-margin-mobile relative z-10 max-w-[1200px] mx-auto">
+    <div class="inline-block px-4 py-1.5 rounded-full bg-primary-container/20 text-primary font-label-md mb-6">
+      ✨ Tahun Ajaran Ganjil 2026/2027 Dimulai
+    </div>
+    <h1 class="font-display-lg text-4xl md:text-6xl text-primary mb-8 leading-[1.1] max-w-4xl mx-auto">
+      Selamat Datang di<br/> Semester Ganjil 2026/2027!
+    </h1>
+    <p class="font-body-lg text-body-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto mb-12">
+      Selamat atas kenaikan kelasmu! Saatnya reset semangat, reset XP, dan mulai petualangan baru bersama Tapamajuma. Ada beberapa perubahan penting yang perlu kamu ketahui.
+    </p>
+  </section>
+
+  <div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop space-y-24 pb-32">
+
+    <!-- Semester Comparison -->
+    <section class="max-w-3xl mx-auto">
+      <div class="glass-card super-ellipse p-8 md:p-12 shadow-2xl shadow-secondary/5 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary-container/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+        <div class="flex-1 text-center md:text-left">
+          <span class="block font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest mb-2">Semester Lalu</span>
+          <span class="block font-headline-lg text-headline-lg text-on-surface-variant">Genap 25/26</span>
+          <span class="text-sm text-on-surface-variant/60 mt-1 block">Data tersimpan sebagai riwayat</span>
+        </div>
+        <div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center shadow-lg shadow-primary/20 relative z-10">
+          <span class="material-symbols-outlined text-on-primary-container text-3xl">arrow_forward</span>
+        </div>
+        <div class="flex-1 text-center md:text-right">
+          <span class="block font-label-sm text-label-sm text-secondary font-bold uppercase tracking-widest mb-2">Sekarang</span>
+          <span class="block font-headline-lg text-headline-lg text-primary font-extrabold">Ganjil 26/27</span>
+          <span class="text-sm text-secondary/80 mt-1 block font-semibold">Aktif sekarang 🎉</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. Kenaikan Kelas -->
+    <section>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary shadow-lg">
+          <span class="material-symbols-outlined">school</span>
+        </div>
+        <div>
+          <h2 class="font-headline-lg text-on-background">Kenaikan Kelas</h2>
+          <p class="text-on-surface-variant text-sm">Berlaku otomatis — tidak perlu melakukan apa-apa</p>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-low super-ellipse p-8 md:p-12 border-2 border-dashed border-outline-variant/50">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 items-center relative">
+
+          <!-- VII → VIII -->
+          <div class="flex flex-col items-center text-center">
+            <div class="relative mb-6">
+              <div class="w-24 h-24 rounded-3xl bg-primary-container flex items-center justify-center font-black text-3xl text-on-primary-container shadow-xl">VII</div>
+              <div class="absolute -top-3 -right-3 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-md">
+                <span class="material-symbols-outlined text-on-primary text-sm">arrow_downward</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-on-surface-variant line-through text-2xl font-black font-mono">VII</span>
+              <span class="material-symbols-outlined text-primary">arrow_forward</span>
+              <span class="text-primary text-3xl font-black font-mono">VIII</span>
+            </div>
+            <span class="inline-block px-4 py-1.5 bg-primary-container/30 text-on-primary-container rounded-full text-xs font-bold uppercase tracking-wider">Naik ke Kelas 8</span>
+          </div>
+
+          <!-- VIII → IX -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="relative mb-6">
+              <div class="w-32 h-32 rounded-[2.5rem] bg-secondary-container flex items-center justify-center font-black text-4xl text-on-secondary shadow-2xl shadow-secondary/40 ring-8 ring-secondary-fixed/50">VIII</div>
+              <div class="absolute -top-3 -right-3 w-8 h-8 bg-secondary rounded-full flex items-center justify-center shadow-md">
+                <span class="material-symbols-outlined text-on-secondary text-sm">arrow_downward</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-on-surface-variant line-through text-2xl font-black font-mono">VIII</span>
+              <span class="material-symbols-outlined text-secondary">arrow_forward</span>
+              <span class="text-secondary text-3xl font-black font-mono">IX</span>
+            </div>
+            <span class="inline-block px-4 py-1.5 bg-secondary-container text-on-secondary rounded-full text-xs font-bold uppercase tracking-wider">Naik ke Kelas 9</span>
+          </div>
+
+          <!-- IX → Lulus -->
+          <div class="flex flex-col items-center text-center">
+            <div class="relative mb-6">
+              <div class="w-24 h-24 rounded-3xl bg-tertiary-container flex items-center justify-center font-black text-3xl text-on-tertiary-container shadow-xl">IX</div>
+              <div class="absolute -top-3 -right-3 w-8 h-8 bg-tertiary rounded-full flex items-center justify-center shadow-md">
+                <span class="material-symbols-outlined text-on-tertiary text-sm">grade</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-on-surface-variant line-through text-2xl font-black font-mono">IX</span>
+              <span class="material-symbols-outlined text-tertiary">arrow_forward</span>
+              <span class="text-tertiary text-3xl font-black font-mono">🎓</span>
+            </div>
+            <span class="inline-block px-4 py-1.5 bg-tertiary-container text-on-tertiary-container rounded-full text-xs font-bold uppercase tracking-wider">Selamat Lulus!</span>
+          </div>
+
+          <div class="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-outline-variant/30 -z-10"></div>
+        </div>
+
+        <div class="mt-10 p-5 bg-primary-container/15 rounded-2xl flex gap-4 items-start border border-primary-container/40">
+          <span class="material-symbols-outlined text-primary mt-0.5">info</span>
+          <p class="text-sm text-on-primary-container leading-relaxed">
+            <strong>Otomatis berlaku!</strong> Kenaikan kelas sudah diterapkan di sistem. Cukup login dan kelas barumu sudah terdaftar. Jika ada yang tidak sesuai, hubungi admin segera.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Reset XP -->
+    <section>
+      <div class="bg-inverse-surface rounded-[3rem] p-8 md:p-16 text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-12 opacity-10 hidden lg:block">
+          <span class="material-symbols-outlined text-[200px]">restart_alt</span>
+        </div>
+        <div class="max-w-3xl relative z-10">
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-xs font-bold uppercase tracking-widest text-white/70 mb-6">
+            <span class="material-symbols-outlined text-sm">update</span> Perubahan Semester
+          </div>
+          <h2 class="font-display-lg text-3xl md:text-5xl mb-6">Reset Poin XP Musiman</h2>
+          <p class="text-white/70 mb-6 text-lg leading-relaxed">
+            Setiap awal semester, XP dikembalikan ke nol agar semua siswa punya peluang yang sama. Tapi tenang — <strong class="text-white">semua data riwayat XP-mu tersimpan aman</strong> dan tidak ada yang hilang!
+          </p>
+          <p class="text-white/70 mb-4 text-md leading-relaxed">
+            Riwayat XP semester lalu bisa dilihat di fitur Riwayat Semester (segera hadir). Jadi kamu tetap bisa melihat pencapaianmu di semester sebelumnya.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="p-8 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-sm">
+              <div class="flex justify-between items-end mb-4">
+                <div>
+                  <span class="text-white/50 text-sm block mb-1 uppercase tracking-wider">Semester Genap 25/26</span>
+                  <span class="text-3xl font-bold">XP Tersimpan</span>
+                </div>
+                <span class="material-symbols-outlined text-white/20 text-4xl">history</span>
+              </div>
+              <div class="h-2 bg-white/10 rounded-full">
+                <div class="h-full bg-white/30 w-full rounded-full"></div>
+              </div>
+              <p class="text-white/40 text-xs mt-3">Bisa dilihat di fitur Riwayat Semester (segera hadir)</p>
+            </div>
+            <div class="p-8 rounded-[2rem] bg-white/10 border border-white/20 shadow-xl relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-tertiary-fixed/10 rounded-full blur-2xl"></div>
+              <div class="flex justify-between items-end mb-4 relative z-10">
+                <div>
+                  <span class="text-tertiary-fixed-dim text-sm block mb-1 uppercase font-bold tracking-wider">Semester Ganjil 25/26</span>
+                  <span class="text-3xl font-bold text-tertiary-fixed">0 XP</span>
+                </div>
+                <span class="material-symbols-outlined text-tertiary-fixed text-4xl animate-pulse">rocket_launch</span>
+              </div>
+              <div class="h-3 bg-white/10 rounded-full">
+                <div class="h-full bg-tertiary-fixed shadow-[0_0_20px_rgba(111,251,190,0.6)] w-[3%] rounded-full"></div>
+              </div>
+              <p class="text-tertiary-fixed-dim text-xs mt-3">Mulai kumpulkan sekarang!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Nilai Keaktifan Baru -->
+    <section>
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-tertiary-container/30 text-tertiary rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+          <span class="material-symbols-outlined text-sm">new_releases</span> Perubahan Sistem
+        </div>
+        <h2 class="font-headline-lg text-on-background mb-4">Sistem Nilai Keaktifan Baru</h2>
+        <p class="text-on-surface-variant max-w-xl mx-auto">
+          Cara penilaian keaktifan di Sesi Belajar Mandiri berubah. Sekarang lebih adil, transparan, dan mencerminkan kualitas partisipasimu yang sesungguhnya.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <!-- Old -->
+        <div class="bg-surface-container p-10 super-ellipse flex flex-col items-center text-center opacity-60 border border-outline-variant/30">
+          <div class="w-16 h-16 bg-outline-variant/20 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-outline text-3xl">history</span>
+          </div>
+          <h3 class="font-headline-lg text-outline mb-2">Sistem Lama</h3>
+          <p class="text-xs text-on-surface-variant/60 uppercase tracking-widest mb-6">Sebelum Semester Ini</p>
+          <div class="flex flex-col items-center mb-6">
+            <span class="text-6xl font-black text-outline">+100</span>
+            <span class="text-sm text-outline font-bold uppercase tracking-widest mt-2">Flat per Sesi</span>
+          </div>
+          <ul class="text-left space-y-2 w-full max-w-xs">
+            <li class="flex items-start gap-2 text-sm text-on-surface-variant/70">
+              <span class="material-symbols-outlined text-outline text-base mt-0.5">close</span>
+              Hanya centang hadir atau tidak hadir
+            </li>
+            <li class="flex items-start gap-2 text-sm text-on-surface-variant/70">
+              <span class="material-symbols-outlined text-outline text-base mt-0.5">close</span>
+              Semua yang hadir dapat XP yang sama
+            </li>
+            <li class="flex items-start gap-2 text-sm text-on-surface-variant/70">
+              <span class="material-symbols-outlined text-outline text-base mt-0.5">close</span>
+              Tidak ada perbedaan kualitas keaktifan
+            </li>
+          </ul>
+        </div>
+
+        <!-- New -->
+        <div class="bg-secondary-container p-10 super-ellipse flex flex-col items-center text-center shadow-2xl shadow-secondary/20 ring-4 ring-secondary-fixed relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-2 bg-white/20"></div>
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-white text-3xl">bolt</span>
+          </div>
+          <h3 class="font-headline-lg text-white mb-2">Sistem Baru</h3>
+          <p class="text-xs text-white/60 uppercase tracking-widest mb-6">Mulai Semester Ini ✨</p>
+          <div class="flex flex-col items-center mb-6">
+            <span class="text-6xl font-black text-white">0–100</span>
+            <span class="text-sm text-white/90 font-bold uppercase tracking-widest mt-2">Rating dari Guru</span>
+          </div>
+          <ul class="text-left space-y-2 w-full max-w-xs">
+            <li class="flex items-start gap-2 text-sm text-white/90">
+              <span class="material-symbols-outlined text-tertiary-fixed text-base mt-0.5">check_circle</span>
+              Guru memberi nilai 0–100 per siswa per sesi
+            </li>
+            <li class="flex items-start gap-2 text-sm text-white/90">
+              <span class="material-symbols-outlined text-tertiary-fixed text-base mt-0.5">check_circle</span>
+              XP yang kamu dapat = nilai dari guru
+            </li>
+            <li class="flex items-start gap-2 text-sm text-white/90">
+              <span class="material-symbols-outlined text-tertiary-fixed text-base mt-0.5">check_circle</span>
+              Semakin aktif → semakin besar XP-mu
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-5 bg-tertiary-container/20 rounded-2xl flex gap-4 items-start border border-tertiary/20">
+        <span class="material-symbols-outlined text-tertiary mt-0.5">tips_and_updates</span>
+        <p class="text-sm text-on-tertiary-container leading-relaxed">
+          <strong>Tips:</strong> Tingkatkan kualitas keaktifanmu dengan berbagai cara! Semakin aktif dan semakin berkualitas → semakin besar XP!
+        </p>
+      </div>
+    </section>
+
+    <!-- 4. Perubahan Galeri -->
+    <section>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-lg">
+          <span class="material-symbols-outlined">photo_library</span>
+        </div>
+        <div>
+          <h2 class="font-headline-lg text-on-background">Perubahan Jadwal Galeri</h2>
+          <p class="text-on-surface-variant text-sm">Kuota dan hari upload berubah mulai semester ini</p>
+        </div>
+      </div>
+
+      <!-- Kuota Berubah -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-surface-container p-8 super-ellipse flex flex-col items-center text-center opacity-60 border border-outline-variant/30">
+          <div class="w-14 h-14 bg-outline-variant/20 rounded-full flex items-center justify-center mb-5">
+            <span class="material-symbols-outlined text-outline text-2xl">history</span>
+          </div>
+          <h3 class="font-title-md text-outline mb-2">Sebelumnya</h3>
+          <div class="flex flex-col items-center my-5">
+            <span class="text-5xl font-black text-outline font-mono">Tidak ada maksimal upload</span>
+          </div>
+        </div>
+
+        <div class="bg-primary-container/20 p-8 super-ellipse flex flex-col items-center text-center border-2 border-primary-container/50 shadow-lg shadow-primary/10 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-primary-container/50"></div>
+          <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center mb-5">
+            <span class="material-symbols-outlined text-on-primary-container text-2xl">photo_camera</span>
+          </div>
+          <h3 class="font-title-md text-primary mb-2">Sekarang ✨</h3>
+          <div class="flex flex-col items-center my-5">
+            <span class="text-7xl font-black text-primary font-mono">2x</span>
+            <span class="text-sm text-primary font-bold uppercase tracking-widest mt-2">Per Minggu</span>
+          </div>
+          <p class="text-sm text-on-primary-container leading-relaxed">
+            Kuota dikurangi menjadi <strong>2 karya per minggu</strong>. Pilih karyamu yang terbaik!
+          </p>
+        </div>
+      </div>
+
+      <!-- Jadwal per Kelas -->
+      <div class="bg-inverse-surface rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden mb-6">
+        <div class="absolute top-0 right-0 p-10 opacity-5 hidden lg:block">
+          <span class="material-symbols-outlined text-[180px]">calendar_month</span>
+        </div>
+
+        <div class="mb-8 relative z-10">
+          <h3 class="font-headline-lg text-white mb-3">Jadwal Hari Upload per Kelas</h3>
+          <p class="text-white/60 text-sm">Upload galeri hanya bisa dilakukan pada hari yang sudah ditentukan sesuai kelasmu.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+          <!-- Kelas VII -->
+          <div class="bg-primary-container/15 border border-primary-container/30 rounded-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center font-black text-2xl text-on-primary-container mx-auto mb-4 shadow-lg">VII</div>
+            <div class="text-white/50 text-xs uppercase tracking-widest mb-2">Kelas 7</div>
+            <div class="text-3xl font-black text-primary-container mb-3">Kamis</div>
+            <div class="flex items-center justify-center gap-1.5 text-white/50 text-xs">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              Setiap hari Kamis
+            </div>
+            <div class="mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-primary-container/20 rounded-full">
+              <span class="material-symbols-outlined text-primary-fixed-dim text-sm">photo_camera</span>
+              <span class="text-primary-fixed-dim text-xs font-bold">Maks. 2 karya/minggu</span>
+            </div>
+          </div>
+
+          <!-- Kelas VIII -->
+          <div class="bg-tertiary-fixed/10 border border-tertiary-fixed/30 rounded-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-tertiary-container rounded-2xl flex items-center justify-center font-black text-2xl text-on-tertiary-container mx-auto mb-4 shadow-lg">VIII</div>
+            <div class="text-white/50 text-xs uppercase tracking-widest mb-2">Kelas 8</div>
+            <div class="text-3xl font-black text-tertiary-fixed mb-3">Jumat</div>
+            <div class="flex items-center justify-center gap-1.5 text-white/50 text-xs">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              Setiap hari Jumat
+            </div>
+            <div class="mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-tertiary-fixed/10 rounded-full">
+              <span class="material-symbols-outlined text-tertiary-fixed-dim text-sm">photo_camera</span>
+              <span class="text-tertiary-fixed-dim text-xs font-bold">Maks. 2 karya/minggu</span>
+            </div>
+          </div>
+
+          <!-- Kelas IX -->
+          <div class="bg-secondary-fixed/10 border border-secondary-fixed-dim/30 rounded-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center font-black text-2xl text-on-secondary mx-auto mb-4 shadow-lg">IX</div>
+            <div class="text-white/50 text-xs uppercase tracking-widest mb-2">Kelas 9</div>
+            <div class="text-3xl font-black text-secondary-fixed-dim mb-3">Sabtu</div>
+            <div class="flex items-center justify-center gap-1.5 text-white/50 text-xs">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              Setiap hari Sabtu
+            </div>
+            <div class="mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-secondary-fixed/10 rounded-full">
+              <span class="material-symbols-outlined text-secondary-fixed-dim text-sm">photo_camera</span>
+              <span class="text-secondary-fixed-dim text-xs font-bold">Maks. 2 karya/minggu</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reminder -->
+        <div class="mt-8 p-5 bg-white/5 border border-white/10 rounded-2xl flex gap-4 items-start relative z-10">
+          <span class="material-symbols-outlined text-primary-fixed-dim mt-0.5">warning</span>
+          <div>
+            <p class="text-white font-semibold text-sm mb-1">Perlu Diingat!</p>
+            <p class="text-white/60 text-sm leading-relaxed">
+              Upload di luar jadwal kelas tidak akan bisa dilakukan. Jika hari jadwal upload adalah hari libur nasional, upload tetap bisa dilakukan di hari tersebut. Jika karya dihapus oleh guru, XP galeri ikut berkurang otomatis.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP Galeri tetap -->
+      <div class="p-5 bg-tertiary-container/20 rounded-2xl flex gap-4 items-start border border-tertiary/20">
+        <span class="material-symbols-outlined text-tertiary mt-0.5">check_circle</span>
+        <p class="text-sm text-on-tertiary-container leading-relaxed">
+          <strong>Yang tidak berubah:</strong> Setiap karya yang berhasil diunggah tetap memberikan <strong>+50 XP</strong> — sama seperti semester sebelumnya. Kualitas karya yang kamu pilih jadi lebih penting!
+        </p>
+      </div>
+    </section>
+
+    <!-- 5. Yang Tidak Berubah -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-tertiary-container/20 p-10 rounded-[2.5rem] border-2 border-tertiary/10 flex gap-6 items-start">
+        <div class="w-14 h-14 bg-tertiary rounded-2xl flex items-center justify-center text-on-tertiary shrink-0">
+          <span class="material-symbols-outlined text-3xl">task_alt</span>
+        </div>
+        <div>
+          <h3 class="font-headline-lg text-on-tertiary-container mb-3">Tugas Harian</h3>
+          <p class="text-on-tertiary-container/70 text-base leading-relaxed">
+            Formula XP masih sama: <strong>Skor × Multiplier Keyakinan</strong>. Skor di bawah 60 tetap kena penalti ×0.8. Pilihan keyakinan 1–5 masih tersedia.
+          </p>
+        </div>
+      </div>
+      <div class="bg-tertiary-container/20 p-10 rounded-[2.5rem] border-2 border-tertiary/10 flex gap-6 items-start">
+        <div class="w-14 h-14 bg-tertiary rounded-2xl flex items-center justify-center text-on-tertiary shrink-0">
+          <span class="material-symbols-outlined text-3xl">collections</span>
+        </div>
+        <div>
+          <h3 class="font-headline-lg text-on-tertiary-container mb-3">Galeri Semester Lalu</h3>
+          <p class="text-on-tertiary-container/70 text-base leading-relaxed">
+            Semua karyamu di semester lalu <strong>tetap tersimpan rapi</strong> di portofolio digitalmu. Kamu bisa terus menambah koleksi baru sesuai jadwal yang baru.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Langkah Pertama -->
+    <section>
+      <h2 class="font-headline-lg text-on-background text-center mb-16">Langkah Pertamamu di Semester Ini</h2>
+      <div class="relative step-line space-y-12 lg:space-y-0 lg:flex lg:gap-8">
+
+        <div class="flex lg:flex-col items-center gap-6 relative z-10 lg:flex-1 text-center">
+          <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-lg font-black text-xl shrink-0">1</div>
+          <div>
+            <h4 class="font-title-md text-on-surface mb-2">Cek Kelas Barumu</h4>
+            <p class="text-on-surface-variant text-sm px-4">Pastikan kelas yang tertera di profil sudah sesuai dengan kelas barumu.</p>
+          </div>
+        </div>
+
+        <div class="flex lg:flex-col items-center gap-6 relative z-10 lg:flex-1 text-center">
+          <div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center shadow-lg font-black text-xl shrink-0">2</div>
+          <div>
+            <h4 class="font-title-md text-on-surface mb-2">Mulai Kumpulkan XP</h4>
+            <p class="text-on-surface-variant text-sm px-4">Kerjakan tugas harian pertama untuk 'pecah telur' poin XP-mu di semester ini.</p>
+          </div>
+        </div>
+
+        <div class="flex lg:flex-col items-center gap-6 relative z-10 lg:flex-1 text-center">
+          <div class="w-12 h-12 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shadow-lg font-black text-xl shrink-0">3</div>
+          <div>
+            <h4 class="font-title-md text-on-surface mb-2">Aktif di Setiap Sesi</h4>
+            <p class="text-on-surface-variant text-sm px-4">Tunjukkan keaktifanmu agar guru bisa memberikan nilai yang tinggi di setiap sesi.</p>
+          </div>
+        </div>
+
+        <div class="flex lg:flex-col items-center gap-6 relative z-10 lg:flex-1 text-center">
+          <div class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg font-black text-xl shrink-0">4</div>
+          <div>
+            <h4 class="font-title-md text-on-surface mb-2">Upload Karya Tepat Waktu</h4>
+            <p class="text-on-surface-variant text-sm px-4">Ingat jadwal upload galeri sesuai kelasmu — VII Kamis, VIII Jumat, IX Sabtu.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+  <!-- Masa Pengembangan -->
+<div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop pb-8">
+  <div class="bg-amber-50 border-2 border-amber-200 rounded-[2rem] p-8 md:p-10 flex flex-col sm:flex-row items-start gap-6 relative overflow-hidden">
+    
+    <!-- Icon -->
+    <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-amber-600 text-3xl">construction</span>
+    </div>
+
+    <!-- Teks -->
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-200 text-amber-800 rounded-full text-xs font-bold uppercase tracking-widest">
+          <span class="w-1.5 h-1.5 bg-amber-600 rounded-full animate-pulse inline-block"></span>
+          Dalam Pengembangan
+        </span>
+      </div>
+      <h3 class="font-headline-lg text-amber-900 mb-2 text-xl">Sistem Masih Dalam Masa Pengembangan</h3>
+      <p class="text-amber-800/70 text-sm leading-relaxed mb-5">
+        Beberapa fitur mungkin masih mengalami penyesuaian. Jika kamu menemukan kendala, data yang tidak sesuai, atau hal lain yang terasa aneh — jangan ragu untuk menghubungi admin segera.
+      </p>
+    </div>
+
+    <!-- Decorative -->
+    <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-amber-100 rounded-full opacity-60"></div>
+    <div class="absolute -top-4 -right-4 w-20 h-20 bg-amber-100 rounded-full opacity-40"></div>
+  </div>
+</div>
+
+</main>
+
+
+
+<script>
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mousedown', () => el.style.transform = 'scale(0.98)');
+    el.addEventListener('mouseup', () => el.style.transform = 'scale(1)');
+    el.addEventListener('mouseleave', () => el.style.transform = 'scale(1)');
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('opacity-100', 'translate-y-0');
+        entry.target.classList.remove('opacity-0', 'translate-y-10');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section').forEach(section => {
+    section.classList.add('transition-all', 'duration-700', 'ease-out', 'opacity-0', 'translate-y-10');
+    observer.observe(section);
+  });
+</script>
+</body>
+</html>

@@ -279,9 +279,9 @@ class GalleryController extends Controller
     const MAX_UPLOAD_PER_WEEK = 3;
 
     const UPLOAD_SCHEDULE = [
-        7 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
-        8 => ['day' => Carbon::THURSDAY,  'label' => 'Kamis'],
-        9 => ['day' => Carbon::FRIDAY,    'label' => 'Jumat'],
+        7 => ['day' => Carbon::THURSDAY, 'label' => 'Kamis'],
+        8 => ['day' => Carbon::FRIDAY,   'label' => 'Jumat'],
+        9 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
     ];
 
     private function checkUploadEligibility(User $user): ?array
