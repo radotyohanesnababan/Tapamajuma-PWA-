@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicPeriod;
 use App\Models\StudentEnrollment;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class AcademicPeriodController extends Controller
@@ -132,6 +134,11 @@ class AcademicPeriodController extends Controller
                 'is_active'  => true,
                 'opened_at'  => now(),
             ]);
+            
+            User::where('role', 'student')->update(['xp_points' => 0]);
+            // ✅ Sync class_id dari enrollment
+            Artisan::call('enrollment:sync-class-id');
+
         });
 
         return response()->json([

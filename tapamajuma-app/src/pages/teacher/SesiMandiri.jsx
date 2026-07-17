@@ -65,8 +65,15 @@ export default function SesiMandiri() {
 
   // LOGIC ACTIONS
   const toggleActive = (id) => {
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
+    setStudents(prev => prev.map(s =>
+      s.id === id ? { ...s, active: !s.active, nilai: !s.active ? s.nilai : 0 } : s
+    ));
   };
+
+    const updateNilai = (id, nilai) => {
+    const val = Math.min(100, Math.max(0, Number(nilai)));
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, nilai: val } : s));
+    };
 
   const toggleAll = (status) => {
     setStudents(prev => prev.map(s => ({ ...s, active: status })));
@@ -94,9 +101,13 @@ export default function SesiMandiri() {
     setIsSaving(true);
     try {
       const payload = {
-        class_id: selectedClass,
-        students: students.map(s => ({ id: s.id, active: !!s.active }))
-      };
+      class_id: selectedClass,
+      students: students.map(s => ({
+        id: s.id,
+        active: !!s.active,
+        nilai: s.active ? (s.nilai || 0) : 0,
+      }))
+    };
 
       await api.post('/api/self-study/store', payload);
       toast.success("Presensi berhasil disimpan!");
@@ -276,15 +287,29 @@ export default function SesiMandiri() {
                         </div>
                       </div>
 
-                      <div className={`
-                        h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300
-                        ${student.active 
-                          ? "bg-indigo-600 text-white scale-110 shadow-indigo-200 shadow-lg" 
-                          : "bg-slate-100 text-slate-300 group-hover:bg-slate-200"
-                        }
-                      `}>
-                        {student.active ? <Check size={16} strokeWidth={4} /> : <UserCheck size={16} />}
+                      <div className="flex items-center gap-3">
+                        {student.active && (
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={student.nilai || ''}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => updateNilai(student.id, e.target.value)}
+                            placeholder="Nilai"
+                            className="w-16 h-8 text-center text-xs font-bold rounded-lg border border-indigo-200 bg-white text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        )}
+                        <div className={`
+                          h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300
+                          ${student.active 
+                            ? "bg-indigo-600 text-white scale-110 shadow-indigo-200 shadow-lg" 
+                            : "bg-slate-100 text-slate-300 group-hover:bg-slate-200"
+                          }
+                        `}>
+                          {student.active ? <Check size={16} strokeWidth={4} /> : <UserCheck size={16} />}
                       </div>
+                    </div>
                     </div>
                   ))
                 ) : (

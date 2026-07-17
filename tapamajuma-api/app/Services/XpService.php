@@ -52,36 +52,36 @@ class XpService
      * @param string      $source    'daily_activity' | 'gallery' | 'attendance'
      * @param int|null    $sourceId  ID record sumber (opsional, untuk audit)
      */
+    
     public static function award(int $userId, int $xp, string $source, ?int $sourceId = null): void
-    {
-        // Tambah XP ke kolom user
-        User::where('id', $userId)->increment('xp_points', $xp);
+{
+    $period = \App\Models\AcademicPeriod::current(); // ✅ Definisikan dulu
 
-        // Catat log untuk audit / riwayat XP
-        XpLog::create([
-            'user_id'   => $userId,
-            'xp'        => $xp,
-            'source'    => $source,
-            'source_id' => $sourceId,
-        ]);
-    }
+    User::where('id', $userId)->increment('xp_points', $xp);
 
-   public static function deduct(int $userId, int $xp, string $source, ?int $sourceId = null): void
-    {
-        // Kurangi XP tapi tidak boleh minus (minimum 0)
-        User::where('id', $userId)
-            ->where('xp_points', '>=', $xp)
-            ->decrement('xp_points', $xp);
+    XpLog::create([
+        'user_id'            => $userId,
+        'xp'                 => $xp,
+        'source'             => $source,
+        'academic_period_id' => $period?->id, 
+        'source_id'          => $sourceId,
+    ]);
+}
 
-        // Kalau XP user kurang dari yang mau dikurangi, set ke 0
-        User::where('id', $userId)
-            ->where('xp_points', '<', $xp)
-            ->update(['xp_points' => 0]);
+public static function deduct(int $userId, int $xp, string $source, ?int $sourceId = null): void
+{
+    User::where('id', $userId)
+        ->where('xp_points', '>=', $xp)
+        ->decrement('xp_points', $xp);
 
-        // Hapus log XP terkait agar recalculate tidak menghitung ulang
-        XpLog::where('user_id', $userId)
-            ->where('source', $source)
-            ->where('source_id', $sourceId)
-            ->delete();
-    }
+    User::where('id', $userId)
+        ->where('xp_points', '<', $xp)
+        ->update(['xp_points' => 0]);
+
+    XpLog::where('user_id', $userId)
+        ->where('source', $source)
+        ->where('source_id', $sourceId)
+        ->delete();
+}
+
 }
