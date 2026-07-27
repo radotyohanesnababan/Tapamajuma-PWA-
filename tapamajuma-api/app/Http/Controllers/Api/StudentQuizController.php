@@ -18,42 +18,91 @@ class StudentQuizController extends Controller
         return response()->json($subjects);
     }
 
-   // 2. Ambil Soal
-    public function getQuestions(Request $request)
-    {
-        $user = $request->user();
-        $subjectId = $request->query('subject_id');
+//    // 2. Ambil Soal
+//     public function getQuestions(Request $request)
+//     {
+//         $user = $request->user();
+//         $subjectId = $request->query('subject_id');
         
-        // 1. TANGKAP TIPE SOAL (numeracy, literacy, tka) DARI REACT
-        $type = $request->query('type'); 
+//         // 1. TANGKAP TIPE SOAL (numeracy, literacy, tka) DARI REACT
+//         $type = $request->query('type'); 
 
-        // Cek apakah siswa sudah punya kelas
-        if (!$user->class_id) {
-            return response()->json(['error' => 'Akun Anda belum masuk ke kelas manapun.'], 403);
-        }
+//         // Cek apakah siswa sudah punya kelas
+//         if (!$user->class_id) {
+//             return response()->json(['error' => 'Akun Anda belum masuk ke kelas manapun.'], 403);
+//         }
 
-        // Query ke tabel question_banks
-        // Ambil random IDs dulu (ringan)
-$randomIds = QuestionBank::query()
-    ->where('subject_id', $subjectId)
-    ->where('class_id', $user->class_id)
-    ->where('type', $type)
-    ->pluck('id')
-    ->shuffle()
-    ->take(10);
+//         // Query ke tabel question_banks
+//         // Ambil random IDs dulu (ringan)
+// $randomIds = QuestionBank::query()
+//     ->where('subject_id', $subjectId)
+//     ->where('class_id', $user->class_id)
+//     ->where('type', $type)
+//     ->pluck('id')
+//     ->shuffle()
+//     ->take(10);
 
-// Baru ambil full data
-$questions = QuestionBank::whereIn('id', $randomIds)
-    ->get()
-    ->makeHidden(['correct_key']);        
+// // Baru ambil full data
+// $questions = QuestionBank::whereIn('id', $randomIds)
+//     ->get()
+//     ->makeHidden(['correct_key']);        
 
-        // Cek ketersediaan soal
-        if ($questions->isEmpty()) {
-            return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
-        }
+//         // Cek ketersediaan soal
+//         if ($questions->isEmpty()) {
+//             return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
+//         }
 
-        return response()->json($questions);
+//         return response()->json($questions);
+//     }
+
+
+// 2. Ambil Soal (Versi Optimasi)
+public function getQuestions(Request $request)
+{
+    $user = $request->user();
+    $subjectId = $request->query('subject_id');
+    $type = $request->query('type');
+
+    if (!$user->class_id) {
+        return response()->json(['error' => 'Akun Anda belum masuk ke kelas manapun.'], 403);
     }
+
+    $needed = 10;
+
+    $baseQuery = QuestionBank::query()
+        ->where('subject_id', $subjectId)
+        ->where('class_id', $user->class_id)
+        ->where('type', $type);
+
+    $bounds = (clone $baseQuery)->selectRaw('MIN(id) as min_id, MAX(id) as max_id')->first();
+
+    if (!$bounds || !$bounds->min_id) {
+        return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
+    }
+
+    $questions = collect();
+    $attempts = 0;
+
+    while ($questions->count() < $needed && $attempts < 5) {
+        $randomId = random_int($bounds->min_id, $bounds->max_id);
+
+        $batch = (clone $baseQuery)
+            ->where('id', '>=', $randomId)
+            ->orderBy('id')
+            ->limit($needed - $questions->count())
+            ->get()
+            ->makeHidden(['correct_key']);
+
+        $questions = $questions->merge($batch)->unique('id');
+        $attempts++;
+    }
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
+    }
+
+    return response()->json($questions->take($needed)->values());
+}
 
     // 3. SUBMIT & SIMPAN KE DAILY_ACTIVITY
     public function submit(Request $request)
