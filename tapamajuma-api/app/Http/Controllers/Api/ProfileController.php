@@ -56,12 +56,12 @@ class ProfileController extends Controller
     return response()->json([
         'message' => 'Profil kamu berhasil diperbarui',
         'user' => [
-            'name' => $user->name,
+            'name' => $request->name ?? $user->name,
             'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
             'avatar_color' => $user->avatar_color,
-            'email' => $user->email,
-            'nis' => $user->nis,
-            'phone_number' => $user->phone_number,
+            'email' => $request->email ?? $user->email,
+            'nis' => $request->nis ?? $user->nis,
+            'phone_number' => $request->phone_number ?? $user->phone_number,
         ]
     ], 200);
 }
