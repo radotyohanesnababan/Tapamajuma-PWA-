@@ -20,8 +20,8 @@ class ProfileController extends Controller
     $user = Auth::user();
 
     $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+        'name' => ['nullable', 'string', 'max:255'],
+        'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
         'nis' => ['nullable', 'string', 'max:20'],
         'phone_number' => ['nullable', 'string', 'max:20'],
         'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:4086',
