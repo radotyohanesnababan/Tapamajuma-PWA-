@@ -194,7 +194,7 @@ const handleSave = async (e) => {
                   <CardTitle className="text-lg text-slate-800">Edit Profil</CardTitle>
                   <CardDescription>Perbarui data identitas kamu di sini.</CardDescription>
                   <CardDescription className="text-xs text-slate-400 mt-1">
-                    <span className="font-bold">Catatan:</span> Kosongkan kolom jika tidak ingin mengubah sebuah data.
+                    <span className="font-bold">Catatan:</span> Biarkan kolom terisi jika tidak ingin mengubah sebuah data.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">

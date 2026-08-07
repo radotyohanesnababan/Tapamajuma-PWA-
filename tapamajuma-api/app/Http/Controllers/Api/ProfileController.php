@@ -19,21 +19,34 @@ class ProfileController extends Controller
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
+    // Ambil aturan validasi email dan name secara dinamis
+    $emailRules = ['nullable', 'string', 'email', 'max:255'];
+    $nameRules = ['nullable', 'string', 'max:255'];
+
+    // Cek Nama: Jika dikirim DAN tidak sama dengan nama saat ini, baru cek unique
+    if ($request->filled('name') && $request->name !== $user->name) {
+        $nameRules[] = Rule::unique('users')->ignore($user->id);
+    }
+
+    // Cek Email: Jika dikirim DAN tidak sama dengan email saat ini, baru cek unique
+    if ($request->filled('email') && $request->email !== $user->email) {
+        $emailRules[] = Rule::unique('users')->ignore($user->id);
+    }
+
     $request->validate([
-        'name' => ['nullable', 'string', 'max:255'],
-        'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+        'name' => $nameRules,
+        'email' => $emailRules,
         'nis' => ['nullable', 'string', 'max:20'],
         'phone_number' => ['nullable', 'string', 'max:20'],
         'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:4086',
         'password' => ['nullable', 'confirmed', 'min:8'],
     ]);
 
-    // --- BAGIAN YANG HARUS DITAMBAHKAN ---
-    $user->name = $request->name;
-    $user->email = $request->email;
-    $user->nis = $request->nis; // Tambahkan ini
-    $user->phone_number = $request->phone_number; // Tambahkan ini
-    // -------------------------------------
+    // Proses Update Data (Pakai konsep ?? agar tidak null)
+    $user->name = $request->name ?? $user->name;
+    $user->email = $request->email ?? $user->email;
+    $user->nis = $request->nis ?? $user->nis;
+    $user->phone_number = $request->phone_number ?? $user->phone_number;
 
     if ($request->hasFile('avatar')) {
         if ($user->avatar && Storage::exists($user->avatar)) {
@@ -56,12 +69,12 @@ class ProfileController extends Controller
     return response()->json([
         'message' => 'Profil kamu berhasil diperbarui',
         'user' => [
-            'name' => $request->name ?? $user->name,
+            'name' => $user->name,
             'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
             'avatar_color' => $user->avatar_color,
-            'email' => $request->email ?? $user->email,
-            'nis' => $request->nis ?? $user->nis,
-            'phone_number' => $request->phone_number ?? $user->phone_number,
+            'email' => $user->email,
+            'nis' => $user->nis,
+            'phone_number' => $user->phone_number,
         ]
     ], 200);
 }
