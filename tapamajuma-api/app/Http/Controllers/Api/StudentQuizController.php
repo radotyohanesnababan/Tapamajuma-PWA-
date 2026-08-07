@@ -18,43 +18,6 @@ class StudentQuizController extends Controller
         return response()->json($subjects);
     }
 
-//    // 2. Ambil Soal
-//     public function getQuestions(Request $request)
-//     {
-//         $user = $request->user();
-//         $subjectId = $request->query('subject_id');
-        
-//         // 1. TANGKAP TIPE SOAL (numeracy, literacy, tka) DARI REACT
-//         $type = $request->query('type'); 
-
-//         // Cek apakah siswa sudah punya kelas
-//         if (!$user->class_id) {
-//             return response()->json(['error' => 'Akun Anda belum masuk ke kelas manapun.'], 403);
-//         }
-
-//         // Query ke tabel question_banks
-//         // Ambil random IDs dulu (ringan)
-// $randomIds = QuestionBank::query()
-//     ->where('subject_id', $subjectId)
-//     ->where('class_id', $user->class_id)
-//     ->where('type', $type)
-//     ->pluck('id')
-//     ->shuffle()
-//     ->take(10);
-
-// // Baru ambil full data
-// $questions = QuestionBank::whereIn('id', $randomIds)
-//     ->get()
-//     ->makeHidden(['correct_key']);        
-
-//         // Cek ketersediaan soal
-//         if ($questions->isEmpty()) {
-//             return response()->json(['message' => 'Belum ada soal tersedia untuk kategori ini.'], 404);
-//         }
-
-//         return response()->json($questions);
-//     }
-
 
 // 2. Ambil Soal (Versi Optimasi)
 public function getQuestions(Request $request)

@@ -21,7 +21,9 @@ return [
 
 'allowed_origins' => [
     'http://localhost:5173',
+    'http://127.0.0.1:5173',   // tambahkan ini
     'http://localhost:3000',
+    'http://127.0.0.1:3000',   // opsional, jaga-jaga
     'http://localhost',
     'https://tapamajuma-pwa.vercel.app',
     'https://tapamajuma.my.id',

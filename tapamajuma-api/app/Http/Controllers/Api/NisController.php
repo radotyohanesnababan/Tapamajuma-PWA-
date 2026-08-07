@@ -16,26 +16,25 @@ class NisController extends Controller
 public function claimNis(Request $request)
 {
     $user = Auth::user();
-    
+
     // 1. Deteksi Kondisi Akun
     $isExternalAccount = !str_contains($user->email, '@tapamajuma.id');
-    
-    $hasValidNis = \App\Models\AllowedNis::where('nis', $user->nis)
+
+    $hasValidNis = AllowedNis::where('nis', $user->nis)
         ->where('is_used', true)
         ->where('used_by', $user->id)
         ->exists();
 
-    // 2. Validasi
+    // 2. Validasi (sama seperti sebelumnya)
     $rules = [];
     if (!$hasValidNis) {
-        $rules['nis'] = ['required', 'exists:allowed_nis,nis'];
+        $rules['nis'] = ['required', 'string', 'exists:allowed_nis,nis']; // tambah string
     } else {
-        $rules['nis'] = ['nullable', 'exists:allowed_nis,nis'];
+        $rules['nis'] = ['nullable', 'string', 'exists:allowed_nis,nis'];
     }
 
     if ($isExternalAccount) {
         $rules['password'] = ['required', 'min:6', 'confirmed'];
-        // Hapus baris $updateData['needs_password'] = true; yang tadi nyasar di sini
     }
 
     $request->validate($rules, [
@@ -46,16 +45,30 @@ public function claimNis(Request $request)
 
     // 3. Eksekusi
     DB::transaction(function () use ($user, $request, $hasValidNis, $isExternalAccount) {
+        
+        // ✅ FIX 1: Lock user row JUGA untuk prevent concurrent update
+        $lockedUser = \App\Models\User::lockForUpdate()->find($user->id);
+        
         $updateData = [];
 
         if (!$hasValidNis && $request->has('nis')) {
-            $allowedNis = AllowedNis::where('nis', $request->nis)->first();
+            $allowedNis = AllowedNis::where('nis', $request->nis)
+                ->lockForUpdate()
+                ->first();
 
-            if ($allowedNis->is_used && $allowedNis->used_by !== $user->id) {
-                throw new \Exception("NISN ini sudah diklaim oleh akun lain.");
+            if (!$allowedNis) {
+                throw ValidationException::withMessages([
+                    'nis' => 'NISN tidak terdaftar.',
+                ]);
             }
 
-            $updateData['nis'] = $allowedNis->nis;
+            if ($allowedNis->is_used && $allowedNis->used_by !== $user->id) {
+                throw ValidationException::withMessages([
+                    'nis' => 'NISN ini sudah diklaim oleh akun lain.',
+                ]);
+            }
+
+            $updateData['nis'] = (string) $allowedNis->nis; // ✅ FIX 2: cast ke string
 
             $allowedNis->update([
                 'is_used' => true,
@@ -63,21 +76,23 @@ public function claimNis(Request $request)
             ]);
         }
 
-        // UPDATE PASSWORD & FLAG
         if ($isExternalAccount && $request->has('password')) {
             $updateData['password'] = bcrypt($request->password);
-            // Kunci: Flag ini yang akan mematikan modal selamanya
-            $updateData['is_password_set'] = true; 
+            $updateData['is_password_set'] = true;
         }
 
         if (!empty($updateData)) {
-            $user->update($updateData);
+            // ✅ FIX 1: Pakai locked user, bukan $user yang di-load luar transaction
+            $lockedUser->update($updateData);
         }
     });
 
+    // ✅ FIX 3: Refresh user dari DB setelah transaction commit
+    $user->refresh();
+
     return response()->json([
         'message' => 'Kredensial berhasil diperbarui! 🔓',
-        'user' => $user->fresh()
+        'user' => $user
     ], 200);
 }
 }

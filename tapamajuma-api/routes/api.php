@@ -64,9 +64,9 @@ Route::middleware('tenant')->group(function () {
     });
 
     /*
-    |----------------------------------------------------------------------
+    |------------------------------------------------------------------------------
     | Public + Tenant (tanpa auth)
-    |----------------------------------------------------------------------
+    |------------------------------------------------------------------------------
     */
     Route::get('/public/classes', [PublicDataController::class, 'getClasses']);
     Route::get('/public/gallery/{token}', [GalleryController::class, 'showPublic']);
