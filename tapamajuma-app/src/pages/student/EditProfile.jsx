@@ -72,8 +72,7 @@ const handleSave = async (e) => {
 
     // 1. Buat objek FormData
     const data = new FormData();
-    data.append('name', formData.name);
-    data.append('email', formData.email);
+    
     
     // TAMBAHKAN BARIS INI: Kirim NISN dan Phone Number
     data.append('phone_number', formData.phone_number);
@@ -84,6 +83,8 @@ const handleSave = async (e) => {
       data.append('avatar', selectedFile);
     }
 
+    if (formData.name) data.append('name', formData.name);
+    if (formData.email) data.append('email', formData.email);
     // Kirim Password jika user mengisinya
     if (formData.password) {
       data.append('password', formData.password);
@@ -192,6 +193,9 @@ const handleSave = async (e) => {
                 <CardHeader>
                   <CardTitle className="text-lg text-slate-800">Edit Profil</CardTitle>
                   <CardDescription>Perbarui data identitas kamu di sini.</CardDescription>
+                  <CardDescription className="text-xs text-slate-400 mt-1">
+                    <span className="font-bold">Catatan:</span> Kosongkan kolom jika tidak ingin mengubah sebuah data.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <div className="space-y-2">
