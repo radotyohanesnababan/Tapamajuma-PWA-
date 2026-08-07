@@ -1,145 +1,138 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Layers, 
-  List, 
-  PlusCircle, 
-  FileUp, 
-  ArrowRight,
-  Database,
-  PenTool,
-  UploadCloud,
-  Sparkles
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  List, PlusCircle, FileUp, ChevronRight,
+  Database, PenTool, UploadCloud, Layers,
+  AlertCircle
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+const MENUS = [
+  {
+    title: "Daftar Soal",
+    desc: "Lihat, edit, atau hapus soal Numerasi, Literasi, dan TKA.",
+    icon: Database,
+    path: "list",
+    accent: "text-slate-600",
+    accentBg: "bg-slate-50",
+    accentBorder: "border-slate-200",
+    dot: "bg-slate-400",
+    tags: ["Manajemen", "Edit Data"],
+  },
+  {
+    title: "Tambah Manual",
+    desc: "Buat soal pilihan ganda baru satu per satu di aplikasi.",
+    icon: PenTool,
+    path: "add",
+    accent: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-200",
+    dot: "bg-emerald-500",
+    tags: ["Input Cepat", "Satu per Satu"],
+  },
+  {
+    title: "Import Massal",
+    desc: "Upload ratusan soal sekaligus via template Excel atau CSV.",
+    icon: UploadCloud,
+    path: "import",
+    accent: "text-amber-600",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-200",
+    dot: "bg-amber-500",
+    tags: ["Excel/CSV", "Otomatisasi"],
+  },
+];
 
 export default function BankSoal() {
   const navigate = useNavigate();
 
-  const menus = [
-    {
-      title: "Daftar Soal",
-      desc: "Lihat, edit, atau hapus soal Numerasi, Literasi, dan TKA yang ada di database.",
-      icon: <List size={24} />,
-      bgIcon: <Database size={120} />,
-      path: 'list',
-      color: "indigo",
-      accentIcon: <List size={14} className="fill-current" />,
-      tags: ["Manajemen", "Edit Data"]
-    },
-    {
-      title: "Tambah Manual",
-      desc: "Ketik dan buat soal pilihan ganda baru satu per satu langsung di aplikasi.",
-      icon: <PlusCircle size={24} />,
-      bgIcon: <PenTool size={120} />,
-      path: 'add',
-      color: "emerald",
-      accentIcon: <PlusCircle size={14} className="fill-current" />,
-      tags: ["Input Cepat", "Satu per Satu"]
-    },
-    {
-      title: "Import Massal",
-      desc: "Upload ratusan soal sekaligus menggunakan template Excel atau CSV standar.",
-      icon: <FileUp size={24} />,
-      bgIcon: <UploadCloud size={120} />,
-      path: 'import',
-      color: "amber",
-      accentIcon: <FileUp size={14} className="fill-current" />,
-      tags: ["Excel/CSV", "Otomatisasi"]
-    }
-  ];
-
-  const colorConfig = {
-    indigo: "bg-indigo-50 text-indigo-600 hover:border-indigo-300 shadow-indigo-100/50",
-    emerald: "bg-emerald-50 text-emerald-600 hover:border-emerald-300 shadow-emerald-100/50",
-    amber: "bg-amber-50 text-amber-600 hover:border-amber-300 shadow-amber-100/50"
-  };
-
-  const btnConfig = {
-    indigo: "bg-indigo-600 shadow-indigo-200",
-    emerald: "bg-emerald-600 shadow-emerald-200",
-    amber: "bg-amber-600 shadow-amber-200"
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-6 pb-24 space-y-8 max-w-5xl mx-auto">
-      
-      {/* HEADER SECTION */}
-      <div className="space-y-2 pt-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-            <Layers className="text-indigo-600" size={28} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bank Soal</h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Management</p>
-          </div>
-        </div>
-        <p className="text-slate-500 text-sm max-w-2xl leading-relaxed font-medium">
-          Kelola seluruh materi ujian dan latihan siswa. Pilih metode input soal yang paling sesuai dengan kebutuhanmu hari ini.
-        </p>
-      </div>
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+      `}</style>
 
-      {/* MENU GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {menus.map((menu, idx) => (
-          <div 
-            key={idx}
-            onClick={() => navigate(menu.path)} 
-            className="group cursor-pointer perspective-1000"
-          >
-            <Card className={`h-full border-none rounded-[2.5rem] bg-white shadow-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden flex flex-col`}>
-              
-              {/* STYLIZED BACKGROUND ICON */}
-              <div className={`absolute -top-6 -right-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 ${menu.color === 'indigo' ? 'text-indigo-600' : menu.color === 'emerald' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {menu.bgIcon}
-              </div>
-              
-              <CardHeader className="p-8 pb-4 relative z-10">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 ${colorConfig[menu.color].split(' ')[0]} ${colorConfig[menu.color].split(' ')[1]}`}>
-                  {menu.icon}
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
-                      {menu.title}
-                    </CardTitle>
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+        {/* ═══ HEADER ═══ */}
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-slate-400">
+            Data Management
+          </p>
+          <h1 className="text-lg font-bold text-slate-800 mt-0.5">
+            Bank Soal
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium leading-relaxed mt-1 max-w-sm">
+            Kelola materi ujian dan latihan. Pilih metode input soal yang sesuai.
+          </p>
+        </div>
+
+        {/* ═══ MENU LIST ═══ */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider ml-1">
+            Modul
+          </p>
+
+          {MENUS.map((menu) => {
+            const Icon = menu.icon;
+            return (
+              <div
+                key={menu.title}
+                onClick={() => navigate(menu.path)}
+                className="rounded-xl bg-white border border-slate-200 overflow-hidden cursor-pointer transition hover:border-slate-300 active:scale-[0.99] group"
+              >
+                <div className={`h-0.5 ${menu.dot} opacity-40`} />
+
+                <div className="p-4 flex items-start gap-3.5">
+                  <div className={`w-10 h-10 rounded-lg ${menu.accentBg} ${menu.accent} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={18} />
                   </div>
-                  <p className="text-slate-500 text-xs leading-relaxed font-medium">
-                    {menu.desc}
-                  </p>
-                </div>
-              </CardHeader>
 
-              <CardContent className="p-8 pt-0 mt-auto relative z-10">
-                {/* TAGS */}
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {menu.tags.map((tag, tIdx) => (
-                    <span key={tIdx} className="text-[9px] font-black uppercase tracking-wider bg-slate-50 text-slate-400 px-2.5 py-1 rounded-lg border border-slate-100">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[13px] font-semibold text-slate-800 leading-tight">
+                        {menu.title}
+                      </h3>
+                      <div className={`w-1.5 h-1.5 rounded-full ${menu.dot} flex-shrink-0`} />
+                    </div>
 
-                {/* ACTION BUTTON */}
-                <div className={`flex items-center justify-between w-full py-4 px-6 rounded-2xl font-black text-white text-xs transition-all duration-300 shadow-lg ${btnConfig[menu.color]} group-hover:gap-4`}>
-                  <span>Lihat</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-      </div>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-0.5">
+                      {menu.desc}
+                    </p>
 
-      {/* FOOTER TIPS */}
-      <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2rem] p-6 mt-12 flex items-center gap-4">
-        <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0">
-          <Sparkles className="text-emerald-600" size={20} />
+                    <div className="flex gap-1.5 mt-2">
+                      {menu.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className={`text-[8px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${menu.accentBg} ${menu.accent} border ${menu.accentBorder}`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <ChevronRight
+                    size={16}
+                    className="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 mt-1"
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <p className="text-xs font-medium text-emerald-700 leading-relaxed">
-          <b>Tips Import:</b> Pastikan kolom di Excel kamu persis sama dengan template agar tidak terjadi error saat proses upload massal.
+
+        {/* ═══ TIP ═══ */}
+        <div className="rounded-lg bg-slate-100 border border-slate-200 p-3 flex items-start gap-2.5">
+          <AlertCircle size={13} className="text-slate-500 flex-shrink-0 mt-0.5" />
+          <p className="text-[10px] text-slate-600 font-medium leading-relaxed">
+            <span className="font-semibold">Tip:</span> Pastikan kolom Excel persis sama dengan template agar tidak error saat upload massal.
+          </p>
+        </div>
+
+        {/* ═══ FOOTER ═══ */}
+        <p className="text-[8px] text-slate-400 text-center font-medium pt-4 uppercase tracking-wider">
+          Question Bank Module · Tapamajuma
         </p>
       </div>
     </div>

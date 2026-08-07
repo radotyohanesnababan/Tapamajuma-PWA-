@@ -12,26 +12,28 @@ class ReflectionController extends Controller
     // Aksi B.1: Simpan Refleksi Mingguan
     public function store(Request $request)
     {
-
         $category = $request->category === 'weekly' ? 'mingguan' : $request->category;
         $validated = $request->validate([
-            'category' => 'required|in:mingguan,harian', 
-            'content' => 'required|string',  
-            'improvements' => 'required|string',
-            'targets' => 'required|string',
-            'activity_id' => 'nullable|exists:daily_activities,id'
+            'category'        => 'required|in:mingguan,harian',
+            'content'         => 'required|string',
+            'improvements'    => 'required|string',
+            'targets'         => 'required|string',
+            'activity_id'     => 'nullable|exists:daily_activities,id',
         ]);
 
         $reflection = Reflection::create([
-            'user_id' => Auth::id(),
-            'category' => $category,
-            'content' => $validated['content'],
+            'user_id'     => Auth::id(),
+            'category'    => $category,
+            'content'     => $validated['content'],
             'improvements' => $validated['improvements'],
-            'targets' => $validated['targets'],
+            'targets'     => $validated['targets'],
             'activity_id' => $validated['activity_id'],
         ]);
 
-        return response()->json(['message' => 'Refleksi mingguan berhasil disimpan', 'data' => $reflection], 201);
+        return response()->json([
+            'message' => 'Refleksi mingguan berhasil disimpan',
+            'data'    => $reflection,
+        ], 201);
     }
 
     // Aksi B.2: Ambil Feed Teman Sekelas
@@ -41,14 +43,13 @@ class ReflectionController extends Controller
 
         $feeds = Reflection::with('user:id,name,class_id')
             ->where('category', 'mingguan')
-            ->whereHas('user', function($query) use ($user) {
+            ->whereHas('user', function ($query) use ($user) {
                 $query->where('class_id', $user->class_id)
-                      ->where('id', '!=', $user->id); // Agar tidak melihat postingan sendiri
+                      ->where('id', '!=', $user->id);
             })
             ->whereNotNull('improvements')
             ->latest()
             ->take(20)
-            // PENTING: Tambahkan 'peer_feedback' agar kolom JSON terambil
             ->get(['id', 'user_id', 'improvements', 'peer_feedback', 'created_at']);
 
         return response()->json($feeds);
@@ -69,72 +70,89 @@ class ReflectionController extends Controller
     public function storePeerFeedback(Request $request, $id)
     {
         $request->validate(['comment' => 'required|string']);
-        
+
         $reflection = Reflection::findOrFail($id);
-        
-        // Ambil data JSON lama atau buat array kosong
         $feedbacks = $reflection->peer_feedback ?? [];
-        
-        // Tambahkan komentar baru
+
         $feedbacks[] = [
-            'user_name' => Auth::user()->name,
-            'comment' => $request->comment,
+            'user_name'  => Auth::user()->name,
+            'comment'    => $request->comment,
             'created_at' => now()->toDateTimeString(),
         ];
 
-        // Update kolom JSON
         $reflection->update(['peer_feedback' => $feedbacks]);
 
         return response()->json(['message' => 'Dukungan berhasil dikirim!']);
     }
 
+    // ── GURU: Ambil Refleksi Siswa (PAGINATED) ──
     public function getStudentReflections(Request $request)
-{
-    /** @var \App\Models\User $user */
-    $user = Auth::user(); // Ambil data Guru/Superadmin
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $allowedClassIds = $user->accessible_classes ?? [];
 
-    // 1. Ambil daftar ID Kelas yang boleh diakses (Array [1, 2, 3])
-    $allowedClassIds = $user->accessible_classes ?? [];
+        $perPage = $request->query('per_page', 10);
+        $page    = $request->query('page', 1);
 
-    $query = Reflection::query();
+        $query = Reflection::query();
 
-    // 2. Security Check: Filter berdasarkan hak akses Guru
-    if ($user->role !== 'superadmin') {
-        $query->whereHas('user', function($q) use ($allowedClassIds) {
-            $q->whereIn('class_id', $allowedClassIds);
-        });
-    }
-
-    // 3. Filter Dropdown (Jika Guru memilih kelas spesifik di UI)
-    $filterClassId = $request->query('class_id'); 
-    if ($filterClassId && $filterClassId !== 'all') {
-        $query->whereHas('user', function($q) use ($filterClassId) {
-            $q->where('class_id', $filterClassId);
-        });
-    }
-
-    // 4. Load Relasi & Ambil Data
-    $reflections = $query->with([
-        'user' => function($q) {
-            $q->select('id', 'name', 'class_id', 'level') // Ambil level juga untuk badge
-              ->with('studentClass:id,name'); // Agar di JSX bisa panggil .student_class.name
+        // Security: filter by accessible classes
+        if ($user->role !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($allowedClassIds) {
+                $q->whereIn('class_id', $allowedClassIds);
+            });
         }
-    ])
-    ->whereIn('category', ['harian', 'mingguan']) // Pastikan mengambil semua kategori
-    ->latest()
-    ->get();
 
-    return response()->json($reflections);
-}
+        // Filter: class_id
+        $filterClassId = $request->query('class_id');
+        if ($filterClassId && $filterClassId !== 'all' && $filterClassId !== '') {
+            $query->whereHas('user', function ($q) use ($filterClassId) {
+                $q->where('class_id', $filterClassId);
+            });
+        }
 
-public function getAllStudentReflections()
-{
-    $reflections = Reflection::with('user:id,name,class_id,level')
-        ->whereIn('category', ['harian', 'mingguan']) // Mengambil kedua kategori
-        ->latest()
-        ->get();
+        // Filter: date range
+        if ($request->query('start_date')) {
+            $query->whereDate('created_at', '>=', $request->query('start_date'));
+        }
+        if ($request->query('end_date')) {
+            $query->whereDate('created_at', '<=', $request->query('end_date'));
+        }
 
-    return response()->json($reflections);
-}
-    
+        // Filter: only unresponded (optional)
+        if ($request->query('unresponded_only') === 'true') {
+            $query->whereNull('feedback_teacher');
+        }
+
+        // Relations & ordering
+        $query->with([
+            'user' => function ($q) {
+                $q->select('id', 'name', 'class_id', 'level')
+                  ->with('studentClass:id,name');
+            },
+        ])
+        ->whereIn('category', ['harian', 'mingguan'])
+        ->latest();
+
+        $paginated = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data'         => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
+        ]);
+    }
+
+    public function getAllStudentReflections()
+    {
+        $reflections = Reflection::with('user:id,name,class_id,level')
+            ->whereIn('category', ['harian', 'mingguan'])
+            ->latest()
+            ->get();
+
+        return response()->json($reflections);
+    }
 }

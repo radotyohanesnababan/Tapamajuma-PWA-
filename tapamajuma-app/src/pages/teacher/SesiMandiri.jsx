@@ -1,35 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import api from "@/lib/axios"; 
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, Search, UserCheck, Save, Users, Filter, Loader2 } from "lucide-react";
-import { toast } from "sonner"; 
+import React, { useState, useEffect, useMemo } from "react";
+import api from "@/lib/axios";
+import {
+  Check, Search, UserCheck, Save, Users, Filter,
+  Loader2, ChevronDown, AlertTriangle, Hash,
+  ToggleLeft, ToggleRight, CheckCircle2, XCircle,
+  ArrowRight, Zap, SlidersHorizontal
+} from "lucide-react";
+import { toast } from "sonner";
 
 export default function SesiMandiri() {
-  
-  // STATE MANAGEMENT
-  const [availableClasses, setAvailableClasses] = useState([]); 
-  const [students, setStudents] = useState([]); 
-  const [selectedClass, setSelectedClass] = useState(null); 
-  
+  // STATE
+  const [availableClasses, setAvailableClasses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingClasses, setIsLoadingClasses] = useState(true);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 1. FETCH DAFTAR KELAS
+  // 1. FETCH CLASSES
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await api.get('/api/teacher/my-classes');
+        const response = await api.get("/api/teacher/my-classes");
         const classesData = response.data;
         setAvailableClasses(classesData);
-
-        if (classesData.length > 0) {
-          setSelectedClass(classesData[0].id);
-        }
+        if (classesData.length > 0) setSelectedClass(classesData[0].id);
       } catch (error) {
         console.error("Gagal memuat kelas:", error);
         toast.error("Gagal mengambil daftar kelas.");
@@ -40,14 +37,12 @@ export default function SesiMandiri() {
     fetchClasses();
   }, []);
 
-  // 2. FETCH SISWA
+  // 2. FETCH STUDENTS
   useEffect(() => {
     if (!selectedClass) return;
-
     const fetchStudents = async () => {
       setIsLoadingStudents(true);
-      setStudents([]); 
-      
+      setStudents([]);
       try {
         const response = await api.get(`/api/students?class_id=${selectedClass}`);
         setStudents(response.data);
@@ -59,58 +54,60 @@ export default function SesiMandiri() {
         setIsLoadingStudents(false);
       }
     };
-
     fetchStudents();
   }, [selectedClass]);
 
-  // LOGIC ACTIONS
+  // ACTIONS
   const toggleActive = (id) => {
-    setStudents(prev => prev.map(s =>
-      s.id === id ? { ...s, active: !s.active, nilai: !s.active ? s.nilai : 0 } : s
-    ));
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, active: !s.active, nilai: !s.active ? s.nilai : 0 } : s
+      )
+    );
   };
 
-    const updateNilai = (id, nilai) => {
+  const updateNilai = (id, nilai) => {
     const val = Math.min(100, Math.max(0, Number(nilai)));
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, nilai: val } : s));
-    };
+    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, nilai: val } : s)));
+  };
 
   const toggleAll = (status) => {
-    setStudents(prev => prev.map(s => ({ ...s, active: status })));
+    setStudents((prev) => prev.map((s) => ({ ...s, active: status })));
   };
 
   const filteredStudents = useMemo(() => {
-    return students.filter(s => 
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (s.nis && s.nis.includes(searchQuery))
+    return students.filter(
+      (s) =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.nis && s.nis.includes(searchQuery))
     );
   }, [students, searchQuery]);
 
-  const activeCount = students.filter(s => s.active).length;
+  const activeCount = students.filter((s) => s.active).length;
+  const inactiveCount = students.length - activeCount;
   const totalStudents = students.length;
   const percentage = totalStudents > 0 ? Math.round((activeCount / totalStudents) * 100) : 0;
 
   const getSelectedClassName = () => {
-    const cls = availableClasses.find(c => c.id === selectedClass);
-    return cls ? cls.name : '-';
+    const cls = availableClasses.find((c) => c.id === selectedClass);
+    return cls ? cls.name : "—";
   };
 
-  // 3. SIMPAN KE SERVER
+  // 3. SAVE
   const handleSave = async () => {
     if (totalStudents === 0) return;
     setIsSaving(true);
     try {
       const payload = {
-      class_id: selectedClass,
-      students: students.map(s => ({
-        id: s.id,
-        active: !!s.active,
-        nilai: s.active ? (s.nilai || 0) : 0,
-      }))
-    };
-
-      await api.post('/api/self-study/store', payload);
-      toast.success("Presensi berhasil disimpan!");
+        class_id: selectedClass,
+        students: students.map((s) => ({
+          id: s.id,
+          active: !!s.active,
+          nilai: s.active ? s.nilai || 0 : 0,
+        })),
+      };
+      await api.post("/api/self-study/store", payload);
+      toast.success("Presensi berhasil disimpan.");
     } catch (error) {
       console.error(error);
       toast.error("Gagal menyimpan presensi.");
@@ -120,235 +117,287 @@ export default function SesiMandiri() {
   };
 
   return (
-    <div className="space-y-6 p-4 max-w-3xl mx-auto pb-24">
-      <Card className="border-none shadow-md bg-white overflow-hidden">
-        
-        <CardHeader className="pb-4 space-y-4">
-          <div>
-            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Users className="text-indigo-600" />
-              Pencatatan Sesi Aktif Kelas
-            </CardTitle>
-            <CardDescription className="mt-1">
-              Sesi untuk Kelas: <span className="font-bold text-indigo-600">{getSelectedClassName()}</span>
-            </CardDescription>
-          </div>
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes pulse-soft { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+      `}</style>
 
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center transition-all">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-full text-indigo-600 shadow-sm">
-                <UserCheck size={20} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-indigo-400 uppercase">Kehadiran</p>
-                <div className="flex items-baseline gap-1">
-                  {/* Tampilkan Loading kecil atau angka */}
-                  {isLoadingStudents ? (
-                    <div className="h-6 w-16 bg-indigo-200 rounded animate-pulse mt-1"></div>
-                  ) : (
-                    <>
-                        <span className="text-2xl font-black text-indigo-700">{activeCount}</span>
-                        <span className="text-sm font-medium text-indigo-400">/ {totalStudents}</span>
-                    </>
-                  )}
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+        {/* ═══ HEADER ═══ */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-slate-400">
+              Pencatatan Sesi Keaktifan Kelas
+            </p>
+            <h1 className="text-lg font-bold text-slate-800 mt-0.5">
+              Kelas {getSelectedClassName()}
+            </h1>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Hash size={12} className="text-slate-400" />
+            <span className="font-mono text-xs font-semibold text-slate-500">
+              {totalStudents} siswa
+            </span>
+          </div>
+        </div>
+
+        {/* ═══ CLASS SELECTOR ═══ */}
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
+            Pilih Kelas
+          </label>
+
+          {isLoadingClasses ? (
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-9 w-20 bg-slate-200 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : availableClasses.length > 0 ? (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+              {availableClasses.map((cls) => (
+                <button
+                  key={cls.id}
+                  onClick={() => setSelectedClass(cls.id)}
+                  className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap border ${
+                    selectedClass === cls.id
+                      ? "bg-slate-800 text-white border-slate-800"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {cls.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 text-xs rounded-lg font-medium">
+              Anda belum memiliki kelas.
+            </div>
+          )}
+        </div>
+
+        {/* ═══ ATTENDANCE STATS BAR ═══ */}
+        {selectedClass && (
+          <div className="rounded-xl bg-white border border-slate-200 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Active count */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="font-mono text-sm font-bold text-slate-800">
+                    {isLoadingStudents ? "—" : activeCount}
+                  </span>
+                  <span className="text-[9px] font-medium text-slate-400">aktif</span>
+                </div>
+
+                {/* Inactive count */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  <span className="font-mono text-sm font-bold text-slate-500">
+                    {isLoadingStudents ? "—" : inactiveCount}
+                  </span>
+                  <span className="text-[9px] font-medium text-slate-400">tidak aktif</span>
                 </div>
               </div>
+
+              {/* Percentage */}
+              <div className="flex items-center gap-1.5">
+                <span className={`font-mono text-sm font-bold ${
+                  percentage >= 80 ? "text-emerald-600" :
+                  percentage >= 50 ? "text-amber-600" :
+                  "text-rose-600"
+                }`}>
+                  {isLoadingStudents ? "—" : `${percentage}%`}
+                </span>
+              </div>
             </div>
-            <div className="text-right">
-               {isLoadingStudents ? (
-                    <div className="h-6 w-10 bg-indigo-200 rounded animate-pulse ml-auto"></div>
-               ) : (
-                    <span className="text-lg font-black text-indigo-600">{percentage}%</span>
-               )}
+
+            {/* Stacked bar */}
+            <div className="flex h-1.5 rounded-full overflow-hidden bg-slate-100">
+              <div
+                className="bg-emerald-500 transition-all duration-300"
+                style={{ width: `${percentage}%` }}
+              />
+              <div
+                className="bg-slate-300 transition-all duration-300"
+                style={{ width: `${100 - percentage}%` }}
+              />
             </div>
           </div>
-        </CardHeader>
+        )}
 
-        <CardContent className="space-y-6">
-          
-          {/* PILIH KELAS (Loading Skeleton) */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Filter size={12} /> Pilih Kelas
-            </label>
-            
-            {isLoadingClasses ? (
-              // SKELETON LOAD KELAS
-              <div className="flex gap-2 overflow-hidden">
-                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
-                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
-                <div className="h-9 w-24 bg-slate-100 rounded-full animate-pulse"></div>
-              </div>
-            ) : availableClasses.length > 0 ? (
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {availableClasses.map((cls) => (
-                  <button
-                    key={cls.id}
-                    onClick={() => setSelectedClass(cls.id)}
-                    className={`
-                      px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap
-                      ${selectedClass === cls.id 
-                        ? "bg-slate-900 text-white shadow-lg transform scale-105" 
-                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                      }
-                    `}
-                  >
-                    Kelas {cls.name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 bg-red-50 text-red-600 text-xs rounded-lg">
-                Anda belum memiliki kelas.
+        {/* ═══ TOOLBAR ═══ */}
+        {selectedClass && (
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama / NIS..."
+                className="w-full pl-8 pr-3 h-9 rounded-lg bg-white border border-slate-200 text-[11px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 transition"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                disabled={isLoadingStudents}
+              />
+            </div>
+
+            <button
+              onClick={() => toggleAll(true)}
+              disabled={isLoadingStudents || students.length === 0}
+              className="h-9 px-3 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition disabled:opacity-40"
+            >
+              Hadir Semua
+            </button>
+
+            <button
+              onClick={() => toggleAll(false)}
+              disabled={isLoadingStudents || students.length === 0}
+              className="h-9 px-3 rounded-lg text-[10px] font-semibold bg-white text-slate-500 border border-slate-200 hover:bg-slate-100 transition disabled:opacity-40"
+            >
+              Reset
+            </button>
+          </div>
+        )}
+
+        {/* ═══ STUDENT LIST ═══ */}
+        {selectedClass && (
+          <div className="space-y-0.5">
+            {/* Column headers */}
+            {!isLoadingStudents && filteredStudents.length > 0 && (
+              <div className="flex items-center px-2.5 py-1.5 text-[8px] font-semibold text-slate-400 uppercase tracking-wider select-none">
+                <span className="w-7" />
+                <span className="flex-1 ml-2">Nama</span>
+                <span className="w-14 text-center">NIS</span>
+                <span className="w-16 text-center">Nilai</span>
+                <span className="w-7" />
               </div>
             )}
-          </div>
 
-          {/* AREA SISWA */}
-          {selectedClass && (
-            <>
-              {/* TOOLBAR */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
-                  <Input 
-                    placeholder="Cari nama atau NIS..."
-                    className="pl-9 bg-white border-slate-200 text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    disabled={isLoadingStudents} // Disable saat loading
+            <div className="space-y-0.5 max-h-[420px] overflow-y-auto">
+              {isLoadingStudents ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-11 rounded-lg bg-white border border-slate-100 animate-pulse"
                   />
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto shrink-0">
-                  <Button 
-                    variant="outline" size="sm" onClick={() => toggleAll(true)} 
-                    className="flex-1 bg-white"
-                    disabled={isLoadingStudents || students.length === 0}
-                   >
-                    Hadir Semua
-                   </Button>
-                  <Button 
-                    variant="ghost" size="sm" onClick={() => toggleAll(false)} 
-                    className="flex-1 text-red-500 hover:bg-red-50"
-                    disabled={isLoadingStudents || students.length === 0}
-                   >
-                    Reset
-                   </Button>
-                </div>
-              </div>
-
-              {/* LIST SISWA (Dengan Skeleton Loading) */}
-              <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
-                {isLoadingStudents ? (
-                  // --- SKELETON LOADING SISWA ---
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-50 bg-white animate-pulse">
-                      <div className="flex items-center gap-3 w-full">
-                        <div className="h-10 w-10 bg-slate-200 rounded-full" /> {/* Avatar Skeleton */}
-                        <div className="space-y-2 flex-1">
-                          <div className="h-4 w-32 bg-slate-200 rounded" /> {/* Nama Skeleton */}
-                          <div className="h-3 w-20 bg-slate-100 rounded" /> {/* Info Skeleton */}
-                        </div>
-                      </div>
-                      <div className="h-8 w-8 bg-slate-200 rounded-full" /> {/* Checkbox Skeleton */}
-                    </div>
-                  ))
-                ) : filteredStudents.length > 0 ? (
-                  // --- DATA ASLI ---
-                  filteredStudents.map((student) => (
-                    <div 
-                      key={student.id}
-                      onClick={() => toggleActive(student.id)}
-                      className={`
-                        group flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer select-none
-                        ${student.active 
-                          ? "bg-indigo-50 border-indigo-200 shadow-sm" 
-                          : "bg-white border-slate-100 hover:border-indigo-100 hover:bg-slate-50"
-                        }
-                      `}
+                ))
+              ) : filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <div
+                    key={student.id}
+                    onClick={() => toggleActive(student.id)}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all cursor-pointer select-none group ${
+                      student.active
+                        ? "bg-emerald-50/60 border-emerald-200 border-l-[3px]"
+                        : "bg-white border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {/* Toggle indicator */}
+                    <div
+                      className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all ${
+                        student.active
+                          ? "bg-emerald-500 text-white"
+                          : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <Avatar className={`h-10 w-10 transition-all ${student.active ? "ring-2 ring-indigo-400 ring-offset-2" : "bg-slate-100"}`}>
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`} />
-                          <AvatarFallback className="text-slate-500 text-xs font-bold">
-                            {student.name.substring(0,2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h4 className={`text-sm font-bold ${student.active ? "text-indigo-900" : "text-slate-700"}`}>
-                            {student.name}
-                          </h4>
-                          <p className="text-xs text-slate-400 flex items-center gap-1">
-                            <span className="bg-slate-100 px-1.5 rounded text-[10px] font-bold text-slate-500">
-                              {student.class_name}
-                            </span>
-                            <span>• NIS: {student.nis || '-'}</span>
-                          </p>
-                        </div>
-                      </div>
+                      {student.active ? (
+                        <Check size={12} strokeWidth={3} />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      )}
+                    </div>
 
-                      <div className="flex items-center gap-3">
-                        {student.active && (
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={student.nilai || ''}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => updateNilai(student.id, e.target.value)}
-                            placeholder="Nilai"
-                            className="w-16 h-8 text-center text-xs font-bold rounded-lg border border-indigo-200 bg-white text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                        )}
-                        <div className={`
-                          h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300
-                          ${student.active 
-                            ? "bg-indigo-600 text-white scale-110 shadow-indigo-200 shadow-lg" 
-                            : "bg-slate-100 text-slate-300 group-hover:bg-slate-200"
-                          }
-                        `}>
-                          {student.active ? <Check size={16} strokeWidth={4} /> : <UserCheck size={16} />}
-                      </div>
+                    {/* Name */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-[11px] font-semibold leading-tight truncate ${
+                          student.active ? "text-slate-800" : "text-slate-600"
+                        }`}
+                      >
+                        {student.name}
+                      </p>
                     </div>
+
+                    {/* NIS — monospace */}
+                    <div className="w-14 flex-shrink-0 text-right">
+                      <span className="font-mono text-[10px] font-medium text-slate-400">
+                        {student.nis || "—"}
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  // --- KOSONG ---
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <Search className="h-8 w-8 mb-2 opacity-50" />
-                    <p className="text-sm font-medium">Siswa tidak ditemukan.</p>
+
+                    {/* Nilai input — only when active */}
+                    <div className="w-16 flex-shrink-0">
+                      {student.active ? (
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={student.nilai || ""}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => updateNilai(student.id, e.target.value)}
+                          placeholder="—"
+                          className="w-full h-7 text-center font-mono text-[11px] font-semibold rounded border border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"
+                        />
+                      ) : (
+                        <span className="block text-center font-mono text-[10px] text-slate-300">
+                          —
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status dot */}
+                    <div className="w-7 flex-shrink-0 flex items-center justify-center">
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          student.active ? "bg-emerald-500" : "bg-slate-300"
+                        }`}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-              
-              {/* TOMBOL SIMPAN */}
-              <Button 
-                className="w-full h-12 text-sm font-bold bg-slate-900 hover:bg-indigo-600 transition-all shadow-lg"
-                onClick={handleSave}
-                disabled={isSaving || students.length === 0 || isLoadingStudents} // Disable jika loading
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Menyimpan Data...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-5 w-4" />
-                    Simpan Keaktifan Kelas {getSelectedClassName()}
-                  </>
-                )}
-              </Button>
-            </>
-          )}
+                ))
+              ) : (
+                <div className="rounded-lg bg-white border border-slate-200 p-8 text-center">
+                  <Search size={24} className="text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-slate-400">
+                    Siswa tidak ditemukan.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-        </CardContent>
-      </Card>
+        {/* ═══ SAVE ACTION ═══ */}
+        {selectedClass && (
+          <button
+            onClick={handleSave}
+            disabled={isSaving || students.length === 0 || isLoadingStudents}
+            className="w-full h-11 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm rounded-xl transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-none"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <Save size={14} />
+                Simpan Sesi Kelas {getSelectedClassName()}
+                <ArrowRight size={12} className="opacity-50" />
+              </>
+            )}
+          </button>
+        )}
 
-        {/* FOOTER TIPS */}
-        <div className="text-xs text-slate-800 mt-4 font-bold justify-center flex items-center gap-2">
-          <p>Tips: Pastikan untuk menyimpan data setelah mencatat keaktifan siswa.</p>
-        </div>
+        {/* ═══ FOOTER ═══ */}
+        <p className="text-[9px] text-slate-400 text-center font-medium pt-2">
+          Klik baris untuk toggle kehadiran · Nilai hanya aktif untuk siswa hadir
+        </p>
+      </div>
     </div>
   );
 }

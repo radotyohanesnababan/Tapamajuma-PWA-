@@ -1,16 +1,8 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  User, 
-  LogOut, 
-  ChevronRight, 
-  Settings, 
-  ShieldCheck,
-  Info,
-  LayoutGrid,
-  Sparkles
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  User, LogOut, ChevronRight, Settings,
+  ShieldCheck, LayoutGrid, KeyRound, LogOutIcon
 } from "lucide-react";
 import {
   AlertDialog,
@@ -23,157 +15,218 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
-import { getStorageUrl } from '@/lib/utils';
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/axios";
+import { getStorageUrl } from "@/lib/utils";
+
+const MENUS = [
+  {
+    title: "Profil Saya",
+    subtitle: "Kelola data diri dan identitas",
+    icon: User,
+    path: "/edit-profile",
+    accent: "text-slate-600",
+    accentBg: "bg-slate-50",
+    accentBorder: "border-slate-200",
+    dot: "bg-slate-400",
+  },
+];
 
 export default function OtherMenu() {
-
   const { user } = useAuth();
-const [previewUrl, setPreviewUrl] = useState(
-  user?.avatar
-    ? getStorageUrl(user.avatar)
-    : null
-);
   const navigate = useNavigate();
 
+  const [previewUrl, setPreviewUrl] = useState(
+    user?.avatar ? getStorageUrl(user.avatar) : null
+  );
+
   const handleLogout = async () => {
-    // 1. Kabari Backend (Sopan santun)
     try {
-        await api.post('/api/logout'); 
+      await api.post("/api/logout");
     } catch (error) {
-        console.warn("Backend logout error (abaikan):", error);
+      console.warn("Backend logout error (abaikan):", error);
     } finally {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
-        localStorage.removeItem('onboarding_data');
-
-
-        window.location.href = '/login';
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("onboarding_data");
+      window.location.href = "/login";
     }
-};
-  useEffect(() => {
-      if (user) {
-        setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
-      }
-    }, [user]);
+  };
 
-  const menuItems = [
-    {
-      title: "Profil Saya",
-      subtitle: "Kelola data diri dan identitas",
-      icon: <User className="text-blue-500" size={22} />,
-      path: "/edit-profile",
-      color: "bg-blue-50"
-    },
-  ];
+  useEffect(() => {
+    if (user) {
+      setPreviewUrl(user.avatar ? getStorageUrl(user.avatar) : null);
+    }
+  }, [user]);
+  
 
   return (
-    <div className="p-4 pb-24 max-w-md mx-auto bg-[#F8FAFC] min-h-screen space-y-6">
-      
-      <div className="flex items-center gap-5 bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
-          <Settings size={100} />
-        </div>
-        
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-100 relative z-10 overflow-hidden">
-          {previewUrl ? (
-                                <img src={previewUrl} className="w-full h-full object-cover" alt="Avatar" />
-                              ) : (
-                                user?.name?.charAt(0)
-                              )}
-        </div>
-        
-        <div className="relative z-10">
-          <h2 className="text-xl font-black text-slate-800 leading-tight">{user?.name}</h2>
-          <div className="flex items-center gap-1.5 mt-1">
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+      `}</style>
+
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+        {/* ═══ PROFILE CARD ═══ */}
+        <div className="relative rounded-lg overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage: `radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+            }}
+          />
+
+          <div className="relative p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white text-xl font-bold ring-1 ring-white/20 flex-shrink-0 overflow-hidden">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    className="w-full h-full object-cover"
+                    alt="Avatar"
+                  />
+                ) : (
+                  user?.name?.charAt(0)
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-semibold text-white leading-tight truncate">
+                  {user?.name}
+                </h2>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="bg-white/15 backdrop-blur-sm text-white/80 px-2.5 py-0.5 rounded-md text-[9px] font-semibold uppercase tracking-wider ring-1 ring-white/10">
+                    {user?.role || "teacher"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* MENU SECTION */}
-      <div className="space-y-3">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-4">Pengaturan Akun</p>
-        
-        {menuItems.map((item, index) => (
-          <Card 
-            key={index} 
-            className="border-none shadow-sm rounded-[1.8rem] cursor-pointer active:scale-95 transition-all bg-white group hover:shadow-md"
-            onClick={() => navigate(item.path)}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`p-3.5 rounded-2xl ${item.color} transition-transform group-hover:scale-110`}>
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-800 tracking-tight">{item.title}</p>
-                  <p className="text-[10px] font-bold text-slate-400 mt-0.5">{item.subtitle}</p>
-                </div>
-              </div>
-              <div className="bg-slate-50 p-2 rounded-xl text-slate-300">
-                <ChevronRight size={14} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {/* ═══ MENU LIST ═══ */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider ml-1">
+            Pengaturan Akun
+          </p>
 
-        <div className="pt-4">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-4">Sesi</p>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Card className="border-none shadow-sm rounded-[1.8rem] cursor-pointer active:scale-95 transition-all bg-white group hover:shadow-md border-l-4 border-l-rose-500">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3.5 rounded-2xl bg-rose-50 text-rose-500 transition-transform group-hover:scale-110">
-                        <LogOut size={22} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-rose-500 tracking-tight">Keluar Akun</p>
-                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">Selesaikan sesi pengajaran</p>
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 p-2 rounded-xl text-rose-300">
-                        <ChevronRight size={14} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </AlertDialogTrigger>
-              
-              <AlertDialogContent className="w-[90%] rounded-[2.5rem] border-none p-8 shadow-2xl">
-                <AlertDialogHeader className="items-center">
-                  <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mb-4">
-                    <LogOut size={32} />
+          {MENUS.map((menu) => {
+            const Icon = menu.icon;
+            return (
+              <div
+                key={menu.title}
+                onClick={() => navigate(menu.path)}
+                className="rounded-lg bg-white border border-slate-200 overflow-hidden cursor-pointer transition hover:border-slate-300 active:scale-[0.99] group"
+              >
+                <div className={`h-0.5 ${menu.dot} opacity-40`} />
+
+                <div className="p-4 flex items-start gap-3.5">
+                      <div className={`w-10 h-10 rounded-lg ${menu.accentBorder} ${menu.accentBg} ${menu.accent} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={18} />
                   </div>
-                  <AlertDialogTitle className="text-xl font-black text-slate-800">Selesaikan Sesi?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-center text-xs font-medium text-slate-500 leading-relaxed">
-                    Pastikan semua data progres siswa sudah tersimpan sebelum kamu keluar dari aplikasi.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="flex flex-col gap-3 mt-8">
-                  <AlertDialogAction
-                    onClick={handleLogout}
-                    className="w-full bg-rose-600 hover:bg-rose-700 rounded-2xl h-14 font-black shadow-lg shadow-rose-100 text-white order-1"
-                  >
-                    YA, KELUAR SEKARANG
-                  </AlertDialogAction>
-                  <AlertDialogCancel className="w-full rounded-2xl h-14 border-none bg-slate-100 text-slate-500 font-black text-xs hover:bg-slate-200 order-2">
-                    BATALKAN
-                  </AlertDialogCancel>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-        </div>
-      </div>
 
-      <div className="text-center pt-10 pb-4">
-         <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
-            <LayoutGrid size={12} className="text-indigo-500" />
-            <p className="text-[9px] text-slate-400 font-black tracking-[0.2em] uppercase">
-                Tapamajuma PWA All Rights Reserved 2026
-            </p>
-         </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[13px] font-semibold text-slate-800 leading-tight">
+                        {menu.title}
+                      </h3>
+                      <div className={`w-1.5 h-1.5 rounded-full ${menu.dot} flex-shrink-0`} />
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-0.5">
+                      {menu.subtitle}
+                    </p>
+                  </div>
+
+                  <ChevronRight
+                    size={16}
+                    className="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 mt-1"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ═══ LOGOUT ═══ */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider ml-1">
+            Sesi
+          </p>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="rounded-lg bg-white border border-slate-200 overflow-hidden cursor-pointer transition hover:border-slate-300 active:scale-[0.99] group">
+                <div className="h-0.5 bg-rose-400 opacity-40" />
+
+                <div className="p-4 flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center flex-shrink-0">
+                    <LogOut size={18} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[13px] font-semibold text-rose-600 leading-tight">
+                      Keluar Akun
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-0.5">
+                      Selesaikan sesi pengajaran
+                    </p>
+                  </div>
+
+                  <ChevronRight
+                    size={16}
+                    className="text-slate-300 group-hover:text-rose-400 transition-colors flex-shrink-0 mt-1"
+                  />
+                </div>
+              </div>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent className="w-[90%] rounded-xl border-slate-200 p-6">
+              <AlertDialogHeader className="items-center">
+                <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-3">
+                  <LogOut size={24} />
+                </div>
+                <AlertDialogTitle className="text-sm font-semibold text-slate-800">
+                  Selesaikan Sesi?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-center text-[11px] font-medium text-slate-500 leading-relaxed">
+                  Pastikan semua data progres siswa sudah tersimpan sebelum keluar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex flex-col gap-2 mt-6">
+                <AlertDialogCancel className="w-full h-10 rounded-lg border-slate-200 text-slate-600 text-[11px] font-semibold">
+                  Batal
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleLogout}
+                  className="w-full h-10 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold border-none"
+                >
+                  Ya, Keluar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {/* ═══ APP INFO ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-white flex-shrink-0">
+            <LayoutGrid size={16} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-slate-700">Tapamajuma PWA</p>
+            <p className="text-[9px] text-slate-400 font-medium">v2.0 · Mission Control</p>
+          </div>
+          <ShieldCheck size={16} className="text-emerald-500 flex-shrink-0" />
+        </div>
+
+        {/* ═══ FOOTER ═══ */}
+        <p className="text-[8px] text-slate-400 text-center font-medium pt-4 uppercase tracking-wider">
+          Tapamajuma © 2026
+        </p>
       </div>
     </div>
   );

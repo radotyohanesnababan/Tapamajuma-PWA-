@@ -1,302 +1,397 @@
-
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { 
-  MessageCircle, 
-  Send, 
-  Quote, 
-  CheckCircle2, 
-  Sparkles,
-  Filter,
-  Calendar,
-  SearchX
+import {
+  MessageCircle, Send, Quote, CheckCircle2,
+  Sparkles, Filter, Calendar, SearchX,
+  ChevronLeft, ChevronRight, MessageSquare,
+  Clock, AlertCircle, ChevronDown, Hash
 } from "lucide-react";
 import { toast } from "sonner";
 
-// --- Sub-Komponen: Kartu Refleksi Individual (TETAP SAMA SEPERTI SEBELUMNYA) ---
-const ReflectionCard = ({ data, onUpdate }) => {
+// ── COMPACT REFLECTION ROW ──
+const ReflectionRow = ({ data, onResponded }) => {
   const [feedback, setFeedback] = useState(data.feedback_teacher || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const hasResponded = !!data.feedback_teacher;
+  const isChanged = feedback !== (data.feedback_teacher || "");
 
   const handleSubmit = async () => {
-    if (!feedback.trim()) return toast.error("Masukan tidak boleh kosong");
-
+    if (!feedback.trim()) return toast.error("Masukan tidak boleh kosong.");
     setIsSubmitting(true);
     try {
       await api.post(`/api/teacher/reflections/${data.id}/feedback`, {
         feedback_teacher: feedback,
       });
-      
-      toast.success("Masukan berhasil dikirim!");
-      // Kita panggil onUpdate agar data refresh (atau kamu bisa update local state)
-      if (onUpdate) onUpdate(); 
-    } catch (error) {
-      console.error(error);
-      toast.error("Gagal mengirim masukan");
+      toast.success("Tanggapan terkirim.");
+      if (onResponded) onResponded();
+    } catch {
+      toast.error("Gagal mengirim masukan.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-5 hover:shadow-md transition-shadow">
-      {/* Header Siswa */}
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-            <span className="text-sm font-black text-indigo-600">
-              {data.user?.name?.substring(0, 2).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 leading-tight">
-              {data.user?.name}
-            </h3>
-            <p className="text-[10px] font-bold text-indigo-400 mt-0.5 uppercase tracking-wider">
-              {data.user?.student_class?.name || 'Kelas Tidak Diketahui'} • {new Date(data.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-            </p>
-          </div>
+    <div
+      className={`rounded-lg bg-white border overflow-hidden transition-all ${
+        hasResponded
+          ? "border-slate-200"
+          : "border-amber-200 border-l-[3px]"
+      }`}
+    >
+      {/* Main row — always visible */}
+      <div
+        className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-slate-50 transition"
+        onClick={() => setExpanded(!expanded)}
+      >
+        {/* Status dot */}
+        <div
+          className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            hasResponded ? "bg-emerald-500" : "bg-amber-500"
+          }`}
+        />
+
+        {/* Name */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold text-slate-800 truncate">
+            {data.user?.name || "—"}
+          </p>
+          <p className="text-[9px] text-slate-400 truncate">
+            {data.user?.student_class?.name || "—"}
+          </p>
         </div>
-        {hasResponded && (
-          <Badge className="bg-emerald-100 text-emerald-700 border-none px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 shadow-sm">
-            <CheckCircle2 size={12} /> Dijawab
-          </Badge>
-        )}
+
+        {/* Category */}
+        <span className="text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 flex-shrink-0">
+          {data.category}
+        </span>
+
+        {/* Status badge */}
+        <span
+  className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 ${
+    hasResponded
+      ? "bg-emerald-50 text-emerald-700"
+      : "bg-amber-50 text-amber-700"
+  }`}
+>
+          {hasResponded ? "Dijawab" : "Menunggu"}
+        </span>
+
+        {/* Date */}
+        <span className="font-mono text-[9px] text-slate-400 flex-shrink-0">
+          {new Date(data.created_at).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+          })}
+        </span>
+
+        {/* Expand chevron */}
+        <ChevronDown
+          size={12}
+          className={`text-slate-400 transition-transform flex-shrink-0 ${
+            expanded ? "rotate-180" : ""
+          }`}
+        />
       </div>
 
-      {/* Konten Refleksi Siswa */}
-      <div className="relative bg-slate-50 rounded-2xl p-4 rounded-tl-sm border border-slate-200 ml-5">
-        <Quote size={20} className="absolute -top-3 -left-3 text-slate-300 fill-slate-50" />
-        
-        <div className="space-y-3">
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-              Refleksi Belajar
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="border-t border-slate-100 px-3 py-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+          {/* Student content */}
+          <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Refleksi
             </p>
-            <p className="text-sm text-slate-700 font-medium leading-relaxed italic">
+            <p className="text-[11px] text-slate-700 leading-relaxed italic">
               "{data.content}"
             </p>
-          </div>
-          
-          {data.targets && (
-            <div className="pt-3 border-t border-slate-200/60 mt-2">
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <Sparkles size={12} /> Target Selanjutnya
-              </p>
-              <p className="text-xs text-indigo-900 font-bold">
-                {data.targets}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Input Respon Guru */}
-      <div className={`transition-all duration-300 ${isFocused ? '-translate-y-1' : ''}`}>
-        <div className="flex items-center justify-between mb-2 px-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Tanggapan Guru
-          </label>
-        </div>
-        
-        <Textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder="Berikan kalimat motivasi atau saran perbaikan..."
-          className="text-sm min-h-[90px] bg-white border-slate-200 focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-2xl resize-none shadow-sm font-medium"
-        />
-        
-        <div className="mt-3 flex justify-end">
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !feedback.trim() || (feedback === data.feedback_teacher)}
-            className={`
-              rounded-xl text-xs h-10 px-5 font-bold transition-all shadow-sm
-              ${hasResponded && feedback === data.feedback_teacher 
-                ? "bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-not-allowed shadow-none" 
-                : "bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md hover:shadow-indigo-200 active:scale-95"}
-            `}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-2"><span className="animate-pulse">Menyimpan...</span></span>
-            ) : hasResponded && feedback === data.feedback_teacher ? (
-              "Sudah Ditanggapi"
-            ) : (
-              <span className="flex items-center gap-2">Kirim Tanggapan <Send size={14} /></span>
+            {data.targets && (
+              <div className="mt-2 pt-2 border-t border-slate-200">
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                  Target
+                </p>
+                <p className="text-[11px] text-slate-700 font-medium">
+                  {data.targets}
+                </p>
+              </div>
             )}
-          </Button>
+          </div>
+
+          {/* Teacher response */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+              Tanggapan Guru
+            </label>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Tulis saran atau motivasi..."
+              className="w-full text-[11px] min-h-[72px] bg-white border border-slate-200 rounded-lg p-2.5 text-slate-700 placeholder:text-slate-400 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-medium"
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !feedback.trim() || !isChanged}
+                className={`h-8 px-4 rounded-md text-[10px] font-semibold transition border-none flex items-center gap-1.5 ${
+                  isChanged && feedback.trim()
+                    ? "bg-slate-800 text-white hover:bg-slate-700 active:scale-[0.97]"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                {isSubmitting ? (
+                  <span className="animate-pulse">Menyimpan...</span>
+                ) : (
+                  <>
+                    <Send size={11} /> Kirim
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-// --- Main Component ---
+// ── MAIN COMPONENT ──
 export default function TeacherReflection() {
   const [reflections, setReflections] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter State
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  // Filters
   const [selectedClass, setSelectedClass] = useState("");
-  // Default filter: Hari ini
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [unrespondedOnly, setUnrespondedOnly] = useState(false);
 
-  // Ambil daftar kelas yang bisa diakses guru
+  // Fetch classes
   useEffect(() => {
-    api.get("/api/teacher/accessible-classes")
-      .then(res => setClasses(res.data))
+    api
+      .get("/api/teacher/accessible-classes")
+      .then((res) => setClasses(res.data))
       .catch(() => toast.error("Gagal memuat daftar kelas."));
   }, []);
 
-  // Fetch Data Refleksi
-  const fetchReflections = async () => {
-    setLoading(true);
-    try {
-      // Kirim filter sebagai query params
-      const res = await api.get("/api/teacher/reflections", {
-        params: {
-          class_id: selectedClass,
-          start_date: startDate,
-          end_date: endDate
-        }
-      });
-      setReflections(res.data);
-    } catch (error) {
-      toast.error("Gagal memuat data refleksi.");
-    } finally {
-      setLoading(false);
-    }
+  // Fetch reflections
+  const fetchReflections = useCallback(
+    async (page = 1) => {
+      setLoading(true);
+      try {
+        const res = await api.get("/api/teacher/reflections", {
+          params: {
+            class_id: selectedClass,
+            start_date: startDate,
+            end_date: endDate,
+            unresponded_only: unrespondedOnly ? "true" : undefined,
+            page,
+            per_page: 10,
+          },
+        });
+        setReflections(res.data.data);
+        setCurrentPage(res.data.current_page);
+        setLastPage(res.data.last_page);
+        setTotal(res.data.total);
+      } catch {
+        toast.error("Gagal memuat data refleksi.");
+      } finally {
+       setLoading(false);
+      }
+    },
+    [selectedClass, startDate, endDate, unrespondedOnly]
+  );
+
+  // Auto-fetch on filter change (reset to page 1)
+  useEffect(() => {
+    fetchReflections(1);
+  }, [selectedClass, startDate, endDate, unrespondedOnly]);
+
+  // Fetch specific page
+  const goToPage = (page) => {
+    fetchReflections(page);
   };
 
-  // Jalankan fetch otomatis saat filter berubah
-  useEffect(() => {
-    // Hindari fetch berulang jika selectedClass belum diset (opsional, tergantung logic)
-    // Di sini kita langsung fetch tiap ada perubahan filter
-    fetchReflections();
-  }, [selectedClass, startDate, endDate]);
+  // After responding, refresh current page
+  const handleResponded = () => {
+    fetchReflections(currentPage);
+  };
+
+  const pendingCount = reflections.filter((r) => !r.feedback_teacher).length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-24">
-      
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-4 shadow-sm">
-        <div className="max-w-3xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-black text-slate-800 tracking-tight">Ruang Refleksi</h1>
-            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">
-              Jurnal Siswa
-            </p>
-          </div>
-          <div className="bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
-            <MessageCircle size={20} className="text-indigo-600" />
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+      `}</style>
 
-      <div className="px-4 py-6 max-w-3xl mx-auto space-y-6">
-        
-        {/* AREA FILTER */}
-        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-end animate-in fade-in slide-in-from-top-4 duration-500">
-          
-          <div className="space-y-2 w-full md:w-1/3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-              <Filter size={12} /> Pilih Kelas
-            </label>
-            <select 
-              className="w-full h-12 px-4 rounded-2xl bg-slate-50 border-none text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner appearance-none cursor-pointer"
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+        {/* ═══ HEADER ═══ */}
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-slate-400">
+            Forum Refleksi
+          </p>
+          <h1 className="text-lg font-bold text-slate-800 mt-0.5">
+            Jurnal Siswa
+          </h1>
+        </div>
+
+        {/* ═══ FILTER BAR ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3 space-y-2.5">
+          <div className="flex items-center gap-1.5">
+            <Filter size={11} className="text-slate-500" />
+            <span className="text-[9px] font-semibold text-slate-=500 uppercase tracking-wider">
+              Filter
+            </span>
+            {(startDate !== today || endDate !== today || selectedClass || unrespondedOnly) && (
+              <button
+                onClick={() => {
+                  setSelectedClass("");
+                  setStartDate(today);
+                  setEndDate(today);
+                  setUnrespondedOnly(false);
+                }}
+                className="ml-auto text-[9px] font-semibold text-rose-600 uppercase tracking-wider"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* Row 1: Class + Unresponded toggle */}
+          <div className="flex gap-2">
+            <select
+              className="flex-1 h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[10px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer appearance-none"
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
             >
               <option value="">Semua Kelas</option>
-              {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
+
+            <button
+              onClick={() => setUnrespondedOnly(!unrespondedOnly)}
+              className={`h-8 px-3 rounded-md text-[10px] font-semibold border transition ${
+                unrespondedOnly
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              {unrespondedOnly ? "Menunggu saja" : "Semua status"}
+            </button>
           </div>
 
-          <div className="space-y-2 w-full md:w-1/3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-              <Calendar size={12} /> Mulai Tanggal
-            </label>
-            <input 
-              type="date" 
+          {/* Row 2: Date range */}
+          <div className="flex gap-2">
+            <input
+              type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full h-12 px-4 rounded-2xl bg-slate-50 border-none text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner"
+              className="flex-1 h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[10px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300"
             />
-          </div>
-
-          <div className="space-y-2 w-full md:w-1/3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-              <Calendar size={12} /> Sampai Tanggal
-            </label>
-            <input 
-              type="date" 
+            <span className="text-slate-300 self-center text-[10px]">→</span>
+            <input
+              type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full h-12 px-4 rounded-2xl bg-slate-50 border-none text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner"
+              className="flex-1 h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[10px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300"
             />
           </div>
-
         </div>
 
-        {/* AREA DAFTAR REFLEKSI */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-2 mb-2">
-            <h2 className="text-sm font-black text-slate-600">Daftar Jurnal Masuk</h2>
-            <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">
-              {reflections.length} Catatan
+        {/* ═══ COUNT BAR ═══ */}
+        {!loading && (
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="font-mono text-slate-600">{total}</span> catatan
             </span>
+            {pendingCount > 0 && (
+              <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600">
+                <AlertCircle size={10} />
+                <span className="font-mono">{pendingCount}</span> belum ditanggapi
+              </span>
+            )}
           </div>
+        )}
 
+        {/* ═══ REFLECTION LIST ═══ */}
+        <div className="space-y-1.5">
           {loading ? (
-            // Skeleton Loading yang lebih rapi
-            [1, 2, 3].map((i) => (
-              <div key={i} className="bg-white h-56 rounded-3xl animate-pulse shadow-sm border border-slate-50 p-5 flex flex-col justify-between">
-                <div className="flex gap-4 items-center">
-                  <div className="w-12 h-12 bg-slate-100 rounded-2xl" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-slate-100 rounded w-1/3" />
-                    <div className="h-3 bg-slate-50 rounded w-1/4" />
-                  </div>
-                </div>
-                <div className="h-20 bg-slate-50 rounded-xl mt-4" />
-                <div className="h-10 bg-slate-100 rounded-xl mt-4 w-1/4 self-end" />
-              </div>
+            Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-11 rounded-lg bg-white border border-slate-100 animate-pulse"
+              />
             ))
           ) : reflections.length === 0 ? (
-            // Empty State yang lebih cantik
-            <div className="bg-white rounded-3xl border border-slate-100 border-dashed p-10 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-300">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-5">
-                <SearchX className="text-slate-300" size={32} />
-              </div>
-              <h3 className="text-base font-black text-slate-700 mb-1">Belum Ada Refleksi</h3>
-              <p className="text-sm text-slate-400 font-medium max-w-[250px]">
-                Tidak ada jurnal siswa yang ditemukan pada rentang tanggal dan kelas ini.
+            <div className="rounded-lg bg-white border border-slate-200 p-10 text-center">
+              <SearchX size={24} className="text-slate-300 mx-auto mb-2" />
+              <p className="text-[11px] font-medium text-slate-500">
+                Tidak ada jurnal pada filter ini.
               </p>
             </div>
           ) : (
-            reflections.map((item) => (
-              <ReflectionCard 
-                key={item.id} 
-                data={item} 
-                onUpdate={fetchReflections} 
-              />
-            ))
+            <>
+              {/* Column header */}
+              <div className="flex items-center px-3 py-1.5 text-[8px] font-semibold text-slate-400 uppercase tracking-wider select-none">
+                <span className="w-2" />
+                <span className="flex-1 ml-2.5">Nama</span>
+                <span className="w-12 text-center">Kategori</span>
+                <span className="w-16 text-center">Status</span>
+                <span className="w-12 text-right">Tanggal</span>
+                <span className="w-4" />
+              </div>
+
+              {reflections.map((item) => (
+                <ReflectionRow
+                  key={item.id}
+                  data={item}
+                  onResponded={handleResponded}
+                />
+              ))}
+            </>
           )}
         </div>
-        
+
+        {/* ═══ PAGINATION ═══ */}
+        {!loading && lastPage > 1 && (
+          <div className="flex items-center justify-between pt-1">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 px-3 rounded-md text-[10px] font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition disabled:opacity-30 flex items-center gap-1"
+            >
+              <ChevronLeft size={12} /> Prev
+            </button>
+
+            <span className="font-mono text-[10px] font-semibold text-slate-500">
+              {currentPage} / {lastPage}
+            </span>
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === lastPage}
+              className="h-8 px-3 rounded-md text-[10px] font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition disabled:opacity-30 flex items-center gap-1"
+            >
+              Next <ChevronRight size={12} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

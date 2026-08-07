@@ -1,165 +1,161 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  MessageSquareQuote, 
-  ArrowRight, 
-  GalleryHorizontal,
-  Zap,
-  Heart,
-  Sparkles,
-  ScooterIcon,
-  Star,
-  BarChart3Icon
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  BarChart3, MessageSquareQuote, GalleryHorizontal,
+  ArrowRight, Zap, Heart, Sparkles, Star,
+  Printer, ChevronRight, LayoutGrid, Activity,
+  TrendingUp, MessageCircle, Image, FileText
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+// ── MENU DEFINITION ──
+const MENUS = [
+  {
+    title: "Analisis Siswa",
+    desc: "Statistik performa, grafik nilai, dan perkembangan kompetensi.",
+    icon: TrendingUp,
+    path: "/teacher/class-improvement/analysis",
+    tags: ["Grafik Nilai", "Status Akurasi"],
+    accent: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  {
+    title: "Forum Refleksi",
+    desc: "Umpan balik tantangan belajar dan target perbaikan siswa.",
+    icon: MessageCircle,
+    path: "/teacher/class-improvement/reflection",
+    tags: ["Feedback Guru", "Peer Support"],
+    accent: "text-indigo-600",
+    accentBg: "bg-indigo-50",
+    accentBorder: "border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  {
+    title: "Galeri Siswa",
+    desc: "Apresiasi karya kreatif dan publikasi hasil belajar.",
+    icon: Image,
+    path: "/teacher/class-improvement/gallery",
+    tags: ["Publikasi", "Karya Kreatif"],
+    accent: "text-amber-600",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-200",
+    dot: "bg-amber-500",
+  },
+  {
+    title: "Cetak Nilai Keaktifan",
+    desc: "Laporan nilai keaktifan siswa terstruktur untuk dicetak.",
+    icon: FileText,
+    path: "/teacher/class-improvement/print-session-activity",
+    tags: ["Laporan", "Cetak"],
+    accent: "text-slate-600",
+    accentBg: "bg-slate-50",
+    accentBorder: "border-slate-200",
+    dot: "bg-slate-400",
+  },
+];
 
 export default function ClassImprovement() {
   const navigate = useNavigate();
 
-  const menus = [
-    {
-      title: "Analisis Siswa",
-      desc: "Pantau statistik performa, grafik nilai, dan perkembangan kompetensi siswa.",
-      icon: <BarChart3 size={24} />,
-      bgIcon: <BarChart3 size={120} />,
-      path: '/teacher/class-improvement/analysis',
-      color: "indigo",
-      accentIcon: <Zap size={14} className="fill-current" />,
-      tags: ["Grafik Nilai", "Status Akurasi"]
-    },
-    {
-      title: "Forum Refleksi",
-      desc: "Wadah umpan balik mengenai tantangan belajar dan target perbaikan siswa.",
-      icon: <MessageSquareQuote size={24} />,
-      bgIcon: <MessageSquareQuote size={120} />,
-      path: '/teacher/class-improvement/reflection',
-      color: "rose",
-      accentIcon: <Heart size={14} className="fill-current" />,
-      tags: ["Feedback Guru", "Peer Support"]
-    },
-    {
-      title: "Galeri Siswa",
-      desc: "Apresiasi karya kreatif dan publikasi hasil belajar siswa dalam bentuk visual.",
-      icon: <GalleryHorizontal size={24} />,
-      bgIcon: <GalleryHorizontal size={120} />,
-      path: '/teacher/class-improvement/gallery',
-      color: "amber",
-      accentIcon: <Sparkles size={14} className="fill-current" />,
-      tags: ["Publikasi", "Karya Kreatif"]
-    },
-    {
-      title: "Cetak Nilai Keaktifan Siswa",
-      desc: "Cetak nilai keaktifan siswa dalam bentuk laporan terstruktur.",
-      icon: <ScooterIcon size={24} />,
-      bgIcon: <ScooterIcon size={120} className="opacity-10" />,
-      path: '/teacher/class-improvement/print-session-activity',
-      color: "green",
-      accentIcon: <Star size={14} className="fill-current" />,
-      tags: ["Publikasi", "Karya Kreatif"]
-    },
-  ];
-
-  const colorConfig = {
-    indigo: "bg-indigo-50 text-indigo-600 hover:border-indigo-300 shadow-indigo-100/50",
-    rose: "bg-rose-50 text-rose-600 hover:border-rose-300 shadow-rose-100/50",
-    amber: "bg-amber-50 text-amber-600 hover:border-amber-300 shadow-amber-100/50",
-    green: "bg-green-50 text-green-600 hover:border-green-300 shadow-green-100/50"
-  };
-
-  const btnConfig = {
-    indigo: "bg-indigo-600 shadow-indigo-200",
-    rose: "bg-rose-600 shadow-rose-200",
-    amber: "bg-amber-600 shadow-amber-200",
-    green: "bg-green-600 shadow-green-200"
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-6 pb-24 space-y-8 max-w-5xl mx-auto">
-      
-      {/* HEADER SECTION */}
-      <div className="space-y-2 pt-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-            <LayoutDashboard className="text-indigo-600" size={28} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Peningkatan Kelas</h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Control Center & Analysis</p>
-          </div>
-        </div>
-        <p className="text-slate-500 text-sm max-w-2xl leading-relaxed font-medium">
-          Pantau grafik perkembangan, berikan feedback pada refleksi mingguan, atau apresiasi karya kreatif siswa di sini.
-        </p>
-      </div>
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+      `}</style>
 
-      {/* MENU GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {menus.map((menu, idx) => (
-          <div 
-            key={idx}
-            onClick={() => navigate(menu.path)} 
-            className="group cursor-pointer perspective-1000"
-          >
-            <Card className={`h-full border-none rounded-[2.5rem] bg-white shadow-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden flex flex-col`}>
-              
-              {/* STYLIZED BACKGROUND ICON */}
-              <div className={`absolute -top-6 -right-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 ${menu.color === 'indigo' ? 'text-indigo-600' : menu.color === 'rose' ? 'text-rose-600' : 'text-amber-600'}`}>
-                {menu.bgIcon}
-              </div>
-              
-              <CardHeader className="p-8 pb-4 relative z-10">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 ${colorConfig[menu.color].split(' ')[0]} ${colorConfig[menu.color].split(' ')[1]}`}>
-                  {menu.icon}
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
-                      {menu.title}
-                    </CardTitle>
-                    <div className={`p-1 rounded-full ${colorConfig[menu.color].split(' ')[0]} ${colorConfig[menu.color].split(' ')[1]}`}>
-                      {menu.accentIcon}
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+        {/* ═══ HEADER ═══ */}
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-slate-400">
+            Control Center
+          </p>
+          <h1 className="text-lg font-bold text-slate-800 mt-0.5">
+            Peningkatan Kelas
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium leading-relaxed mt-1 max-w-sm">
+            Pantau perkembangan, berikan feedback, dan apresiasi karya siswa.
+          </p>
+        </div>
+
+
+        {/* ═══ MENU LIST ═══ */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider ml-1">
+            Modul Tersedia
+          </p>
+
+          {MENUS.map((menu) => {
+            const Icon = menu.icon;
+            return (
+              <div
+                key={menu.title}
+                onClick={() => navigate(menu.path)}
+                className="rounded-xl bg-white border border-slate-200 overflow-hidden cursor-pointer transition-all hover:border-slate-300 active:scale-[0.99] group"
+              >
+                {/* Top accent line — subtle, functional */}
+                <div className={`h-0.5 ${menu.dot} opacity-40`} />
+
+                <div className="p-4 flex items-start gap-3.5">
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-lg ${menu.accentBg} ${menu.accent} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={18} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[13px] font-semibold text-slate-800 leading-tight">
+                        {menu.title}
+                      </h3>
+                      <div className={`w-1.5 h-1.5 rounded-full ${menu.dot} flex-shrink-0`} />
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-0.5">
+                      {menu.desc}
+                    </p>
+
+                    {/* Tags — minimal */}
+                    <div className="flex gap-1.5 mt-2">
+                      {menu.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className={`text-[8px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${menu.accentBg} ${menu.accent} border ${menu.accentBorder}`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-slate-500 text-xs leading-relaxed font-medium">
-                    {menu.desc}
-                  </p>
-                </div>
-              </CardHeader>
 
-              <CardContent className="p-8 pt-0 mt-auto relative z-10">
-                {/* TAGS */}
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {menu.tags.map((tag, tIdx) => (
-                    <span key={tIdx} className="text-[9px] font-black uppercase tracking-wider bg-slate-50 text-slate-400 px-2.5 py-1 rounded-lg border border-slate-100">
-                      {tag}
-                    </span>
-                  ))}
+                  {/* Chevron */}
+                  <div className="flex-shrink-0 mt-1">
+                    <ChevronRight
+                      size={16}
+                      className="text-slate-300 group-hover:text-slate-500 transition-colors"
+                    />
+                  </div>
                 </div>
-
-                {/* ACTION BUTTON */}
-                <div className={`flex items-center justify-between w-full py-4 px-6 rounded-2xl font-black text-white text-xs transition-all duration-300 shadow-lg ${btnConfig[menu.color]} group-hover:gap-4`}>
-                  <span>BUKA MENU</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-      </div>
-
-      {/* FOOTER TIPS */}
-      <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2rem] p-6 mt-12 flex items-center gap-4">
-        <div className="bg-white p-3 rounded-2xl shadow-sm">
-          <Sparkles className="text-indigo-600" size={20} />
+              </div>
+            );
+          })}
         </div>
-        <p className="text-xs font-medium text-indigo-700 leading-relaxed">
-          <b>Tips Guru:</b> Periksa "Forum Refleksi" secara rutin untuk mengetahui kendala teknis atau emosional yang dialami siswa saat mengerjakan tugas.
+
+        {/* ═══ TIP ═══ */}
+        <div className="rounded-lg bg-slate-100 border border-slate-200 p-3.5 flex items-start gap-3">
+          <Activity size={14} className="text-slate-500 flex-shrink-0 mt-0.5" />
+          <p className="text-[10px] text-slate-600 font-medium leading-relaxed">
+            <span className="font-semibold">Tip:</span> Periksa Forum Refleksi secara rutin untuk mengetahui kendala yang dialami siswa saat mengerjakan tugas.
+          </p>
+        </div>
+
+        {/* ═══ FOOTER ═══ */}
+        <p className="text-[8px] text-slate-400 text-center font-medium pt-4 uppercase tracking-wider">
+          Class Improvement Module · Tapamajuma
         </p>
       </div>
-
     </div>
   );
 }

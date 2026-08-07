@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Printer, Users, Loader2, Calendar } from "lucide-react";
+import {
+  ChevronLeft, Printer, Users, Loader2, Calendar,
+  ArrowLeft, FileText, Hash
+} from "lucide-react";
 import api from "@/lib/axios";
 import { toast } from "sonner";
 
@@ -8,58 +11,49 @@ export default function SesiPrint() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
-  
-  // Data Guru & Kelas
-  const [teacherName, setTeacherName] = useState("Memuat Nama...");
+
+  const [teacherName, setTeacherName] = useState("Memuat...");
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
-  
-  // State untuk Tanggal (Default: Hari ini)
-  const today = new Date().toISOString().split('T')[0];
+
+  const today = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 
-  // Data Absensi & UI Interaction
   const [attendances, setAttendances] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // 1. Ambil Profil Guru & Kelas yang diampu saat komponen dimuat
+  // 1. Ambil profil guru & kelas
   useEffect(() => {
-    // Ambil Profil Guru
-    api.get('/api/user')
-      .then(res => setTeacherName(res.data.name))
+    api
+      .get("/api/user")
+      .then((res) => setTeacherName(res.data.name))
       .catch(() => setTeacherName("________________________"));
 
-    // Ambil Kelas sesuai accessible_classes
-    api.get("/api/teacher/accessible-classes")
-      .then(res => setClasses(res.data))
+    api
+      .get("/api/teacher/accessible-classes")
+      .then((res) => setClasses(res.data))
       .catch(() => toast.error("Gagal memuat daftar kelas."));
   }, []);
 
-  // 2. Fungsi Ambil Data Rekapitulasi
+  // 2. Fetch rekapitulasi
   const fetchAttendances = async (classId, start, end) => {
     if (!classId) return setAttendances([]);
     setIsLoading(true);
-    
     try {
-      const res = await api.get(`/api/teacher/print-session`, {
-        params: {
-          class_id: classId,
-          start_date: start,
-          end_date: end
-        }
+      const res = await api.get("/api/teacher/print-session", {
+        params: { class_id: classId, start_date: start, end_date: end },
       });
       setAttendances(res.data);
-      setSelectedStudent(null); // Reset rincian yang terbuka
-    } catch (error) {
-      console.error(error);
+      setSelectedStudent(null);
+    } catch {
       toast.error("Gagal memuat rekapitulasi sesi.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 3. Efek jika Filter Berubah
+  // 3. Auto-fetch saat filter berubah
   useEffect(() => {
     if (selectedClass) {
       fetchAttendances(selectedClass, startDate, endDate);
@@ -68,7 +62,6 @@ export default function SesiPrint() {
 
   const handlePrint = () => {
     setIsPrinting(true);
-    // Tutup rincian tanggal sebelum print agar tabel rapi
     setSelectedStudent(null);
     setTimeout(() => {
       window.print();
@@ -76,172 +69,236 @@ export default function SesiPrint() {
     }, 500);
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 print:bg-white print:pb-0">
-      
-      {/* TRIK CSS GLOBAL: Menyembunyikan Navbar Bawah (BottomNav) saat di Print */}
-      <style>
-        {`
-          @media print {
-            nav, footer, .bottom-nav, [role="navigation"], .fixed.bottom-0 {
-              display: none !important;
-            }
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-          }
-        `}
-      </style>
+  // Hitung summary
+  const totalActive = attendances.reduce((sum, a) => sum + (a.total_active || 0), 0);
+  const maxActive = attendances.length > 0 ? Math.max(...attendances.map((a) => a.total_active || 0)) : 0;
 
-      {/* STICKY HEADER - Web Only */}
-      <div className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-slate-100 p-4 flex items-center justify-between z-20 shadow-sm print:hidden">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm hover:bg-slate-50 transition-all active:scale-95">
-            <ChevronLeft size={20} className="text-slate-600" />
+  return (
+    <div className="min-h-screen bg-slate-50 pb-28 print:bg-white print:pb-0">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @media print {
+          nav, footer, .bottom-nav, [role="navigation"], .fixed.bottom-0 {
+            display: none !important;
+          }
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      `}</style>
+
+      {/* ═══ STICKY HEADER (web only) ═══ */}
+      <div className="sticky top-0 bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 py-3 flex items-center justify-between z-20 print:hidden">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition active:scale-95"
+          >
+            <ArrowLeft size={16} />
           </button>
           <div>
-            <h2 className="text-lg font-black text-slate-800 tracking-tight">Cetak Rekap Sesi</h2>
-            <p className="text-[10px] text-indigo-500 font-black uppercase tracking-[0.15em]">Laporan Keaktifan</p>
+            <h2 className="text-sm font-semibold text-slate-800">Cetak Rekap Sesi</h2>
+            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+              Laporan Keaktifan
+            </p>
           </div>
         </div>
-        
+
         {attendances.length > 0 && (
-          <button 
-            onClick={handlePrint} 
+          <button
+            onClick={handlePrint}
             disabled={isPrinting}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-70"
+            className="h-9 px-4 bg-slate-800 text-white rounded-lg text-[11px] font-semibold flex items-center gap-2 hover:bg-slate-700 transition active:scale-[0.98] disabled:opacity-50 border-none"
           >
-            {isPrinting ? <Loader2 size={16} className="animate-spin"/> : <Printer size={16} />}
-            CETAK
+            {isPrinting ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
+            Cetak
           </button>
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 mt-6 px-4 print:mt-0 print:p-0 print:animate-none">
-        
-        <div className="border-none rounded-[2.5rem] bg-white shadow-xl overflow-hidden p-8 md:p-12 print:shadow-none print:rounded-none print:p-0">
-          
-          {/* HEADER KONTEN (Logo & Judul) */}
-          <div className="flex items-center justify-between mb-8 print:mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center print:hidden">
-                <Users size={24} />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight print:text-xl">Rekapitulasi Keaktifan Siswa Sesi Pagi</h2>
-                <p className="text-sm font-medium text-slate-400 mt-1 print:hidden">
-                  Pilih parameter di bawah untuk melihat rekapitulasi data sesi belajar mandiri.
-                </p>
-              </div>
+      <div className="max-w-2xl mx-auto px-4 pt-4 print:mt-0 print:p-0 print:max-w-none space-y-4">
+
+        {/* ═══ JUDUL LAPORAN (visible di print) ═══ */}
+        <div className="print:mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-base font-bold text-slate-800 print:text-lg">
+              Rekapitulasi Keaktifan Siswa — Sesi Pagi
+            </h1>
+            <div className="hidden print:block text-[10px] text-slate-600 font-mono">
+              {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
             </div>
           </div>
+          <p className="text-[11px] text-slate-500 print:hidden">
+            Pilih parameter untuk melihat rekapitulasi sesi belajar mandiri.
+          </p>
+        </div>
 
-          {/* AREA FILTER - Disembunyikan saat print */}
-          <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 mb-8 print:hidden flex flex-wrap gap-4 items-end">
-            
-            <div className="space-y-2 flex-1 min-w-[200px]">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Kelas</label>
-              <select 
-                className="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-sm"
+        {/* ═══ FILTER (web only) ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3 space-y-2.5 print:hidden">
+          <div className="flex gap-2">
+            {/* Kelas */}
+            <div className="flex-1">
+              <label className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Kelas
+              </label>
+              <select
+                className="w-full h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[11px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer appearance-none"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
               >
-                <option value="">-- Pilih Kelas --</option>
-                {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="">— Pilih —</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
 
-            <div className="space-y-2 flex-1 min-w-[150px]">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dari Tanggal</label>
-              <div className="relative">
-                <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-sm"
-                />
-              </div>
+            {/* Dari */}
+            <div className="flex-1">
+              <label className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Dari
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[11px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300"
+              />
             </div>
 
-            <div className="space-y-2 flex-1 min-w-[150px]">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sampai Tanggal</label>
-              <div className="relative">
-                <input 
-                  type="date" 
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 shadow-sm"
-                />
-              </div>
+            {/* Sampai */}
+            <div className="flex-1">
+              <label className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Sampai
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[11px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300"
+              />
             </div>
-
           </div>
+        </div>
 
-          {/* AREA TABEL */}
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400 print:hidden">
-              <Loader2 className="animate-spin h-8 w-8 mb-4 text-indigo-500" />
-              <p className="text-sm font-bold tracking-wide">Merekap data kehadiran...</p>
+        {/* ═══ SUMMARY BAR ═══ */}
+        {!isLoading && attendances.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 print:hidden">
+            <div className="rounded-lg bg-white border border-slate-200 p-2.5 text-center">
+              <p className="font-mono text-base font-bold text-slate-800 leading-none">
+                {attendances.length}
+              </p>
+              <p className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Siswa</p>
             </div>
-          ) : attendances.length > 0 ? (
-            <div className="space-y-4">
+            <div className="rounded-lg bg-white border border-slate-200 p-2.5 text-center">
+              <p className="font-mono text-base font-bold text-emerald-600 leading-none">
+                {totalActive}
+              </p>
+              <p className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Total Aktif</p>
+            </div>
+            <div className="rounded-lg bg-white border border-slate-200 p-2.5 text-center">
+              <p className="font-mono text-base font-bold text-slate-800 leading-none">
+                {maxActive}x
+              </p>
+              <p className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Tertinggi</p>
+            </div>
+          </div>
+        )}
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-100 print:border-black print:rounded-none">
-                <table className="w-full text-left border-collapse">
-                  
-                  {/* Judul Tabel Khusus Print */}
-                  <caption className="mb-4 caption-top print:mb-6">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center print:text-black print:text-sm">
-                      Laporan Kehadiran Aktif
-                    </div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center print:text-black print:border-b print:border-black pb-2 print:text-sm">
-                      Periode : {new Date(startDate).toLocaleDateString('id-ID')} s/d {new Date(endDate).toLocaleDateString('id-ID')}
-                    </div>
-                  </caption>
+        {/* ═══ TABEL ═══ */}
+        {isLoading ? (
+          <div className="flex flex-col items-center py-10 print:hidden">
+            <Loader2 className="animate-spin h-6 w-6 text-slate-400 mb-3" />
+            <p className="text-[11px] font-medium text-slate-500">Merekap data...</p>
+          </div>
+        ) : attendances.length > 0 ? (
+          <div className="space-y-3">
+            {/* Periode caption untuk print */}
+            <div className="hidden print:block text-center text-sm text-slate-700 mb-4 border-b border-slate-300 pb-2">
+              Periode: {new Date(startDate).toLocaleDateString("id-ID")} — {new Date(endDate).toLocaleDateString("id-ID")}
+            </div>
 
-                  <thead>
-                    <tr className="bg-slate-50 border-y border-slate-100 print:bg-white print:border-black">
-                      <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest print:text-black print:border-b print:border-black w-16">No</th>
-                      <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest print:text-black print:border-b print:border-black">Nama Siswa</th>
-                      <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest print:text-black print:border-b print:border-black text-center w-32">Total Aktif</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendances.map((item, index) => (
+            <div className="overflow-x-auto rounded-lg border border-slate-200 print:border-black print:rounded-none">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 print:bg-white print:border-black">
+                    <th className="py-2.5 px-3 text-[8px] font-semibold text-slate-500 uppercase tracking-wider print:text-black print:border-b print:border-black print:text-[10px] w-10">
+                      No
+                    </th>
+                    <th className="py-2.5 px-3 text-[8px] font-semibold text-slate-500 uppercase tracking-wider print:text-black print:border-b print:border-black print:text-[10px]">
+                      Nama Siswa
+                    </th>
+                    <th className="py-2.5 px-3 text-[8px] font-semibold text-slate-500 uppercase tracking-wider print:text-black print:border-b print:border-black print:text-[10px] text-center w-20">
+                      Aktif
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {attendances.map((item, index) => {
+                    const isHigh = item.total_active >= maxActive * 0.8;
+                    const isLow = item.total_active <= maxActive * 0.3 && maxActive > 0;
+
+                    return (
                       <React.Fragment key={index}>
-                        {/* Baris Utama (Bisa diklik di Web) */}
-                        <tr 
-                          onClick={() => setSelectedStudent(selectedStudent === index ? null : index)}
-                          className="border-b border-slate-50 cursor-pointer hover:bg-indigo-50/50 transition-colors print:border-b print:border-slate-300 print:cursor-default print:hover:bg-transparent"
+                        {/* Baris utama */}
+                        <tr
+                          onClick={() =>
+                            setSelectedStudent(selectedStudent === index ? null : index)
+                          }
+                          className="border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition print:border-slate-300 print:cursor-default"
                         >
-                          <td className="py-4 px-6 text-sm font-bold text-slate-500">{index + 1}</td>
-                          <td className="py-4 px-6">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black text-slate-800">{item.student_name}</span>
-                              <span className="text-[9px] text-indigo-400 font-bold uppercase mt-0.5 print:hidden">
-                                {selectedStudent === index ? "Tutup Detail ▲" : "Klik untuk rincian tanggal ▼"}
-                              </span>
-                            </div>
+                          {/* No */}
+                          <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500 print:text-black">
+                            {index + 1}
                           </td>
-                          <td className="py-4 px-6 text-center">
-                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-black text-sm print:bg-transparent print:text-black print:p-0">
+
+                          {/* Nama */}
+                          <td className="py-2.5 px-3">
+                            <span className="text-[11px] font-semibold text-slate-800 print:text-black">
+                              {item.student_name}
+                            </span>
+                            <span className="text-[8px] text-slate-400 ml-2 print:hidden">
+                              {selectedStudent === index ? "▲" : "▼"}
+                            </span>
+                          </td>
+
+                          {/* Total aktif — warna status */}
+                          <td className="py-2.5 px-3 text-center">
+                            <span
+                              className={`font-mono text-[11px] font-bold print:text-black ${
+                                isHigh
+                                  ? "text-emerald-600"
+                                  : isLow
+                                  ? "text-rose-600"
+                                  : "text-slate-700"
+                              }`}
+                            >
                               {item.total_active}x
                             </span>
                           </td>
                         </tr>
 
-                        {/* Rincian Tanggal (HANYA MUNCUL DI WEB SAAT DIKLIK) */}
+                        {/* Rincian tanggal (web only) */}
                         {selectedStudent === index && item.active_dates && (
-                          <tr className="bg-slate-50/50 print:hidden animate-in slide-in-from-top-2 duration-300">
-                            <td colSpan="3" className="px-12 py-4 border-b border-slate-100">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Calendar size={14} className="text-slate-400" />
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Riwayat Tanggal Aktif:</p>
+                          <tr className="bg-slate-50 print:hidden">
+                            <td colSpan="3" className="px-6 py-3 border-b border-slate-100">
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <Calendar size={11} className="text-slate-400" />
+                                <span className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider">
+                                  Riwayat Tanggal Aktif
+                                </span>
                               </div>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-1.5">
                                 {item.active_dates.map((date, dIdx) => (
-                                  <span key={dIdx} className="px-2 py-1 bg-white border border-slate-200 rounded-md text-[11px] font-medium text-slate-600 shadow-sm">
+                                  <span
+                                    key={dIdx}
+                                    className="font-mono text-[9px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded"
+                                  >
                                     {date}
                                   </span>
                                 ))}
@@ -250,39 +307,31 @@ export default function SesiPrint() {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* TANDA TANGAN (Hanya Muncul Saat Diprint) */}
-              <div className="hidden print:flex justify-end mt-16 pr-12">
-                <div className="text-center min-w-[200px]">
-                  <p className="text-sm">
-                    Siborongborong, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
-                  <p className="text-sm mb-24">
-                    Guru Pengampu,
-                  </p>
-                  <p className="text-sm font-bold underline tracking-wide ">
-                    {teacherName}
-                  </p>
-                  <p className="text-xs mt-1">
-                    NIP. ...........................
-                  </p>
-                </div>
-              </div>
-
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            selectedClass && !isLoading && (
-              <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 print:hidden">
-                <p className="text-sm font-bold text-slate-400">Belum ada data kehadiran aktif pada periode ini.</p>
-              </div>
-            )
-          )}
 
-        </div>
+            {/* Tanda tangan (print only) */}
+            <div className="hidden print:flex justify-end mt-16 pr-8">
+              <div className="text-center min-w-[200px] text-sm">
+                <p>Siborongborong, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
+                <p className="mb-20">Guru Pengampu,</p>
+                <p className="font-bold underline tracking-wide">{teacherName}</p>
+                <p className="text-xs mt-1">NIP. ...........................</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          selectedClass && !isLoading && (
+            <div className="rounded-lg bg-white border border-slate-200 p-8 text-center print:hidden">
+              <p className="text-[11px] font-medium text-slate-500">
+                Belum ada data keaktifan pada periode ini.
+              </p>
+            </div>
+          )
+        )}
       </div>
     </div>
   );

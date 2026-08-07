@@ -1,61 +1,120 @@
-import React, { useState } from 'react';
-import { LayoutDashboard, PlusCircle, MonitorPlay } from 'lucide-react';
-import ExamList from '@/components/ExamList';
-import ExamForm from '@/components/ExamForm';
-import ExamLiveControl from '@/components/ExamLiveControl';
-import ExamResultsList from '@/components/ExamResultsList';
+import React, { useState } from "react";
+import {
+  LayoutDashboard, PlusCircle, MonitorPlay,
+  ClipboardList, ChevronRight, Radio, Zap
+} from "lucide-react";
+import ExamList from "@/components/ExamList";
+import ExamForm from "@/components/ExamForm";
+import ExamLiveControl from "@/components/ExamLiveControl";
+import ExamResultsList from "@/components/ExamResultsList";
 
-const CBTCenter = () => {
-  // view: 'list' | 'create' | 'live'
-  const [currentView, setCurrentView] = useState('list');
-  const [activeExam, setActiveExam] = useState(null); // Menyimpan data ujian yang sedang di-Live-kan
+const TABS = [
+  { key: "list", label: "Daftar Paket", icon: ClipboardList },
+  { key: "create", label: "Buat Baru", icon: PlusCircle },
+];
+
+export default function CBTCenter() {
+  const [currentView, setCurrentView] = useState("list");
+  const [activeExam, setActiveExam] = useState(null);
+
+  // Gabung tab statis + tab dinamis (live)
+  const visibleTabs = [
+    ...TABS,
+    ...(activeExam
+      ? [{ key: "live", label: "Live", icon: Radio }]
+      : []),
+  ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6 mb-24">
-      
-      {/* HEADER & NAVIGASI TAB */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-4 border-slate-200">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">CBT Control Center</h1>
-          <p className="text-slate-500">Sistem Ujian Berbasis Komputer</p>
-        </div>
-        <div>
-          <h1></h1>
-        </div>
-        
-        <div className="flex bg-white rounded-full p-1 border border-slate-200 shadow-sm">
-          <button 
-            onClick={() => setCurrentView('list')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all ${currentView === 'list' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <LayoutDashboard size={18} /> Daftar Paket
-          </button>
-          <button 
-            onClick={() => setCurrentView('create')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all ${currentView === 'create' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <PlusCircle size={18} /> Buat Paket Baru
-          </button>
-          {activeExam && (
-             <button 
-               onClick={() => setCurrentView('live')}
-               className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all ${currentView === 'live' ? 'bg-emerald-500 text-white' : 'text-emerald-600 hover:bg-emerald-50'}`}
-             >
-               <MonitorPlay size={18} /> Live Control
-             </button>
-          )}
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes pulse-soft { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* ═══ HEADER ═══ */}
+      <div className="sticky top-0 bg-white/90 backdrop-blur-sm border-b border-slate-200 z-20">
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-0">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-slate-400">
+                CBT System
+              </p>
+              <h1 className="text-base font-bold text-slate-800">
+                Control Center
+              </h1>
+            </div>
+
+            {/* Live indicator */}
+            {activeExam && currentView !== "live" && (
+              <button
+                onClick={() => setCurrentView("live")}
+                className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-[9px] font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-soft" />
+                Live aktif
+                <ChevronRight size={10} />
+              </button>
+            )}
+          </div>
+
+          {/* ═══ TAB BAR ═══ */}
+          <div className="flex gap-0 -mb-px">
+            {visibleTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentView === tab.key;
+              const isLive = tab.key === "live";
+
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setCurrentView(tab.key)}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-semibold border-b-2 transition -mb-px ${
+                    isActive
+                      ? isLive
+                        ? "border-emerald-500 text-emerald-700"
+                        : "border-slate-800 text-slate-800"
+                      : "border-transparent text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <Icon size={13} />
+                  {tab.label}
+                  {isLive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-soft" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* RENDER KOMPONEN BERDASARKAN TAB */}
-      <div className="mt-6">
-        {currentView === 'list' && <ExamList setView={setCurrentView} setActiveExam={setActiveExam} />}
-        {currentView === 'create' && <ExamForm setView={setCurrentView} />}
-        {currentView === 'live' && <ExamLiveControl exam={activeExam} setView={setCurrentView} />}
-        {currentView === 'results' && <ExamResultsList exam={activeExam} setView={setCurrentView} />}
+      {/* ═══ CONTENT ═══ */}
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        {currentView === "list" && (
+          <ExamList
+            setView={setCurrentView}
+            setActiveExam={setActiveExam}
+          />
+        )}
+        {currentView === "create" && (
+          <ExamForm setView={setCurrentView} />
+        )}
+        {currentView === "live" && (
+          <ExamLiveControl
+            exam={activeExam}
+            setView={setCurrentView}
+          />
+        )}
+        {currentView === "results" && (
+          <ExamResultsList
+            exam={activeExam}
+            setView={setCurrentView}
+          />
+        )}
       </div>
     </div>
   );
-};
-
-export default CBTCenter;
+}

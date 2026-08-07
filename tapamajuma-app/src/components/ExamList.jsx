@@ -1,30 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Trash2, Eye, RefreshCw, X, Check, FileText, MonitorPlay, BarChart2 } from 'lucide-react';
-import api from '@/lib/axios';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import {
+  Play, Trash2, Eye, RefreshCw, X, Check, FileText,
+  MonitorPlay, BarChart2, ChevronRight, ChevronDown,
+  Radio, Hash, Clock, Target, AlertCircle, CheckCircle2
+} from "lucide-react";
+import api from "@/lib/axios";
+import { toast } from "sonner";
 import DOMPurify from "dompurify";
+
+const STATUS_CONFIG = {
+  active: {
+    dot: "bg-emerald-500",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    label: "Aktif",
+  },
+  draft: {
+    dot: "bg-slate-300",
+    badge: "bg-slate-50 text-slate-500 border-slate-200",
+    label: "Draft",
+  },
+  completed: {
+    dot: "bg-slate-400",
+    badge: "bg-slate-50 text-slate-600 border-slate-200",
+    label: "Selesai",
+  },
+};
 
 const ExamList = ({ setView, setActiveExam }) => {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState([]);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [selectedExamTitle, setSelectedExamTitle] = useState('');
+  const [selectedExamTitle, setSelectedExamTitle] = useState("");
 
   const fetchExams = async () => {
     try {
-      const res = await api.get('/api/teacher/cbt/exams');
+      const res = await api.get("/api/teacher/cbt/exams");
       setExams(res.data.data || []);
-    } catch (err) {
-      toast.error("Gagal memuat daftar paket");
+    } catch {
+      toast.error("Gagal memuat daftar paket.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchExams(); }, []);
+  useEffect(() => {
+    fetchExams();
+  }, []);
 
   const handleOpenPreview = async (exam) => {
     setSelectedExamTitle(exam.title);
@@ -33,8 +57,8 @@ const ExamList = ({ setView, setActiveExam }) => {
     try {
       const res = await api.get(`/api/teacher/cbt/exams/${exam.id}/preview`);
       setPreviewData(res.data.data);
-    } catch (err) {
-      toast.error("Gagal memuat detail soal");
+    } catch {
+      toast.error("Gagal memuat detail soal.");
       setShowPreview(false);
     } finally {
       setPreviewLoading(false);
@@ -42,156 +66,314 @@ const ExamList = ({ setView, setActiveExam }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Yakin ingin menghapus paket ujian ini? Data hasil ujian (jika ada) juga akan hilang.")) return;
+    if (
+      !window.confirm(
+        "Yakin ingin menghapus paket ujian ini? Data hasil ujian juga akan hilang."
+      )
+    )
+      return;
     try {
       const res = await api.delete(`/api/teacher/cbt/exams/${id}`);
       toast.success(res.data.message);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Gagal menghapus paket");
+      toast.error(err.response?.data?.message || "Gagal menghapus paket.");
     }
   };
 
   const handleReleaseToken = async (id) => {
     try {
-      toast.loading("Sedang merilis token...");
+      toast.loading("Merilis token...");
       const res = await api.post(`/api/teacher/cbt/exams/${id}/release-token`);
       toast.dismiss();
-      if (res.data.status === 'success') {
-        toast.success("Token Berhasil Dirilis!");
-        fetchExams(); 
+      if (res.data.status === "success") {
+        toast.success("Token berhasil dirilis.");
+        fetchExams();
       }
-    } catch (err) {
+    } catch {
       toast.dismiss();
-      toast.error("Gagal merilis token");
+      toast.error("Gagal merilis token.");
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-bold text-slate-400">Memuat paket...</div>;
+  // Derived counts
+  const activeCount = exams.filter((e) => e.status === "active").length;
+
+  if (loading) {
+    return (
+      <div className="space-y-1.5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-14 rounded-lg bg-white border border-slate-100 animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden relative">
-        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-          <div>
-            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Daftar Paket Ujian</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Manajemen & Monitoring Real-time</p>
-          </div>
-          <button onClick={fetchExams} className="p-3 bg-white text-slate-400 hover:text-blue-600 hover:rotate-180 transition-all duration-500 rounded-2xl border shadow-sm">
-            <RefreshCw size={20} />
-          </button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-white border-b border-slate-50 text-slate-400 text-[10px] uppercase tracking-[0.2em]">
-              <tr>
-                <th className="p-6 font-black">Detail Paket</th>
-                <th className="p-6 font-black text-center">Status</th>
-                <th className="p-6 font-black text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {exams.map((exam) => (
-                <tr key={exam.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="p-6">
-                    <div className="font-black text-slate-700 text-base uppercase leading-tight">{exam.title}</div>
-                    <div className="flex gap-3 mt-2">
-                       <span className="text-[10px] text-blue-600 font-black bg-blue-50 px-2 py-0.5 rounded uppercase">{exam.subject?.name}</span>
-                       <span className="text-[10px] text-slate-400 font-bold uppercase">{exam.total_questions} Soal • {exam.duration_minutes} Menit</span>
-                    </div>
-                  </td>
-                  <td className="p-6 text-center">
-                     <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter ${
-                       exam.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
-                     }`}>
-                       {exam.status}
-                     </span>
-                  </td>
-                  <td className="p-6 flex justify-center gap-2">
-                    <button onClick={() => handleOpenPreview(exam)} className="p-3 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm" title="Pratinjau Soal">
-                      <Eye size={18} />
-                    </button>
-                    
-                    <button 
-                      onClick={() => { setActiveExam(exam); setView('results'); }} 
-                      className="p-3 bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm" 
-                      title="Lihat Laporan Nilai"
-                    >
-                      <BarChart2 size={18} />
-                    </button>
+    <div className="space-y-3">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes pulse-soft { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+      `}</style>
 
-                    <button 
-                      onClick={() => exam.status === 'active' ? (setActiveExam(exam), setView('live')) : handleReleaseToken(exam.id)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black shadow-lg transition-all ${
-                        exam.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-100' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
-                      }`}
-                    >
-                      {exam.status === 'active' ? <><MonitorPlay size={16} /> MONITOR LIVE</> : <><Play size={16} fill="currentColor" /> RILIS TOKEN</>}
-                    </button>
-
-                    <button onClick={() => handleDelete(exam.id)} className="p-3 text-red-300 hover:bg-red-50 hover:text-red-500 rounded-2xl transition-all" title="Hapus Paket">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* ═══ SUMMARY BAR ═══ */}
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+          <span className="font-mono text-slate-600">{exams.length}</span> paket
+        </span>
+        {activeCount > 0 && (
+          <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-soft" />
+            <span className="font-mono">{activeCount}</span> sedang aktif
+          </span>
+        )}
       </div>
 
-      {/* --- MODAL PREVIEW --- */}
+      {/* ═══ EXAM LIST ═══ */}
+      {exams.length === 0 ? (
+        <div className="rounded-lg bg-white border border-slate-200 p-10 text-center">
+          <FileText size={24} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-[11px]+ font-medium text-slate-500">
+            Belum ada paket ujian.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {/* Column header */}
+          <div className="flex items-center px-3 py-1.5 text-[8px] font-semibold text-slate-400 uppercase tracking-wider select-none">
+            <span className="w-2" />
+            <span className="flex-1 ml-3">Paket</span>
+            <span className="w-16 text-center">Soal</span>
+            <span className="w-16 text-center">Durasi</span>
+            <span className="w-14 text-center">Status</span>
+            <span className="w-6" />
+          </div>
+
+          {exams.map((exam) => {
+            const statusKey = exam.status || "draft";
+            const status = STATUS_CONFIG[statusKey] || STATUS_CONFIG.draft;
+            const isActive = exam.status === "active";
+
+            return (
+              <div
+                key={exam.id}
+                className={`rounded-lg bg-white border overflow-hidden transition ${
+                  isActive
+                    ? "border-emerald-200 border-l-[3px]"
+                    : "border-slate-200"
+                }`}
+                style={isActive ? { borderLeftColor: "#10b981" } : undefined}
+              >
+                <div className="flex items-center gap-2.5 px-3 py-2.5">
+                  {/* Status dot */}
+                  <div
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      isActive ? "pulse-soft" : ""
+                    } ${status.dot}`}
+                  />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-slate-800 truncate leading-tight">
+                      {exam.title}
+                    </p>
+                    <p className="text-[9px] text-slate-400 mt-0.5 truncate">
+                      {exam.subject?.name || "—"}
+                    </p>
+                  </div>
+
+                  {/* Questions */}
+                  <span className="font-mono text-[10px] font-bold text-slate-600 w-16 text-center flex-shrink-0">
+                    {exam.total_questions}
+                  </span>
+
+                  {/* Duration */}
+                  <span className="font-mono text-[10px] font-semibold text-slate-500 w-16 text-center flex-shrink-0">
+                    {exam.duration_minutes}m
+                  </span>
+
+                  {/* Status badge */}
+                  <span
+                    className={`text-[8px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border flex-shrink-0 w-14 text-center ${status.badge}`}
+                  >
+                    {status.label}
+                  </span>
+
+                  {/* Actions dropdown */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Preview */}
+                    <button
+                      onClick={() => handleOpenPreview(exam)}
+                      className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
+                      title="Pratinjau"
+                    >
+                      <Eye size={13} />
+                    </button>
+
+                    {/* Results */}
+                    <button
+                      onClick={() => {
+                        setActiveExam(exam);
+                        setView("results");
+                      }}
+                      className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
+                      title="Hasil"
+                    >
+                      <BarChart2 size={13} />
+                    </button>
+
+                    {/* Primary action */}
+                    {isActive ? (
+                      <button
+                        onClick={() => {
+                          setActiveExam(exam);
+                          setView("live");
+                        }}
+                        className="h-7 px-2.5 rounded-md bg-emerald-500 text-white text-[9px] font-semibold flex items-center gap-1 hover:bg-emerald-600 transition border-none"
+                      >
+                        <Radio size={10} /> Live
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleReleaseToken(exam.id)}
+                        className="h-7 px-2.5 rounded-md bg-slate-800 text-white text-[9px] font-semibold flex items-center gap-1 hover:bg-slate-700 transition border-none"
+                      >
+                        <Play size={10} /> Rilis
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════
+          MODAL: PREVIEW SOAL
+      ═══════════════════════════════════════ */}
       {showPreview && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
-          <div className="bg-slate-50 w-full max-w-5xl h-full max-h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300">
-            <div className="p-6 md:p-8 bg-white border-b flex justify-between items-center">
-               <div className="flex items-center gap-4">
-                 <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><FileText size={24} /></div>
-                 <div>
-                   <h3 className="text-xl font-black text-slate-800 uppercase leading-none">{selectedExamTitle}</h3>
-                   <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Daftar Soal Terkunci</p>
-                 </div>
-               </div>
-               <button onClick={() => setShowPreview(false)} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-400 transition-colors"><X size={24} /></button>
+        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-50 w-full sm:max-w-2xl sm:h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-white border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-800">
+                  {selectedExamTitle}
+                </h3>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Pratinjau Soal ·{" "}
+                  <span className="font-mono">{previewData.length}</span> butir
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 transition"
+              >
+                <X size={16} />
+              </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
-               {previewLoading ? (
-                 <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4">
-                    <RefreshCw size={40} className="animate-spin text-blue-500" />
-                    <span className="font-bold">Menyusun pratinjau soal...</span>
-                 </div>
-               ) : (
-                 previewData.map((q, index) => (
-                   <div key={q.id} className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black rounded-full uppercase">Pertanyaan #{index + 1}</div>
-                        <div className="flex gap-2">
-                           <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg uppercase">{q.type}</span>
-                        </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              {previewLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                  <RefreshCw
+                    size={24}
+                    className="animate-spin text-slate-400"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    Menyusun pratinjau...
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {previewData.map((q, index) => (
+                    <div key={q.id} className="px-4 py-4 space-y-3">
+                      {/* Question header */}
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] font-bold text-slate-500">
+                          #{index + 1}
+                        </span>
+                        <span className="text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                          {q.type}
+                        </span>
                       </div>
-                      <div className="text-slate-800 text-lg leading-relaxed font-medium mb-8" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(q.question_text) }} />
+
+                      {/* Question text */}
+                      <div
+                        className="text-[F11px] text-slate-700 leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(q.question_text),
+                        }}
+                      />
+
+                      {/* Options */}
                       {q.options && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {Object.entries(typeof q.options === 'string' ? JSON.parse(q.options) : q.options).map(([key, value]) => (
-                            <div key={key} className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${key === q.correct_key ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-100 bg-slate-50'}`}>
-                              <div className={`w-10 h-10 flex items-center justify-center rounded-xl font-black text-sm ${key === q.correct_key ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400 border'}`}>
-                                {key.toUpperCase()}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {Object.entries(
+                            typeof q.options === "string"
+                              ? JSON.parse(q.options)
+                              : q.options
+                          ).map(([key, value]) => {
+                            const isCorrect = key === q.correct_key;
+                            return (
+                              <div
+                                key={key}
+                                className={`flex items-center gap-2 p-2 rounded-md border text-[10px] ${
+                                  isCorrect
+                                    ? "bg-emerald-50 border-emerald-200"
+                                    : "bg-white border-slate-100"
+                                }`}
+                              >
+                                <span
+                                  className={`font-mono font-bold w-4 h-4 rounded flex items-center justify-center text-[8px] flex-shrink-0 ${
+                                    isCorrect
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-slate-100 text-slate-500"
+                                  }`}
+                                >
+                                  {key.toUpperCase()}
+                                </span>
+7                                <span
+                                  className={`truncate ${
+                                    isCorrect
+                                      ? "font-semibold text-emerald-800"
+                                      : "text-slate-600"
+                                  }`}
+                                >
+                                  {value}
+                                </span>
+                                {isCorrect && (
+                                  <CheckCircle2
+                                    size={10}
+                                    className="text-emerald-500 flex-shrink-0 ml-auto"
+                                  />
+                                )}
                               </div>
-                              <div className={`flex-1 text-sm font-bold ${key === q.correct_key ? 'text-emerald-700' : 'text-slate-600'}`}>{value}</div>
-                              {key === q.correct_key && <Check size={20} className="text-emerald-500" />}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
-                   </div>
-                 ))
-               )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="p-6 bg-white border-t flex justify-center">
-               <button onClick={() => setShowPreview(false)} className="bg-slate-900 text-white px-10 py-3 rounded-2xl font-black text-sm shadow-xl hover:bg-slate-800">TUTUP PRATINJAU</button>
+            {/* Footer */}
+            <div className="p-3 bg-white border-t border-slate-200 flex-shrink-0">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="w-full h-9 bg-slate-100 text-slate-600 rounded-lg text-[11px] font-semibold hover:bg-slate-200 transition border-none"
+              >
+                Tutup
+              </button>
             </div>
           </div>
         </div>

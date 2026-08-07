@@ -1,134 +1,209 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCw, Users, Clock, AlertTriangle, Monitor } from 'lucide-react';
-import api from '@/lib/axios'; 
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import {
+  RefreshCw, Clock, AlertTriangle, ArrowLeft,
+  Radio, ShieldCheck, Hash, Eye
+} from "lucide-react";
+import api from "@/lib/axios";
+import { toast } from "sonner";
 
 const ExamLiveControl = ({ exam, setView }) => {
-  // Ambil token awal dari data exam yang dikirim atau default strip
-  const [token, setToken] = useState(exam?.token || '------');
-  const [studentCount, setStudentCount] = useState(0);
+  const [token, setToken] = useState(exam?.token || "------");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-  
-  // 1. Timer untuk Jam Server (Realtime)
+  // Timer
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Fungsi Refresh Token (Panggil API yang sama dengan Rilis Token)
+  // Refresh Token
   const handleRefreshToken = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
     try {
-      toast.loading("Memperbarui token...");
-      const res = await api.post(`/api/teacher/cbt/exams/${exam.id}/release-token`);
+      const res = await api.post(
+        `/api+api+/teacher/cbt/exams/${exam.id}/release-token`
+      );
       setToken(res.data.token);
-      toast.dismiss();
-      toast.success("Token baru berhasil dirilis!");
-    } catch (err) {
-      toast.dismiss();
-      toast.error("Gagal memperbarui token");
+      toast.success("Token baru dirilis.");
+    } catch {
+      toast.error("Gagal memperbarui token.");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
-  // 3. Fungsi Tutup Ujian
+  // Close Exam
   const handleCloseExam = async () => {
-    if (!window.confirm("Yakin ingin menutup ujian ini? Siswa tidak akan bisa masuk lagi.")) return;
-    
+    if (
+      !window.confirm(
+        "Yakin ingin menutup ujian ini? Siswa tidak akan bisa masuk lagi."
+      )
+    )
+      return;
+
+    setIsClosing(true);
     try {
       await api.post(`/api/teacher/cbt/exams/${exam.id}/close`);
-      toast.success("Ujian telah ditutup.");
-      setView('list'); // Kembali ke daftar paket
-    } catch (err) {
-      toast.error("Gagal menutup ujian");
+      toast.success("Ujian ditutup.");
+      setView("list");
+    } catch {
+      toast.error("Gagal menutup ujian.");
+    } finally {
+      setIsClosing(false);
     }
   };
 
   if (!exam) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in duration-500">
-      
-      {/* 1. LAYAR PROYEKTOR (TAMPILKAN KE SISWA) */}
-      <div className="md:col-span-2 bg-white rounded-[3rem] p-12 shadow-2xl shadow-blue-100 border-4 border-blue-50 flex flex-col items-center justify-center space-y-8 relative overflow-hidden">
-        {/* Dekorasi Background */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
-        
-        <div className="flex flex-col items-center gap-2 z-10">
-            <span className="bg-blue-600 text-white px-6 py-1.5 rounded-full text-xs font-black tracking-widest uppercase">
-              Token Ujian Aktif
+    <div className="space-y-3">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes pulse-soft { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+        @keyframes token-glow { 0%,100% { text-shadow: 0 0 20px rgba(16,185,129,0.3) } 50% { text-shadow: 0 0 40px rgba(16,185,129,0.6) } }
+        .token-glow { animation: token-glow 3s ease-in-out infinite; }
+      `}</style>
+
+      {/* ═══ LIVE BANNER ═══ */}
+      <div className="rounded-lg bg-emerald-900 text-white p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-soft" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider">
+            Ujian Berlangsung
+          </span>
+          <span className="text-emerald-300">·</span>
+          <span className="font-mono text-[10px] font-bold text-emerald-300">
+            {currentTime.toLocaleTimeString("id-ID")}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[9px] font-semibold text-emerald-300">
+            {exam.subject?.name || "—"}
+          </span>
+          <span className="text-emerald-400">·</span>
+          <span className="font-mono text-[9px] text-emerald-300">
+            {exam.duration_minutes}m
+          </span>
+        </div>
+      </div>
+
+      {/* ═══ TOKEN DISPLAY — PRIMARY ═══ */}
+      <div className="rounded-xl bg-white border-2 border-emerald-200 overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-2.5 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Hash size={13} className="text-emerald-600" />
+            <span className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider">
+              Token Aktif
             </span>
-            <p className="text-slate-400 text-sm font-bold">Silakan masukkan kode di bawah pada aplikasi Anda</p>
+          </div>
+          <span className="text-[9px] font-semibold text-emerald-500 flex items-center gap-1">
+            <Eye size={10} /> Tampilkan ke siswa
+          </span>
         </div>
 
-        <div className="bg-slate-50 border-2 border-dashed border-blue-200 rounded-[2.5rem] px-1 py-12 w-full text-center z-10 shadow-inner">
-          <h2 className="text-9xl font-mono font-black text-blue-700 tracking-[0.2em] drop-shadow-sm">
+        {/* Token number */}
+        <div className="py-10 px-4 text-center bg-gradient-to-b from-white to-emerald-50/30">
+          <p className="font-mono text-6xl sm:text-7xl font-extrabold text-emerald-700 tracking-[0.15em] token-glow select-all">
             {token}
-          </h2>
+          </p>
+          <p className="text-[10px] text-slate-400 font-medium mt-4">
+            Masukkan kode di atas pada aplikasi ujian
+          </p>
         </div>
+      </div>
 
-        <div className="flex gap-4 z-10">
-          <button 
-            onClick={handleRefreshToken}
-            className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl font-black shadow-xl shadow-blue-200 transition-all text-lg active:scale-95"
-          >
-            <RefreshCw size={24} /> REFRESH TOKEN
-          </button>
-          
-          <button 
-            onClick={handleCloseExam}
-            className="flex items-center gap-3 bg-red-50 hover:bg-red-100 text-red-600 px-8 py-5 rounded-2xl font-black transition-all border-2 border-transparent hover:border-red-200"
-          >
-            <AlertTriangle size={24} /> SELESAIKAN UJIAN
-          </button>
+      {/* ═══ ACTIONS ═══ */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={handleRefreshToken}
+          disabled={isRefreshing}
+          className="h-11 rounded-lg bg-slate-800 text-white text-[11px] font-semibold flex items-center justify-center gap-2 hover:bg-slate-700 transition active:scale-[0.98] disabled:opacity-50 border-none"
+        >
+          {isRefreshing ? (
+            <RefreshCw size={14} className="animate-spin" />
+          ) : (
+            <RefreshCw size={14} />
+          )}
+          {isRefreshing ? "Memperbarui..." : "Refresh Token"}
+        </button>
+
+        <button
+          onClick={handleCloseExam}
+          disabled={isClosing}
+          className="h-11 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold flex items-center justify-center gap-2 hover:bg-rose-100 transition active:scale-[0.98] disabled:opacity-50"
+        >
+          {isClosing ? (
+            <span className="animate-pulse">Menutup...</span>
+          ) : (
+            <>
+              <AlertTriangle size={14} /> Selesaikan Ujian
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* ═══ EXAM INFO ═══ */}
+      <div className="rounded-lg bg-white border border-slate-200 p-3">
+        <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+          Detail Paket
+        </p>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center py-1 border-b border-slate-50">
+            <span className="text-[10px] text-slate-500">Judul</span>
+            <span className="text-[11px] font-semibold text-slate-800 truncate max-w-[60%] text-right">
+              {exam.title}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-1 border-b border-slate-50">
+            <span className="text-[10px] text-slate-500">Mapel</span>
+            <span className="text-[11px] font-semibold text-slate-700">
+              {exam.subject?.name || "—"}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-1 border-b border-slate-50">
+            <span className="text-[10px] text-slate-500">Durasi</span>
+            <span className="font-mono text-[11px] font-bold text-slate-700">
+              {exam.duration_minutes} menit
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-1 border-b border-slate-50">
+            <span className="text-[10px] text-slate-500">Jumlah Soal</span>
+            <span className="font-mono text-[11px] font-bold text-slate-700">
+              {exam.total_questions}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-1">
+            <span className="text-[10px] text-slate-500">Status</span>
+            <span className="text-[9px] font-semibold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Berjalan
+            </span>
+          </div>
         </div>
-        
-        <p className="text-xs text-slate-400 font-bold animate-pulse uppercase tracking-widest italic">
-          *Jangan tutup halaman ini selama ujian berlangsung
+      </div>
+
+      {/* ═══ WARNING ═══ */}
+      <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2.5">
+        <AlertTriangle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
+          <span className="font-semibold">Jangan tutup halaman ini</span> selama
+          ujian berlangsung. Token hanya terlihat di sini.
         </p>
       </div>
 
-      {/* 2. PANEL MONITORING GURU */}
-      <div className="space-y-6">
-        {/* Live Status Card */}
-        <div className=" hidden group relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-          {/* Abstract background */}
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-        </div>
-
-        {/* Info Detail Card */}
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
-           <div className="flex items-center gap-3 text-slate-800 font-black border-b border-slate-50 pb-4">
-              <Clock size={20} className="text-blue-500" /> JAM SERVER
-              <span className="ml-auto font-mono text-blue-600 text-xl">
-                {currentTime.toLocaleTimeString('id-ID')}
-              </span>
-           </div>
-           
-           <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-xs font-bold uppercase">Mata Pelajaran</span>
-                <span className="text-slate-700 font-black text-sm">{exam.subject?.name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-xs font-bold uppercase">Durasi Sisa</span>
-                <span className="text-slate-700 font-black text-sm">{exam.duration_minutes} Menit</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-xs font-bold uppercase">Status Paket</span>
-                <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">Berjalan</span>
-              </div>
-           </div>
-        </div>
-
-        {/* Shortcut Button */}
-        <button 
-          onClick={() => setView('list')}
-          className="w-full flex items-center justify-center gap-2 p-4 bg-slate-50 text-slate-500 rounded-2xl font-bold hover:bg-slate-100 transition-all border border-slate-200/50"
-        >
-          <Monitor size={18} /> Kembali ke Daftar Paket
-        </button>
-      </div>
-      
+      {/* ═══ BACK ═══ */}
+      <button
+        onClick={() => setView("list")}
+        className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition"
+      >
+        <ArrowLeft size={12} /> Kembali ke Daftar Paket
+      </button>
     </div>
   );
 };

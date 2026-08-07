@@ -1,134 +1,260 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, FileSpreadsheet, Download, Loader2, Layers, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft, FileSpreadsheet, Download, Loader2,
+  Layers, Upload, ArrowLeft, CheckCircle2, AlertCircle,
+  FileUp, Image
+} from "lucide-react";
 import api from "@/lib/axios";
 import { toast } from "sonner";
 
 export default function SoalImport() {
   const navigate = useNavigate();
   const [xlsxFile, setXlsxFile] = useState(null);
-  const [importType, setImportType] = useState("numeracy"); 
+  const [importType, setImportType] = useState("numeracy");
   const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // Link langsung ke route Download Template Backend
-   const downloadTemplate = async () => {
+  const downloadTemplate = async () => {
     setIsDownloading(true);
     try {
-        const response = await api.get('/api/teacher/bank-soal/template', { responseType: 'blob' });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'template_bank_soal.xlsx'); 
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+      const response = await api.get("/api/teacher/bank-soal/template", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "template_bank_soal.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch {
-        toast.error("Gagal unduh template");
+      toast.error("Gagal unduh template.");
     } finally {
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
   };
 
-const handleImportSubmit = async (e) => {
+  const handleImportSubmit = async (e) => {
     e.preventDefault();
-    if (!xlsxFile) return toast.error("File wajib dipilih!");
+    if (!xlsxFile) return toast.error("File wajib dipilih.");
     setIsSubmitting(true);
 
     const formData = new FormData();
     formData.append("file", xlsxFile);
-    formData.append("type", importType); 
+    formData.append("type", importType);
 
     try {
-      
       const res = await api.post("/api/teacher/bank-soal/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 300000, // Waktu tunggu 5 Menit (300.000 ms)
-        skipFailover: true // (Opsional) Jika di interceptor kamu ada failover, beri flag ini agar diabaikan
+        timeout: 300000,
       });
-      
-      toast.success(res.data.message || "Berhasil import soal!");
-      setXlsxFile(null); // Reset
+      toast.success(res.data.message || "Berhasil import soal.");
+      setXlsxFile(null);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Gagal melakukan import. Waktu habis atau format salah.");
+      toast.error(
+        error.response?.data?.error ||
+          "Gagal import. Waktu habis atau format salah."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
-      {/* ... [STICKY HEADER SAMA SEPERTI SEBELUMNYA] ... */}
-      <div className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-slate-100 p-4 flex items-center gap-4 z-20 shadow-sm">
-        <button onClick={() => navigate(-1)} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm hover:bg-slate-50 transition-all active:scale-95">
-          <ChevronLeft size={20} className="text-slate-600" />
+    <div className="min-h-screen bg-slate-50 pb-28">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+      `}</style>
+
+      {/* ═══ HEADER ═══ */}
+      <div className="sticky top-0 bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 py-3 flex items-center gap-3 z-20">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition active:scale-95"
+        >
+          <ArrowLeft size={16} />
         </button>
         <div>
-          <h2 className="text-lg font-black text-slate-800 tracking-tight">Import Massal</h2>
-          <p className="text-[10px] text-green-500 font-black uppercase tracking-[0.15em]">Via Excel</p>
+          <h2 className="text-sm font-semibold text-slate-800">
+            Import Massal
+          </h2>
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+            Via Excel / CSV
+          </p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-500 mt-6 px-4">
-        <div className="border-none rounded-[2rem] sm:rounded-[2.5rem] bg-white shadow-xl text-center overflow-hidden p-6 sm:p-10">
-          
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-50 text-green-600 rounded-2xl sm:rounded-[2rem] flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-inner">
-            <FileSpreadsheet className="w-8 h-8 sm:w-10 sm:h-10" />
-          </div>
-          
-          <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-2">Import Masal via Excel</h2>
-          <p className="text-[10px] sm:text-xs font-medium text-slate-500 mb-6 sm:mb-8 px-2 sm:px-8 leading-relaxed">
-            Pilih kategori soal dan pastikan format file Anda sesuai dengan template sistem.
-          </p>
-            <div className="bg-green-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 border border-green-100/50 border-dashed text-center">
-              <p className="text-[12px] sm:text-[15px] font-black text-green-700 uppercase tracking-widest mb-3">MEDIA BANK SOAL</p>
-              <p className="text-[9px] sm:text-[10px] font-black text-slate-700 ">Jika dibutuhkan, ambil link soal dari media bank. Jika belum upload, upload gambar terlebih dahulu</p>
-              <Button onClick={() => navigate('/teacher/bank-soal/mediabank')} variant="outline" style={{ marginTop: '1rem' }}>
-          Buka Brankas Gambar
-          </Button>
-            </div>
+      <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
 
-          <form onSubmit={handleImportSubmit} className="space-y-6 text-left">
-            <div className="bg-green-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 border border-green-100/50 border-dashed text-center">
-              <p className="text-[9px] sm:text-[10px] font-black text-green-400 uppercase tracking-widest mb-3">Langkah 1: Gunakan Template</p>
-              <Button 
-            variant="outline" 
-            onClick={downloadTemplate} 
-            disabled={isDownloading} 
-            className="w-full sm:w-auto rounded-xl sm:rounded-2xl border-green-200 text-green-600 font-black text-[10px] px-6 h-10 hover:bg-green-600 hover:text-white transition-all shadow-sm"
+        {/* ═══ KATEGORI ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3">
+          <label className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+            Kategori Soal
+          </label>
+          <select
+            value={importType}
+            onChange={(e) => setImportType(e.target.value)}
+            className="w-full h-8 px-2.5 rounded-md bg-white border border-slate-200 text-[11px] font-medium text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer appearance-none"
           >
-             {isDownloading ? <Loader2 size={14} className="animate-spin mr-2"/> : <Download size={14} className="mr-2"/>}
-             DOWNLOAD TEMPLATE
-          </Button>
-            </div>
-            <div className="space-y-3">
-                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Langkah 2: Unggah File</p>
-                <div className="border-4 border-dashed border-slate-100 rounded-[1.5rem] sm:rounded-[2.5rem] p-8 sm:p-12 relative cursor-pointer hover:bg-slate-50 group transition-colors">
-                  <input type="file" accept=".xlsx, .csv" onChange={e => setXlsxFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                  <div className="text-center space-y-2">
-                      <Layers size={28} className="mx-auto text-slate-300 group-hover:text-green-400 transition-colors" />
-                      <div className="text-[10px] sm:text-xs font-black text-slate-400 break-all px-2">
-                          {xlsxFile ? (
-                            <span className="text-green-600 bg-green-50 px-3 py-1.5 rounded-full inline-block border border-green-100">
-                              {xlsxFile.name.length > 20 ? xlsxFile.name.substring(0, 20) + '...' : xlsxFile.name}
-                            </span>
-                          ) : "Klik atau Tarik file .xlsx / .csv"}
-                      </div>
-                  </div>
-                </div>
-            </div>
+            <option value="numeracy">Numerasi</option>
+            <option value="literacy">Literasi</option>
+            <option value="tka">TKA (HOTS)</option>
+            <option value="official">Soal Resmi</option>
+          </select>
+        </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8">
-              <button type="button" className="w-full sm:flex-1 rounded-xl sm:rounded-2xl font-bold h-12 sm:h-14 text-slate-500 hover:bg-slate-100 transition-colors" onClick={() => navigate('/teacher/bank-soal')}>
-                Batal
-              </button>
-              <button type="submit" className="w-full sm:flex-[2] bg-green-600 hover:bg-green-700 text-white rounded-xl sm:rounded-2xl h-12 sm:h-14 font-black shadow-lg shadow-green-200 transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:active:scale-100" disabled={!xlsxFile || isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Upload className="mr-2" size={16} />}
-                {isSubmitting ? "PROSES..." : "IMPORT SEKARANG"}
-              </button>
+        {/* ═══ LANGKAH 1: TEMPLATE ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 w-5 h-5 rounded flex items-center justify-center flex-shrink-0">
+              1
+            </span>
+            <span className="text-[10px] font-semibold text-slate-700">
+              Download template
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 leading-relaxed pl-7">
+            Gunakan template standar agar kolom sesuai format sistem.
+          </p>
+          <div className="pl-7">
+            <button
+              onClick={downloadTemplate}
+              disabled={isDownloading}
+              className="h-8 px-3 rounded-md bg-slate-800 text-white text-[10px] font-semibold flex items-center gap-1.5 hover:bg-slate-700 transition active:scale-[0.97] disabled:opacity-50 border-none"
+            >
+              {isDownloading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Download size={12} />
+              )}
+              {isDownloading ? "Mengunduh..." : "Template .xlsx"}
+            </button>
+          </div>
+        </div>
+
+        {/* ═══ LANGKAH 2: UPLOAD FILE ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 w-5 h-5 rounded flex items-center justify-center flex-shrink-0">
+              2
+            </span>
+            <span className="text-[10px] font-semibold text-slate-700">
+              Unggah file
+            </span>
+          </div>
+
+          <div className="pl-7">
+            <div className="relative">
+              <input
+                type="file"
+                accept=".xlsx,.csv"
+                onChange={(e) => setXlsxFile(e.target.files[0])}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              />
+              <div
+                className={`rounded-lg border-2 border-dashed p-5 text-center transition cursor-pointer ${
+                  xlsxFile
+                    ? "border-emerald-300 bg-emerald-50/50"
+                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {xlsxFile ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle2
+                      size={16}
+                      className="text-emerald-500 flex-shrink-0"
+                    />
+                    <span className="text-[11px] font-semibold text-emerald-700 truncate max-w-[200px]">
+                      {xlsxFile.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <FileUp
+                      size={20}
+                      className="mx-auto text-slate-300"
+                    />
+                    <p className="text-[10px] font-medium text-slate-400">
+                      Klik untuk pilih file .xlsx / .csv
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </form>
+          </div>
+        </div>
+
+        {/* ═══ LANGKAH 3: BRANKAS GAMBAR (opsional) ═══ */}
+        <div className="rounded-lg bg-white border border-slate-200 p-3 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 w-5 h-5 rounded flex items-center justify-center flex-shrink-0">
+              3
+            </span>
+            <span className="text-[10px] font-semibold text-slate-700">
+              Brankas gambar
+              <span className="text-slate-400 font-normal ml-1">
+                (opsional)
+              </span>
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 leading-relaxed pl-7">
+            Jika soal membutuhkan gambar, upload dulu ke brankas lalu ambil
+            link-nya.
+          </p>
+          <div className="pl-7">
+            <button
+              type="button"
+              onClick={() => navigate("/teacher/bank-soal/7mediabank")}
+              className="h-8 px-3 rounded-md bg-white border border7-slate-200 text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 hover:bg-slate-50 transition"
+            >
+              <Image size={12} /> Buka Brankas Gambar
+            </button>
+          </div>
+        </div>
+
+        {/* ═══ PERHATIAN ═══ */}
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2.5">
+          <AlertCircle
+            size={13}
+            className="text-amber-600 flex-shrink-0 mt-0.5"
+          />
+          <p className="text-[10px] text-Eamber-800 font-medium leading-relaxed">
+            Pastikan kolom di Excel <span className="font-semibold">persis sama</span> dengan
+            template. File yang tidak sesuai format akan ditolak oleh sistem.
+          </p>
+        </div>
+
+        {/* ═══ ACTIONS ═══ */}
+        <div className="flex gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => navigate("/teacher/bank-soal")}
+            className="flex-1 h-10 rounded-lg bg-white border border-slate-200 text-slate-600 text-[11px] font-semibold hover:bg-slate-50 transition"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            onClick={handleImportSubmit}
+            disabled={!xlsxFile || isSubmitting}
+            className={`flex-[2] h-10 rounded-lg text-[11px] font-semibold transition flex items-center justify-center gap-2 border-none ${
+              xlsxFile && !isSubmitting
+                ? "bg-slate-800 text-white hover:bg-slate-700 active:scale-[0.98]"
+                : "bg-slate-300 text-slate-500 cursor-not-allowed"
+            }`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 size={12} className="animate-spin" /> Memproses...
+              </>
+            ) : (
+              <>
+                <Upload size={12} /> Import Sekarang
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
