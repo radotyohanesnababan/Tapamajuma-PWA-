@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class School extends Model
 {
@@ -31,4 +32,16 @@ class School extends Model
         'db_name', 
         'db_user',
     ];
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($school) {
+            $config = $school->config ?? [];
+            if (empty($config['logger_api_key'])) {
+                $config['logger_api_key'] = Str::random(40);
+                $school->config = $config;
+            }
+        });
+    }
 }

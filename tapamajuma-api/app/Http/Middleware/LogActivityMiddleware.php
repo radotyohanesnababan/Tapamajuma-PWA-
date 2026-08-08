@@ -9,23 +9,38 @@ use Illuminate\Support\Facades\Auth;
 
 class LogActivityMiddleware
 {
-    public function handle(Request $request, Closure $next)
+public function handle(Request $request, Closure $next)
 {
     $response = $next($request);
 
-    // Ambil URL dari env
     $logUrl = env('LOGGER_SERVICE_URL');
 
-    // Hanya kirim jika user login DAN URL log tersedia
-    if (Auth::check() && !empty($logUrl)) {
+    // Skip GET biasa, kecuali yang eksplisit penting
+    $importantGetPaths = [
+        // tambahkan path GET yang tetap mau dicatat, contoh:
+        // 'admin/certificates/verify',
+    ];
+
+    $shouldLog = $request->method() !== 'GET' 
+        || collect($importantGetPaths)->contains(fn ($path) => $request->is($path . '*'));
+
+    if ($shouldLog && Auth::check() && !empty($logUrl) && app()->bound('currentSchool')) {
         try {
             $user = Auth::user();
             $action = "Mengakses " . $request->path() . " [" . $request->method() . "]";
 
+            $school = app('currentSchool');
+            $apiKey = $school->config['logger_api_key'] ?? null;
+
+            if (!$apiKey) {
+                return $response;
+            }
+
             Http::withoutVerifying()
                 ->timeout(1)
                 ->connectTimeout(1)
-                ->post($logUrl, [ // Variabel $logUrl dipastikan bukan null di sini
+                ->withHeaders(['X-Tenant-API-Key' => $apiKey])
+                ->post($logUrl . '/api/logs', [
                     'user_id' => $user->id,
                     'action'  => $action,
                 ]);

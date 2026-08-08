@@ -26,6 +26,7 @@ import SharedGallery from './pages/SharedGallery';
 import CBTManager from './pages/student/CBTManager';
 import Certificate from './pages/student/Certificate';
 import CertificateManagement from './pages/superadmin/CertificateManagement';
+import ActivityLog from './pages/superadmin/ActivityLog';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
@@ -221,6 +222,7 @@ function App() {
               <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
               <Route path="academic-periods" element={<div className="p-4"><AcademicPeriodPage /></div>} />
               <Route path="enrollment-promotion" element={<div className="p-4"><EnrollmentPromotionPage /></div>} />
+              <Route path="activity-log" element={<div className="p-4"><ActivityLog /></div>} />
               
               
               {/* GRUP 4.1: Laporan */}

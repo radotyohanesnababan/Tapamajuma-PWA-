@@ -212,16 +212,7 @@ export default function OtherMenu() {
         </div>
 
         {/* ═══ APP INFO ═══ */}
-        <div className="rounded-lg bg-white border border-slate-200 p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-white flex-shrink-0">
-            <LayoutGrid size={16} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-slate-700">Tapamajuma PWA</p>
-            <p className="text-[9px] text-slate-400 font-medium">v2.0 · Mission Control</p>
-          </div>
-          <ShieldCheck size={16} className="text-emerald-500 flex-shrink-0" />
-        </div>
+        
 
         {/* ═══ FOOTER ═══ */}
         <p className="text-[8px] text-slate-400 text-center font-medium pt-4 uppercase tracking-wider">

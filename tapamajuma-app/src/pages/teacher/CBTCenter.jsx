@@ -45,6 +45,11 @@ export default function CBTCenter() {
               <h1 className="text-base font-bold text-slate-800">
                 Control Center
               </h1>
+              <div>
+                <p className="text-[9px] text-slate-800 font-bold mt-1 bg-yellow-300 px-2 py-1 rounded-lg inline-block">
+                 Fitur ini masih dalam masa pengembangan. Beberapa fitur mungkin belum tersedia atau masih dalam tahap uji coba.
+                </p>
+              </div>
             </div>
 
             {/* Live indicator */}

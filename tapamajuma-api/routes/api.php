@@ -34,6 +34,7 @@ use App\Http\Controllers\Teacher\MandiriSessionController;
 use App\Http\Controllers\Teacher\MediaBankController;
 use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 use App\Http\Controllers\Teacher\QuestionBankController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -137,6 +138,9 @@ Route::middleware('tenant')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('auth:sanctum')->group(function () {
+
+        // Activity Log
+        Route::get('/activity-log', [ActivityLogController::class, 'index']);
 
         // Auth & User
         Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');

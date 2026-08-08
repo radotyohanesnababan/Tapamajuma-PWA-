@@ -49,6 +49,14 @@ export default function OtherMenuSa() {
       hoverBorder: "hover:border-blue-200"
     },
     {
+      title: "Audit Log",
+      subtitle: "Lihat riwayat aktivitas pengguna",
+      icon: <Presentation className="text-purple-600" size={32} />, // Icon lebih besar
+      path: "/superadmin/activity-log",
+      color: "bg-purple-100", // Warna background icon lebih soft
+      hoverBorder: "hover:border-purple-200"
+    },
+    {
       title: "Import Data",
       subtitle: "Import data siswa atau guru dari file Excel",
       icon: <Grid className="text-green-600" size={32} />, // Icon lebih besar
