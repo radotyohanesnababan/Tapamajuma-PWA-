@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeveloperAuth } from "@/context/DeveloperAuthContext";
-import { developerLoginPath } from "@/utils/devPath";
 
 export default function DeveloperAuthGuard({ children }) {
   const { developer, isLoading } = useDeveloperAuth();
@@ -9,7 +8,7 @@ export default function DeveloperAuthGuard({ children }) {
 
   useEffect(() => {
     if (!isLoading && !developer) {
-      navigate(developerLoginPath(), { replace: true });
+      navigate("/developer/login", { replace: true });
     }
   }, [developer, isLoading]);
 

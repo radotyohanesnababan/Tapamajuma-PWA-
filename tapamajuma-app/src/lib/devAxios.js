@@ -1,6 +1,5 @@
 import axios from "axios";
 import { toast } from "sonner";
-import { developerLoginPath } from "@/utils/devPath";
 
 const devApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -26,12 +25,10 @@ devApi.interceptors.response.use(
     if (!error.response) {
       toast.error("Koneksi terputus atau server tidak merespon.");
     }
-
-    const loginPath = developerLoginPath();
-    if (status === 401 && window.location.pathname !== loginPath) {
+    if (status === 401 && window.location.pathname !== "/developer/login") {
       localStorage.removeItem("dev_token");
       localStorage.removeItem("dev_data");
-      window.location.href = loginPath;
+      window.location.href = "/developer/login";
     }
     return Promise.reject(error);
   }
