@@ -35,6 +35,8 @@ use App\Http\Controllers\Teacher\MediaBankController;
 use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 use App\Http\Controllers\Teacher\QuestionBankController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Auth\DeveloperAuthController;
+use App\Http\Controllers\Developer\SchoolOnboardingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +49,17 @@ use Illuminate\Support\Facades\Route;
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
+
+/*
+|--------------------------------------------------------------------------
+| Developer Routes — Tanpa Tenant
+|--------------------------------------------------------------------------
+*/
+Route::prefix('developer')->middleware('auth.developer')->group(function () {
+    Route::get('/me', [DeveloperAuthController::class, 'me']);
+    Route::get('/schools', [SchoolOnboardingController::class, 'index']);
+    Route::post('/onboard-school', [SchoolOnboardingController::class, 'store']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -345,3 +358,5 @@ Route::middleware('tenant')->group(function () {
     }); // end auth:sanctum
 
 }); // end tenant
+
+require __DIR__.'/developer.php';

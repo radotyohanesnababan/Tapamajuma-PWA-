@@ -8,20 +8,7 @@ use App\Models\Gallery;
 Route::get('/', function () {
     return ['Laravel' => app()->version()];
 });
-Route::get('/cek-hantu', function () {
-    $url = config('app.url');
-    $frontend = config('app.frontend_url') ?? env('FRONTEND_URL');
-    
-    return [
-        'APP_URL_VALUE' => $url,
-        'APP_URL_LENGTH' => strlen($url), // PENTING: Jika panjangnya beda dengan jumlah huruf, berarti ada spasi/enter
-        'FRONTEND_URL_VALUE' => $frontend,
-        'FRONTEND_URL_LENGTH' => strlen($frontend),
-        
-    ];
 
-    
-});
 
 
 Route::get('/s/{token}', function ($token) {
@@ -36,7 +23,7 @@ Route::get('/s/{token}', function ($token) {
     $gallery = \App\Models\Gallery::where('share_token', $token)->first();
 
     if (!$gallery) {
-        return redirect('https://tapamajuma.smpn1siborongborong.sch.id'); // Redirect ke homepage jika token tidak valid
+        return redirect('/'); // Redirect ke homepage jika token tidak valid
     }
 
     // ... semua logic thumbnail kamu tetap sama ...

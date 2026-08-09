@@ -1,5 +1,5 @@
 import React, { Suspense, lazy} from 'react';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
@@ -14,6 +14,8 @@ import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
 // ==========================================
 // Layout dan AuthGuard harus dimuat langsung agar kerangka dasar web tidak telat muncul.
 import AuthGuard from "./components/AuthGuard";
+import DeveloperAuthGuard from "./components/DeveloperAuthGuard";
+import { DeveloperAuthProvider } from "./context/DeveloperAuthContext";
 import StudentLayout from "./layouts/StudentLayout";
 import TeacherLayout from "./layouts/TeacherLayout";
 import SuperadminLayout from "./layouts/SuperadminLayout";
@@ -94,6 +96,12 @@ const MathGame = lazy(() => import("./components/games/MathGame"));
 const CBTStart = lazy(() => import("./pages/student/CBTStart"));
 const CBTExam = lazy(() => import("./pages/student/CBTExam"));
 
+// Developer
+const DeveloperLayout = lazy(() => import("./layouts/DeveloperLayout"));
+const DeveloperDashboard = lazy(() => import("./pages/developer/Dashboard"));
+const OnboardSchool = lazy(() => import("./pages/developer/OnboardSchool"));
+const DeveloperLogin = lazy(() => import("./pages/developer/Login"));
+
 // ==========================================
 // KOMPONEN LOADING
 // ==========================================
@@ -103,9 +111,6 @@ const PageLoader = () => (
     <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"></div>
   </div>
 );
-
-
-
 
 function App() {
   return (
@@ -242,6 +247,22 @@ function App() {
                 </AuthGuard>
               } 
             />
+            
+            {/* GRUP 5: DEVELOPER (Sistem Auth Terpisah) */}
+            <Route element={<DeveloperAuthProvider><Outlet /></DeveloperAuthProvider>}>
+              <Route path="/developer/login" element={<DeveloperLogin />} />
+              <Route 
+                path="/developer" 
+                element={
+                  <DeveloperAuthGuard>
+                    <DeveloperLayout />
+                  </DeveloperAuthGuard>
+                }
+              >
+                <Route index element={<DeveloperDashboard />} />
+                <Route path="onboard-school" element={<OnboardSchool />} />
+              </Route>
+            </Route>
 
           </Routes>
         </Suspense>
