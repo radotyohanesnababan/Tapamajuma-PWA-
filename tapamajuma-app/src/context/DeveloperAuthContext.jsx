@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import devApi from "@/lib/devAxios";
+import { developerLoginPath } from "@/utils/devPath";
 
 const DeveloperAuthContext = createContext(null);
 
@@ -41,7 +42,7 @@ export function DeveloperAuthProvider({ children }) {
       localStorage.removeItem("dev_token");
       localStorage.removeItem("dev_data");
       setDeveloper(null);
-      window.location.href = "/developer/login";
+      window.location.href = developerLoginPath();
     }
   };
 
