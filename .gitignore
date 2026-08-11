@@ -8,3 +8,4 @@ tapamajuma-app/.env.development
 /tapamajuma-logger/tapamajuma-logger
 /tapamajuma-logger/.env
 /node_modules
+AGENTS.md

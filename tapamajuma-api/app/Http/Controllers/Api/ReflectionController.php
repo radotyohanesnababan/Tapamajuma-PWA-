@@ -36,23 +36,31 @@ class ReflectionController extends Controller
         ], 201);
     }
 
-    // Aksi B.2: Ambil Feed Teman Sekelas
-    public function getPeerFeed()
+    // Aksi B.2: Ambil Feed Teman Sekelas (PAGINATED)
+    public function getPeerFeed(Request $request)
     {
         $user = Auth::user();
 
-        $feeds = Reflection::with('user:id,name,class_id')
+        $perPage = $request->query('per_page', 10);
+
+        $query = Reflection::with('user:id,name,class_id')
             ->where('category', 'mingguan')
             ->whereHas('user', function ($query) use ($user) {
                 $query->where('class_id', $user->class_id)
                       ->where('id', '!=', $user->id);
             })
             ->whereNotNull('improvements')
-            ->latest()
-            ->take(20)
-            ->get(['id', 'user_id', 'improvements', 'peer_feedback', 'created_at']);
+            ->latest();
 
-        return response()->json($feeds);
+        $paginated = $query->paginate($perPage, ['id', 'user_id', 'improvements', 'peer_feedback', 'created_at']);
+
+        return response()->json([
+            'data'         => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
+        ]);
     }
 
     // Aksi B.2: Guru Memberi Feedback

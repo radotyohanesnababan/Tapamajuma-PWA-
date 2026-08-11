@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
+Route::get('/schools/public-list', [\App\Http\Controllers\Api\SchoolController::class, 'publicList']);
 
 /*
 |--------------------------------------------------------------------------

@@ -20,20 +20,39 @@ export default function PeerFeed() {
   const [feeds, setFeeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCommentId, setActiveCommentId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    fetchFeeds();
+    fetchFeeds(1);
   }, []);
 
-  const fetchFeeds = async () => {
+  const fetchFeeds = async (page) => {
+    const isLoadMore = page > 1;
+    if (isLoadMore) setLoadingMore(true);
     try {
-      const res = await api.get("/api/reflections/peer-feed");
-      setFeeds(res.data);
+      const res = await api.get("/api/reflections/peer-feed", {
+        params: { page, per_page: 10 },
+      });
+      const { data, current_page, last_page, total: totalCount } = res.data;
+      setFeeds((prev) => (isLoadMore ? [...prev, ...data] : data));
+      setCurrentPage(current_page);
+      setLastPage(last_page);
+      setTotal(totalCount);
     } catch (err) {
       console.error("Gagal mengambil feed", err);
       toast.error("Gagal memuat kabar baik.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (currentPage < lastPage) {
+      fetchFeeds(currentPage + 1);
     }
   };
 
@@ -125,7 +144,7 @@ export default function PeerFeed() {
           <div className="flex items-center gap-3">
             <div className="flex-1 h-1 bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400 rounded-full" />
             <span className="text-[10px] font-extrabold text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
-              {feeds.length} cerita minggu ini
+              {feeds.length} dari {total} cerita
             </span>
             <div className="flex-1 h-1 bg-gradient-to-r from-fuchsia-400 via-violet-400 to-indigo-400 rounded-full" />
           </div>
@@ -298,6 +317,28 @@ export default function PeerFeed() {
                 </div>
               );
             })}
+          {/* ── LOAD MORE ── */}
+          {currentPage < lastPage && (
+            <div className="flex justify-center pt-2 pb-4">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="px-6 py-2.5 rounded-2xl text-[11px] font-extrabold bg-white text-indigo-600 border border-indigo-200 shadow-[0_2px_8px_rgba(99,102,241,0.1)] hover:shadow-[0_4px_12px_rgba(99,102,241,0.15)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                    Memuat...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Muat Lebih Banyak
+                    <ChevronRight size={13} />
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
           </div>
         )}
 
