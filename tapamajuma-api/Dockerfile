@@ -41,10 +41,10 @@ RUN apt-get update && apt-get install -y \
 # NODE.JS
 # ============================================================
 RUN set -eux; \
-    curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh; \
-    bash /tmp/nodesource_setup.sh; \
-    apt-get install -y nodejs; \
-    rm -rf /var/lib/apt/lists/* /tmp/nodesource_setup.sh; \
+    NODE_VERSION=20.18.0; \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz; \
+    tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1; \
+    rm -f /tmp/node.tar.xz; \
     node -v && npm -v
 
 # ============================================================
