@@ -1,13 +1,20 @@
 import axios from "axios";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
+import { Preferences } from "@capacitor/preferences";
 
 // =================================================================
 // 1. TENANT SLUG DETECTION
 // =================================================================
-const getSlugFromHost = () => {
-  // Local dev atau native app: pakai env
-  if (import.meta.env.DEV || Capacitor.isNativePlatform()) {
+const getSlugFromHost = async () => {
+  // Native app: baca dari pilihan sekolah yang disimpan saat onboarding
+  if (Capacitor.isNativePlatform()) {
+    const { value } = await Preferences.get({ key: 'tenant_slug' });
+    return value || null;
+  }
+
+  // Dev lokal (browser)
+  if (import.meta.env.DEV) {
     return import.meta.env.VITE_TENANT_SLUG || 'smpn1siborongborong';
   }
 
@@ -27,9 +34,6 @@ const getSlugFromHost = () => {
 // 2. CONFIG URL
 // =================================================================
 const getEnvUrl = () => {
-  if (Capacitor.isNativePlatform()) {
-    return import.meta.env.VITE_API_URL;
-  }
   return import.meta.env.VITE_API_URL;
 };
 
@@ -41,7 +45,6 @@ const api = axios.create({
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
-  params: { tenant: getSlugFromHost() },
   timeout: 120000,
 });
 
@@ -49,16 +52,15 @@ const api = axios.create({
 // 3. INTERCEPTOR REQUEST
 // =================================================================
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     config.baseURL = currentBaseUrl;
+
+    const slug = await getSlugFromHost();
+    config.params = { ...config.params, tenant: slug, _t: Date.now() };
 
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    if (config.method === 'get') {
-      config.params = { ...config.params, _t: Date.now() };
     }
 
     return config;

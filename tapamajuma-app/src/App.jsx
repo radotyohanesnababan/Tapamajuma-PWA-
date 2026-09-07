@@ -25,6 +25,8 @@ import CBTManager from './pages/student/CBTManager';
 import Certificate from './pages/student/Certificate';
 import CertificateManagement from './pages/superadmin/CertificateManagement';
 import ActivityLog from './pages/superadmin/ActivityLog';
+import TenantGuard from './components/TenantGuard';
+import PilihSekolah from './pages/PilihSekolah';
 
 // ==========================================
 // 2. IMPORT ASINKRON (Lazy Load)
@@ -110,9 +112,11 @@ function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        <Route path="/pilih-sekolah" element={<PilihSekolah />} />
         {/* Suspense membungkus rute yang di-lazy load */}
         <Suspense fallback={<PageLoader />}>
-          <Routes>
+          <Route element={<TenantGuard />}>
+                    <Routes>
             {/* Rute Publik & Utama (NO GUARD) */}
             <Route path="/s/:token" element={<SharedGallery />} />
             <Route path="/seb" element={<SebPage />} />
@@ -261,6 +265,8 @@ function App() {
             </Route>
 
           </Routes>
+          </Route>
+
         </Suspense>
       </BrowserRouter>
       <Toaster position="top-center" richColors closeButton />
