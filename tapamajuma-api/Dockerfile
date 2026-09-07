@@ -40,9 +40,12 @@ RUN apt-get update && apt-get install -y \
 # ============================================================
 # NODE.JS
 # ============================================================
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh; \
+    bash /tmp/nodesource_setup.sh; \
+    apt-get install -y nodejs; \
+    rm -rf /var/lib/apt/lists/* /tmp/nodesource_setup.sh; \
+    node -v && npm -v
 
 # ============================================================
 # PHP EXTENSIONS
