@@ -86,18 +86,27 @@ class GalleryController extends Controller
         $query = Gallery::query();
 
         // Batasi gallery berdasarkan kelas yang boleh diakses teacher
-        // Sekarang join ke student_enrollments, bukan class_id di users
         if ($user->role !== 'superadmin') {
-            $query->whereHas('user.activeEnrollment', function ($q) use ($allowedClassIds) {
-                $q->whereIn('class_name_id', $allowedClassIds);
+            $query->where(function ($mainQ) use ($allowedClassIds) {
+                $mainQ->whereHas('user.activeEnrollment', function ($q) use ($allowedClassIds) {
+                    $q->whereIn('class_name_id', $allowedClassIds);
+                })
+                ->orWhereHas('user', function ($q) use ($allowedClassIds) {
+                    $q->whereIn('class_id', $allowedClassIds);
+                });
             });
         }
 
         // Filter kelas spesifik (dari ?class_id=1)
         if ($request->filled('class_id') && strtolower($request->class_id) !== 'all') {
             $classId = $request->class_id;
-            $query->whereHas('user.activeEnrollment', function ($q) use ($classId) {
-                $q->where('class_name_id', $classId);
+            $query->where(function ($mainQ) use ($classId) {
+                $mainQ->whereHas('user.activeEnrollment', function ($q) use ($classId) {
+                    $q->where('class_name_id', $classId);
+                })
+                ->orWhereHas('user', function ($q) use ($classId) {
+                    $q->where('class_id', $classId);
+                });
             });
         }
 
@@ -119,10 +128,10 @@ class GalleryController extends Controller
 
         $galleries = $query
             ->with([
-                // Load user + enrollment aktif + nama kelas dari enrollment
                 'user' => function ($q) {
-                    $q->select('id', 'name')
+                    $q->select('id', 'name', 'class_id')
                       ->with([
+                          'studentClass:id,name',
                           'activeEnrollment' => function ($eq) {
                               $eq->with('className:id,name');
                           }
@@ -136,9 +145,21 @@ class GalleryController extends Controller
         $galleries->getCollection()->transform(function ($item) {
             $item->file_url = $this->formatGalleryUrl($item);
 
-            // Tambah class_name langsung di item supaya frontend tidak perlu
-            // drill ke user.activeEnrollment.className.name
-            $item->class_name = $item->user?->activeEnrollment?->className?->name;
+            // Dapatkan model kelas dari activeEnrollment atau fallback ke studentClass
+            $classObj = $item->user?->activeEnrollment?->className ?? $item->user?->studentClass;
+            $className = $classObj?->name ?? '-';
+            $classId = $classObj?->id ?? $item->user?->class_id;
+
+            $item->class_name = $className;
+
+            // Buat student_class terisi objek { id, name } untuk frontend
+            if ($item->user) {
+                $item->user->student_class = $classObj ? [
+                    'id'   => $classId,
+                    'name' => $className,
+                ] : null;
+                $item->user->studentClass = $item->user->student_class;
+            }
 
             return $item;
         });

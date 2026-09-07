@@ -47,6 +47,7 @@ const GalleryStudent = lazy(() => import("./pages/student/GalleryStudent"));
 const OtherMenu = lazy(() => import("./pages/student/OtherMenu"));
 const PresentationPage = lazy(() => import("./pages/student/PresentationPage"));
 const EditProfile = lazy(() => import("./pages/student/EditProfile"));
+const StudentActivityLog = lazy(() => import("./pages/student/ActivityLog"));
 // const Certificate = lazy(() => import("./pages/student/Certificate")); // (Dicoment di asli)
 
 // -- Teacher --
@@ -112,161 +113,162 @@ function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <Route path="/pilih-sekolah" element={<PilihSekolah />} />
         {/* Suspense membungkus rute yang di-lazy load */}
         <Suspense fallback={<PageLoader />}>
-          <Route element={<TenantGuard />}>
-                    <Routes>
-            {/* Rute Publik & Utama (NO GUARD) */}
-            <Route path="/s/:token" element={<SharedGallery />} />
-            <Route path="/seb" element={<SebPage />} />
-            <Route path="/syarat-ketentuan" element={<TermsPage />} />
-            <Route path="/kebijakan-privasi" element={<PrivacyPolicyPage />} />        
-            {/* Rute Publik & Utama */}
-            <Route element={<GuestGuard />}>
-              <Route path="/" element={<Welcome />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/password-reset/:token" element={<ResetPassword />} />
-            </Route>
-            <Route path="/edit-profile" element={
-              <AuthGuard>
-                <EditProfile />
-              </AuthGuard>
-            } />
-            <Route path="/social-callback" element={<SocialCallback />} />
+          <Routes>
+            <Route path="/pilih-sekolah" element={<PilihSekolah />} />
 
-            {/* GRUP 1: HALAMAN SISWA */}
-            <Route 
-              path="/student" 
-              element={
-                <AuthGuard> 
-                  <StudentLayout />
-                </AuthGuard>
-              }
-            >
-              <Route index element={<StudentDashboard />} />
-              <Route path="tantangan" element={<ChallengeForm />} />
-              <Route path="refleksi" element={
-                <div className="space-y-8">
-                  <WeeklyReflection />
-                  <hr />
-                  <PeerFeed />
-                </div>
-              } />
-              <Route path="galeri" element={<GalleryStudent />} />
-              <Route path="other" element={<OtherMenu />} />
-              <Route path="presentation" element={<PresentationPage />} />
-              <Route path="certificates" element={<Certificate />} />
-            </Route>
-
-            {/* GRUP 2: HALAMAN GURU */}
-            <Route 
-              path="/teacher" 
-              element={
-                <AuthGuard roleRequired="teacher">
-                  <TeacherLayout />
-                </AuthGuard>
-              }
-            >
-              <Route index element={<TeacherDashboard />} />
-              <Route path="mandiri-session" element={<div className="p-4 font-bold"><SesiMandiri /></div>} />
-              <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
-              
-              {/* GRUP 2.1: Peningkatan Kelas */}
-              {/* PERBAIKAN: Hapus awalan '/' pada child routes agar mengikuti induk '/teacher' */}
-              <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
-              <Route path="class-improvement/analysis" element={<AnalysisTab />} />
-              <Route path="class-improvement/reflection" element={<TeacherReflection />} />
-              <Route path="class-improvement/gallery" element={<GalleryTeacher />} />
-              <Route path="class-improvement/print-session-activity" element={<PrintSession />} />
-              
-              {/* GRUP 2.2: Bank Soal */}
-              <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
-              <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
-              <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
-              <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
-              <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
-
-              {/* GRUP 2.3: CBT */}
-              <Route path="cbt-center" element={<div className="p-4"><CBTCenter /></div>} />
-            </Route>
-
-            {/* GRUP 3: GAME */}
-            <Route 
-              path="/game/math" 
-              element={
+            <Route element={<TenantGuard />}>
+              {/* Rute Publik & Utama (NO GUARD) */}
+              <Route path="/s/:token" element={<SharedGallery />} />
+              <Route path="/seb" element={<SebPage />} />
+              <Route path="/syarat-ketentuan" element={<TermsPage />} />
+              <Route path="/kebijakan-privasi" element={<PrivacyPolicyPage />} />        
+              {/* Rute Publik & Utama */}
+              <Route element={<GuestGuard />}>
+                <Route path="/" element={<Welcome />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/password-reset/:token" element={<ResetPassword />} />
+              </Route>
+              <Route path="/edit-profile" element={
                 <AuthGuard>
-                  <MathGame />
+                  <EditProfile />
                 </AuthGuard>
-              } 
-            />
+              } />
+              <Route path="/social-callback" element={<SocialCallback />} />
 
-            {/* GRUP 4: SUPERADMIN */}
-            <Route 
-              path="/superadmin" 
-              element={
-                <AuthGuard roleRequired="superadmin">
-                  <SuperadminLayout />
-                </AuthGuard>
-              }
-            >
-              <Route index element={<SuperadminDashboard />} />
-              <Route path="teacher-mgmt" element={<div className="p-4 font-bold"><TeacherManagement /></div>} />
-              <Route path="student-mgmt" element={<div className="p-4 font-bold"><StudentManagement /></div>} />
-              <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
-              <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
-              <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
-              <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
-              <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
-              <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
-              <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
-              <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
-              <Route path="academic-periods" element={<div className="p-4"><AcademicPeriodPage /></div>} />
-              <Route path="enrollment-promotion" element={<div className="p-4"><EnrollmentPromotionPage /></div>} />
-              <Route path="activity-log" element={<div className="p-4"><ActivityLog /></div>} />
-              
-              
-              {/* GRUP 4.1: Laporan */}
-              <Route path="activity-report/executive" element={<ExecutiveReport />} />
-              <Route path="activity-report/students" element={<StudentLog />} />
-              <Route path="activity-report/sessions" element={<SessionReport />} />
-              <Route path="activity-report/classes" element={<ClassSummary />} />
-              <Route path="activity-report/teachers" element={<TeacherSummary />} />
-              <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
-            </Route>
-            {/* CBT SYSTEM: SINGLE ENDPOINT */}
-            <Route 
-              path="/cbt" 
-              element={
-                <AuthGuard roleRequired="student">
-                  <CBTManager />
-                </AuthGuard>
-              } 
-            />
-
-            {/* GRUP 5: DEVELOPER (Sistem Auth Terpisah) */}
-            {/* Prefix /developer dipakai konsisten di semua environment (lokal & prod). */}
-            {/* DeveloperDomainGuard membatasi akses grup ini hanya dari dev.tapamajuma.my.id atau localhost. */}
-            <Route element={<DeveloperDomainGuard><DeveloperAuthProvider><Outlet /></DeveloperAuthProvider></DeveloperDomainGuard>}>
-              <Route path="/developer/login" element={<DeveloperLogin />} />
+              {/* GRUP 1: HALAMAN SISWA */}
               <Route 
-                path="/developer" 
+                path="/student" 
                 element={
-                  <DeveloperAuthGuard>
-                    <DeveloperLayout />
-                  </DeveloperAuthGuard>
+                  <AuthGuard> 
+                    <StudentLayout />
+                  </AuthGuard>
                 }
               >
-                <Route index element={<DeveloperDashboard />} />
-                <Route path="onboard-school" element={<OnboardSchool />} />
+                <Route index element={<StudentDashboard />} />
+                <Route path="tantangan" element={<ChallengeForm />} />
+                <Route path="refleksi" element={
+                  <div className="space-y-8">
+                    <WeeklyReflection />
+                    <hr />
+                    <PeerFeed />
+                  </div>
+                } />
+                <Route path="galeri" element={<GalleryStudent />} />
+                <Route path="other" element={<OtherMenu />} />
+                <Route path="presentation" element={<PresentationPage />} />
+                <Route path="certificates" element={<Certificate />} />
+                <Route path="activity-log" element={<StudentActivityLog />} />
               </Route>
+
+              {/* GRUP 2: HALAMAN GURU */}
+              <Route 
+                path="/teacher" 
+                element={
+                  <AuthGuard roleRequired="teacher">
+                    <TeacherLayout />
+                  </AuthGuard>
+                }
+              >
+                <Route index element={<TeacherDashboard />} />
+                <Route path="mandiri-session" element={<div className="p-4 font-bold"><SesiMandiri /></div>} />
+                <Route path="profile" element={<div className="p-4 font-bold"><OtherMenuTc /></div>} />
+                
+                {/* GRUP 2.1: Peningkatan Kelas */}
+                {/* PERBAIKAN: Hapus awalan '/' pada child routes agar mengikuti induk '/teacher' */}
+                <Route path="class-improvement" element={<div className="p-4"><ClassImprovement /></div>} />
+                <Route path="class-improvement/analysis" element={<AnalysisTab />} />
+                <Route path="class-improvement/reflection" element={<TeacherReflection />} />
+                <Route path="class-improvement/gallery" element={<GalleryTeacher />} />
+                <Route path="class-improvement/print-session-activity" element={<PrintSession />} />
+                
+                {/* GRUP 2.2: Bank Soal */}
+                <Route path="bank-soal" element={<div className="p-4"><BankSoal /></div>} />
+                <Route path="bank-soal/list" element={<div className="p-4"><SoalList /></div>} />
+                <Route path="bank-soal/add" element={<div className="p-4"><SoalAdd /></div>} />
+                <Route path="bank-soal/import" element={<div className="p-4"><SoalImport /></div>} />
+                <Route path="bank-soal/mediabank" element={<div className="p-4"><MediaBank /></div>} />
+
+                {/* GRUP 2.3: CBT */}
+                <Route path="cbt-center" element={<div className="p-4"><CBTCenter /></div>} />
+              </Route>
+
+              {/* GRUP 3: GAME */}
+              <Route 
+                path="/game/math" 
+                element={
+                  <AuthGuard>
+                    <MathGame />
+                  </AuthGuard>
+                } 
+              />
+
+              {/* GRUP 4: SUPERADMIN */}
+              <Route 
+                path="/superadmin" 
+                element={
+                  <AuthGuard roleRequired="superadmin">
+                    <SuperadminLayout />
+                  </AuthGuard>
+                }
+              >
+                <Route index element={<SuperadminDashboard />} />
+                <Route path="teacher-mgmt" element={<div className="p-4 font-bold"><TeacherManagement /></div>} />
+                <Route path="student-mgmt" element={<div className="p-4 font-bold"><StudentManagement /></div>} />
+                <Route path="class-mgmt" element={<div className="p-4 font-bold"><ClassManagement /></div>} />
+                <Route path="subject-mgmt" element={<div className="p-4 font-bold"><SubjectManagement /></div>} />
+                <Route path="question-bank-mgmt" element={<div className="p-4 font-bold"><QuestionBankManagement /></div>} />
+                <Route path="import-data" element={<div className="p-4 font-bold"><ImportData /></div>} />
+                <Route path="other" element={<div className="p-4 font-bold"><OtherMenuSa /></div>} />
+                <Route path="activity-report" element={<div className="p-4 font-bold"><ActivityReport/></div>} />
+                <Route path="changelog" element={<div className="p-4 font-bold"><Changelog /></div>} />
+                <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
+                <Route path="academic-periods" element={<div className="p-4"><AcademicPeriodPage /></div>} />
+                <Route path="enrollment-promotion" element={<div className="p-4"><EnrollmentPromotionPage /></div>} />
+                <Route path="activity-log" element={<div className="p-4"><ActivityLog /></div>} />
+                
+                
+                {/* GRUP 4.1: Laporan */}
+                <Route path="activity-report/executive" element={<ExecutiveReport />} />
+                <Route path="activity-report/students" element={<StudentLog />} />
+                <Route path="activity-report/sessions" element={<SessionReport />} />
+                <Route path="activity-report/classes" element={<ClassSummary />} />
+                <Route path="activity-report/teachers" element={<TeacherSummary />} />
+                <Route path="activity-report/morning-sessions" element={<MorningSessionStudent />} />
+              </Route>
+              {/* CBT SYSTEM: SINGLE ENDPOINT */}
+              <Route 
+                path="/cbt" 
+                element={
+                  <AuthGuard roleRequired="student">
+                    <CBTManager />
+                  </AuthGuard>
+                } 
+              />
+
+              {/* GRUP 5: DEVELOPER (Sistem Auth Terpisah) */}
+              {/* Prefix /developer dipakai konsisten di semua environment (lokal & prod). */}
+              {/* DeveloperDomainGuard membatasi akses grup ini hanya dari dev.tapamajuma.my.id atau localhost. */}
+              <Route element={<DeveloperDomainGuard><DeveloperAuthProvider><Outlet /></DeveloperAuthProvider></DeveloperDomainGuard>}>
+                <Route path="/developer/login" element={<DeveloperLogin />} />
+                <Route 
+                  path="/developer" 
+                  element={
+                    <DeveloperAuthGuard>
+                      <DeveloperLayout />
+                    </DeveloperAuthGuard>
+                  }
+                >
+                  <Route index element={<DeveloperDashboard />} />
+                  <Route path="onboard-school" element={<OnboardSchool />} />
+                </Route>
+              </Route>
+
             </Route>
-
           </Routes>
-          </Route>
-
         </Suspense>
       </BrowserRouter>
       <Toaster position="top-center" richColors closeButton />

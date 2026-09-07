@@ -46,6 +46,14 @@ class Gallery extends Model
         return $this->belongsTo(Subject::class, 'subject_id');
     }
 
+    /**
+     * Relasi ke Periode Akademik / Semester
+     */
+    public function academicPeriod()
+    {
+        return $this->belongsTo(AcademicPeriod::class, 'academic_period_id');
+    }
+
 
 
     public function getPublicUrlAttribute()

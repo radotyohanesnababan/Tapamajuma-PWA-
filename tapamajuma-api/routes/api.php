@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\NisController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicDataController;
 use App\Http\Controllers\Api\ReflectionController;
+use App\Http\Controllers\Api\StudentActivityLogController;
 use App\Http\Controllers\Api\StudentQuizController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -171,6 +172,7 @@ Route::middleware('tenant')->group(function () {
         Route::get('/summary', [ProfileController::class, 'getSummary']);
         Route::post('/user/profile-update', [ProfileController::class, 'update']);
         Route::post('/generate-content', [ApiAIController::class, 'generate']);
+        Route::get('/student/activity-logs', [StudentActivityLogController::class, 'index']);
 
         // Aktivitas Harian
         Route::prefix('activities')->group(function () {

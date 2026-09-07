@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Preferences } from "@capacitor/preferences";
-import api from "@/api"; // sesuaikan path axios instance kamu
+import api from "@/lib/axios";
 
 export default function PilihSekolah() {
   const [schools, setSchools] = useState([]);

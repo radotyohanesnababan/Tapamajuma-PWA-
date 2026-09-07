@@ -10,10 +10,10 @@ class DailyActivity extends Model
 {
     protected $fillable = [
         'user_id',
+        'academic_period_id',
         'type',
         'subject',
         'score',
-        'subject',
         'reading_content',
         'audio_path',
         'confidence_level',
@@ -23,6 +23,11 @@ class DailyActivity extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function academicPeriod(): BelongsTo
+    {
+        return $this->belongsTo(AcademicPeriod::class);
     }
 
     // Relasi ke Refleksi (Setiap aktivitas bisa punya 1 strategi berpikir)

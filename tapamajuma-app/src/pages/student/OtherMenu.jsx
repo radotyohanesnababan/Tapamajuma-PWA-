@@ -5,7 +5,9 @@ import { useNavigate } from "react-router-dom";
 import {
   User, Presentation, LogOut, ChevronRight, Award,
   Sparkles, ShieldCheck, LayoutGrid, Gamepad2,
-  Rocket, Heart, Zap, Star, Crown, Gem, CircleDot
+  Rocket, Heart, Zap, Star, Crown, Gem, CircleDot,
+  LogInIcon,
+  Activity
 } from "lucide-react";
 import {
   AlertDialog,
@@ -78,8 +80,18 @@ export default function OtherMenu() {
       grad: "from-amber-400 to-orange-500",
       light: "bg-amber-50",
       shadow: "shadow-[0_4px_14px_rgba(251,191,36,0.2)]",
-      badge: "Baru!",
     },
+    {
+      title: "Riwayat Kegiatan ",
+      subtitle: "Lihat Riwayat Kegiatan Kamu di Platform.",
+      icon: Activity,
+      iconColor: "text-green-500",
+      path: "/student/activity-log",
+      grad: "from-green-400 to-emerald-500",
+      light: "bg-green-50",
+      shadow: "shadow-[0_4px_14px_rgba(16,185,129,0.2)]",
+      badge: "Baru!",
+    }
   ];
 
   return (
