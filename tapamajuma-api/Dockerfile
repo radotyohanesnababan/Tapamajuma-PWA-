@@ -3,7 +3,7 @@ FROM php:8.3-fpm-bullseye
 # ============================================================
 # SYSTEM DEPENDENCIES
 # ============================================================
-RUN apt-get update && apt-get install -y \
+RUN apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y \
     curl \
     zip \
     unzip \
