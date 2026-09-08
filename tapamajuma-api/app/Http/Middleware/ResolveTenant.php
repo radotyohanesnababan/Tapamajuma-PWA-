@@ -50,25 +50,27 @@ class ResolveTenant
         // Bind ke container
         app()->instance('currentSchool', $school);
 
-        // Switch database connection
-        config(['database.connections.tenant' => [
-            'driver'    => 'mysql',
-            'host'      => $school->db_host,
-            'port'      => env('DB_PORT', '3306'),
-            'database'  => $school->db_name,
-            'username'  => $school->db_user,
-            'password'  => decrypt($school->db_password),
-            'charset'   => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'strict'    => true,
-            'options'   => extension_loaded('pdo_mysql') ? array_filter([
-                \PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
-                \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => !empty(env('DB_SSL_CA')),
-            ]) : [],
-        ]]);
+        if (!app()->environment('testing')) {
+            config(['database.connections.tenant' => [
+                'driver'    => 'mysql',
+                'host'      => $school->db_host,
+                'port'      => env('DB_PORT', '3306'),
+                'database'  => $school->db_name,
+                'username'  => $school->db_user,
+                'password'  => decrypt($school->db_password),
+                'charset'   => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'strict'    => true,
+                'options'   => extension_loaded('pdo_mysql') ? array_filter([
+                    \PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
+                    \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => !empty(env('DB_SSL_CA')),
+                ]) : [],
+            ]]);
 
-        DB::purge('tenant');
-        DB::reconnect('tenant');
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+        }
+
         DB::setDefaultConnection('tenant');
 
         return $next($request);
