@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 
 export default function ClassSummary() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   const [classesData, setClassesData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rankingData, setRankingData] = useState([]);
@@ -16,11 +21,12 @@ export default function ClassSummary() {
   
 
   useEffect(() => {
-    api.get('/api/admin/activity-report/class-summary')
+    const params = periodId ? { academic_period_id: periodId } : {};
+    api.get('/api/admin/activity-report/class-summary', { params })
       .then(res => setClassesData(res.data.data || []))
       .catch(err => console.error("Gagal mengambil data kelas:", err))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [periodId]);
 
   // Fungsi untuk mendapatkan ranking berdasarkan rata-rata skor keseluruhan
   const getRank = (classId) => {
@@ -47,7 +53,8 @@ const openRankingModal = async (cls) => {
     setRankingData([]); 
 
     try {
-      const res = await api.get(`/api/admin/activity-report/class-ranking/${cls.id}`);
+      const params = periodId ? { academic_period_id: periodId } : {};
+      const res = await api.get(`/api/admin/activity-report/class-ranking/${cls.id}`, { params });
       setRankingData(res.data.data || []);
     } catch (err) {
       console.error("Gagal mengambil data ranking siswa:", err);
@@ -58,8 +65,14 @@ const openRankingModal = async (cls) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-slate-800">Ringkasan Aktivitas Kelas</h1>
+        {periodId && (
+          <div className="flex items-center gap-2 text-sm bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+            <CalendarDays className="w-4 h-4 text-indigo-500" />
+            <span className="font-medium text-indigo-700 text-xs">Semester terpilih</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

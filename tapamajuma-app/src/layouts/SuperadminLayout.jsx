@@ -14,6 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { IconCertificate } from "@tabler/icons-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const menuItems = [
   {
@@ -175,14 +186,31 @@ export default function SuperadminLayout() {
 
         {/* Footer with refined styling */}
         <div className="p-3 border-t border-slate-800/50 mt-auto">
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="w-full justify-start gap-3 text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 rounded-lg font-semibold text-sm py-3 transition-all"
-          >
-            <LogOut size={20} />
-            Keluar Sistem
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 rounded-lg font-semibold text-sm py-3 transition-all"
+              >
+                <LogOut size={20} />
+                Keluar Sistem
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali untuk mengakses control room.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="bg-rose-600 hover:bg-rose-700 text-white">
+                  Ya, Keluar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
 

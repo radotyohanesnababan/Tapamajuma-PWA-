@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
 use App\Models\ClassName;
 use App\Models\DailyActivity;
 use App\Models\SelfStudySession;
@@ -24,6 +25,28 @@ class ReportController extends Controller
         $type = pathinfo($path, PATHINFO_EXTENSION);
         $data = file_get_contents($path);
         return 'data:image/' . $type . ';base64,' . base64_encode($data);
+    }
+
+    // ============================================================
+    // HELPER: Resolve Period ID dari request atau fallback ke aktif
+    // ============================================================
+    private function resolvePeriodId(Request $request): ?int
+    {
+        if ($request->filled('academic_period_id')) {
+            return (int) $request->academic_period_id;
+        }
+        return AcademicPeriod::current()?->id;
+    }
+
+    // ============================================================
+    // API: Daftar semua periode akademik (untuk dropdown frontend)
+    // ============================================================
+    public function getAcademicPeriods()
+    {
+        $periods = AcademicPeriod::orderByDesc('opened_at')
+            ->get(['id', 'name', 'semester', 'academic_year', 'is_active', 'opened_at', 'closed_at']);
+
+        return response()->json(['data' => $periods]);
     }
 
     // ============================================================
@@ -327,30 +350,45 @@ class ReportController extends Controller
     // API ENDPOINTS LAINNYA (tidak berubah)
     // ============================================================
 
-    public function executiveSummary()
+    public function executiveSummary(Request $request)
     {
-        $totalActivities = DailyActivity::count();
-        $avgScore        = DailyActivity::avg('score');
-        $activeStudents  = DailyActivity::distinct('user_id')
-            ->where('created_at', '>=', Carbon::now()->subDays(7))
-            ->count();
+        $periodId = $this->resolvePeriodId($request);
+        $period   = $periodId ? AcademicPeriod::find($periodId) : null;
 
-        $trend = DailyActivity::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->where('created_at', '>=', Carbon::now()->subDays(7))
+        $query = DailyActivity::query();
+        if ($periodId) {
+            $query->where('academic_period_id', $periodId);
+        }
+
+        $totalActivities = (clone $query)->count();
+        $avgScore        = (clone $query)->avg('score');
+        $activeStudents  = (clone $query)->distinct('user_id')->count();
+
+        $trend = (clone $query)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')->orderBy('date')->get();
 
-        $subjects = DailyActivity::select('subject', DB::raw('count(*) as total'))
+        $subjects = (clone $query)
+            ->select('subject', DB::raw('count(*) as total'))
             ->groupBy('subject')->orderByDesc('total')->limit(5)->get();
 
-        $activity_types = DailyActivity::select('type', DB::raw('count(*) as total'))
+        $activity_types = (clone $query)
+            ->select('type', DB::raw('count(*) as total'))
             ->groupBy('type')->orderByDesc('total')->limit(5)->get();
 
         return response()->json([
-            'metrics'        => [
-                'total_activities'    => $totalActivities,
-                'avg_score'           => round($avgScore, 1),
-                'active_students_7d'  => $activeStudents,
+            'metrics' => [
+                'total_activities'  => $totalActivities,
+                'avg_score'         => round($avgScore ?? 0, 1),
+                'active_students'   => $activeStudents,
             ],
+            'period'         => $period ? [
+                'id'            => $period->id,
+                'name'          => $period->name,
+                'semester'      => $period->semester,
+                'academic_year' => $period->academic_year,
+                'is_active'     => $period->is_active,
+            ] : null,
             'activity_types' => $activity_types,
             'trend'          => $trend,
             'subjects'       => $subjects,
@@ -359,10 +397,18 @@ class ReportController extends Controller
 
     public function studentLog(Request $request)
     {
+        $periodId = $this->resolvePeriodId($request);
+
+        $periodFilter = function ($q) use ($periodId) {
+            if ($periodId) {
+                $q->where('academic_period_id', $periodId);
+            }
+        };
+
         $query = User::where('role', 'student')
-            ->withCount('dailyActivities as total_tasks')
-            ->withAvg('dailyActivities as avg_score', 'score')
-            ->withMax('dailyActivities as last_active', 'created_at');
+            ->withCount(['dailyActivities as total_tasks' => $periodFilter])
+            ->withAvg(['dailyActivities as avg_score' => $periodFilter], 'score')
+            ->withMax(['dailyActivities as last_active' => $periodFilter], 'created_at');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -381,94 +427,120 @@ class ReportController extends Controller
     {
         $query = DailyActivity::where('user_id', $id)->latest();
 
-        if ($request->filled('start_date')) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+        // Filter berdasarkan semester jika diberikan
+        if ($request->filled('academic_period_id')) {
+            $query->where('academic_period_id', $request->academic_period_id);
+        } else {
+            // Fallback: filter tanggal manual (untuk modal dengan date picker)
+            if ($request->filled('start_date')) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
         }
 
         return response()->json(['data' => $query->get()]);
     }
 
-    public function sessionEffectiveness()
-{
-    $sessions = SelfStudySession::with(['teacher:id,name', 'students:id,name'])
-        ->orderByDesc('started_at')
-        ->limit(10)
-        ->get();
+    public function sessionEffectiveness(Request $request)
+    {
+        $periodId = $this->resolvePeriodId($request);
+        $period   = $periodId ? AcademicPeriod::find($periodId) : null;
 
-    if ($sessions->isEmpty()) {
-        return response()->json([]);
+        $sessionQuery = SelfStudySession::with(['teacher:id,name', 'students:id,name'])
+            ->orderByDesc('started_at');
+
+        // Filter sesi berdasarkan rentang waktu periode semester
+        if ($period) {
+            $sessionQuery->where('started_at', '>=', $period->opened_at);
+            if ($period->closed_at) {
+                $sessionQuery->where('started_at', '<=', $period->closed_at);
+            }
+        }
+
+        $sessions = $sessionQuery->limit(50)->get();
+
+        if ($sessions->isEmpty()) {
+            return response()->json([]);
+        }
+
+        // Kumpulkan semua student_id yang hadir di semua sesi
+        $allStudentIds = $sessions
+            ->flatMap(fn($s) => $s->students->pluck('id'))
+            ->unique()
+            ->values();
+
+        // Kumpulkan rentang waktu terluas dari semua sesi
+        $earliestStart = $sessions
+            ->map(fn($s) => Carbon::parse($s->started_at))
+            ->min();
+
+        $latestEnd = $sessions
+            ->map(fn($s) => Carbon::parse($s->started_at)->addHours(2))
+            ->max();
+
+        // Satu query — hanya siswa yang hadir, dalam rentang semua sesi
+        $activityQuery = DailyActivity::whereIn('user_id', $allStudentIds)
+            ->whereBetween('created_at', [$earliestStart, $latestEnd])
+            ->select('user_id', 'created_at');
+
+        if ($periodId) {
+            $activityQuery->where('academic_period_id', $periodId);
+        }
+
+        $allActivities = $activityQuery->get();
+
+        // Hitung per sesi di PHP, tidak ada query di dalam loop
+        $result = $sessions->map(function ($session) use ($allActivities) {
+            $startTime   = Carbon::parse($session->started_at);
+            $endTime     = $startTime->copy()->addHours(2);
+            $studentIds  = $session->students->pluck('id');
+            $studentList = $session->students->pluck('name');
+            $realCount   = $session->students->count();
+
+            $generatedActivities = $allActivities
+                ->filter(fn($a) =>
+                    $studentIds->contains($a->user_id) &&
+                    Carbon::parse($a->created_at)->between($startTime, $endTime)
+                )
+                ->count();
+
+            $conversionRate = $realCount > 0
+                ? round(($generatedActivities / $realCount) * 100)
+                : 0;
+
+            return [
+                'id'                   => $session->id,
+                'topic'                => $session->topic,
+                'teacher'              => $session->teacher->name,
+                'date'                 => $startTime->format('d M Y, H:i'),
+                'class_name'           => $session->class_name,
+                'attendees_count'      => $realCount,
+                'attendees_list'       => $studentList,
+                'activities_generated' => $generatedActivities,
+                'conversion_rate'      => $conversionRate,
+            ];
+        });
+
+        return response()->json($result);
     }
 
-    // Kumpulkan semua student_id yang hadir di semua sesi
-    $allStudentIds = $sessions
-        ->flatMap(fn($s) => $s->students->pluck('id'))
-        ->unique()
-        ->values();
-
-    // Kumpulkan rentang waktu terluas dari semua sesi
-    $earliestStart = $sessions
-        ->map(fn($s) => Carbon::parse($s->started_at))
-        ->min();
-
-    $latestEnd = $sessions
-        ->map(fn($s) => Carbon::parse($s->started_at)->addHours(2))
-        ->max();
-
-    // Satu query — hanya siswa yang hadir, dalam rentang semua sesi
-    $allActivities = DailyActivity::whereIn('user_id', $allStudentIds)
-        ->whereBetween('created_at', [$earliestStart, $latestEnd])
-        ->select('user_id', 'created_at')
-        ->get();
-
-    // Hitung per sesi di PHP, tidak ada query di dalam loop
-    $result = $sessions->map(function ($session) use ($allActivities) {
-        $startTime   = Carbon::parse($session->started_at);
-        $endTime     = $startTime->copy()->addHours(2);
-        $studentIds  = $session->students->pluck('id');
-        $studentList = $session->students->pluck('name');
-        $realCount   = $session->students->count();
-
-        // Filter dari collection:
-        // 1. Hanya siswa yang HADIR di sesi ini
-        // 2. Hanya dalam rentang waktu sesi ini
-        $generatedActivities = $allActivities
-            ->filter(fn($a) =>
-                $studentIds->contains($a->user_id) &&
-                Carbon::parse($a->created_at)->between($startTime, $endTime)
-            )
-            ->count();
-
-        $conversionRate = $realCount > 0
-            ? round(($generatedActivities / $realCount) * 100)
-            : 0;
-
-        return [
-            'id'                   => $session->id,
-            'topic'                => $session->topic,
-            'teacher'              => $session->teacher->name,
-            'date'                 => $startTime->format('d M Y, H:i'),
-            'class_name'           => $session->class_name,
-            'attendees_count'      => $realCount,
-            'attendees_list'       => $studentList,
-            'activities_generated' => $generatedActivities,
-            'conversion_rate'      => $conversionRate,
-        ];
-    });
-
-    return response()->json($result);
-}
-
-    public function classSummary()
+    public function classSummary(Request $request)
     {
+        $periodId = $this->resolvePeriodId($request);
+
         $classStats = DB::table('class_names')
             ->leftJoin('users', function ($join) {
                 $join->on('class_names.id', '=', 'users.class_id')
                      ->where('users.role', '=', 'student');
             })
-            ->leftJoin('daily_activities', 'users.id', '=', 'daily_activities.user_id')
+            ->leftJoin('daily_activities', function ($join) use ($periodId) {
+                $join->on('users.id', '=', 'daily_activities.user_id');
+                if ($periodId) {
+                    $join->where('daily_activities.academic_period_id', '=', $periodId);
+                }
+            })
             ->select(
                 'class_names.id',
                 'class_names.name as class_name',
@@ -489,23 +561,27 @@ class ReportController extends Controller
         return response()->json(['data' => $classStats]);
     }
 
-    // Tambahkan di dalam Controller yang sama
-    public function classRanking($classId)
+    public function classRanking(Request $request, $classId)
     {
+        $periodId = $this->resolvePeriodId($request);
+
         $studentRankings = DB::table('users')
-            ->leftJoin('daily_activities', 'users.id', '=', 'daily_activities.user_id')
+            ->leftJoin('daily_activities', function ($join) use ($periodId) {
+                $join->on('users.id', '=', 'daily_activities.user_id');
+                if ($periodId) {
+                    $join->where('daily_activities.academic_period_id', '=', $periodId);
+                }
+            })
             ->where('users.class_id', $classId)
             ->where('users.role', 'student')
             ->select(
                 'users.id',
                 'users.name',
-                // Gunakan COALESCE agar jika belum ada aktivitas, nilainya 0 bukan NULL
                 DB::raw('COALESCE(ROUND(SUM(daily_activities.score), 1), 0) as score'),
                 DB::raw('COUNT(daily_activities.id) as total_activities')
             )
             ->groupBy('users.id', 'users.name')
-            // Urutkan dari nilai tertinggi ke terendah
-            ->orderBy('score', 'desc')  
+            ->orderBy('score', 'desc')
             ->get();
 
         // Tambahkan nomor urut (rank) secara dinamis
@@ -517,10 +593,25 @@ class ReportController extends Controller
         return response()->json(['data' => $studentRankings]);
     }
 
-    public function teacherSummary()
+    public function teacherSummary(Request $request)
     {
+        $periodId = $this->resolvePeriodId($request);
+        $period   = $periodId ? AcademicPeriod::find($periodId) : null;
+
+        $sessionFilter = function ($q) use ($period) {
+            if ($period) {
+                $q->where('started_at', '>=', $period->opened_at);
+                if ($period->closed_at) {
+                    $q->where('started_at', '<=', $period->closed_at);
+                }
+            }
+        };
+
         $teachers = User::where('role', 'teacher')
-            ->withCount(['sessions as total_sessions', 'questions as total_questions'])
+            ->withCount([
+                'sessions as total_sessions'   => $sessionFilter,
+                'questions as total_questions',
+            ])
             ->get()
             ->map(function ($teacher) {
                 $teacher->total_contribution = $teacher->total_sessions + $teacher->total_questions;

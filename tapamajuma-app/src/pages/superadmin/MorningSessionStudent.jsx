@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Filter, Loader2, Trophy } from "lucide-react";
+import { Filter, Loader2, Trophy, CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 
 export default function MorningSessionStudent() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   const [studentsData, setStudentsData] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
@@ -22,17 +26,20 @@ export default function MorningSessionStudent() {
       .catch(err => console.error("Gagal mengambil kelas:", err));
   }, []);
 
-  // Ambil data siswa setiap kali filter kelas berubah
+  // Ambil data siswa setiap kali filter kelas atau period berubah
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
-    const params = selectedClass ? { class_id: selectedClass } : {};
+    const params = {
+      ...(selectedClass && { class_id: selectedClass }),
+      ...(periodId && { academic_period_id: periodId }),
+    };
     
-    api.get('/api/admin/activity-report/morning-session-details/{student_id}', { params })
+    api.get('/api/admin/activity-report/morning-session', { params })
       .then(res => setStudentsData(res.data.data || []))
       .catch(err => console.error("Gagal mengambil data siswa:", err))
       .finally(() => setIsLoading(false));
-  }, [selectedClass]);
+  }, [selectedClass, periodId]);
 
   const openStudentModal = (student, rank) => {
     setSelectedStudent({ ...student, rank });
@@ -42,7 +49,15 @@ export default function MorningSessionStudent() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-slate-800">Rekapitulasi Keaktifan Siswa</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Rekapitulasi Keaktifan Siswa</h1>
+          {periodId && (
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-indigo-600">
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span className="font-medium">Menampilkan data semester terpilih</span>
+            </div>
+          )}
+        </div>
         
         {/* Dropdown Filter Kelas */}
         <div className="relative w-full sm:w-64">

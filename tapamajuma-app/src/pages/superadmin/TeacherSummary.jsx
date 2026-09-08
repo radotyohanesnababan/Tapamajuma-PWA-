@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 
 export default function TeacherSummary() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   const [teachersData, setTeachersData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -13,11 +18,12 @@ export default function TeacherSummary() {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   useEffect(() => {
-    api.get('/api/admin/activity-report/teacher-summary')
+    const params = periodId ? { academic_period_id: periodId } : {};
+    api.get('/api/admin/activity-report/teacher-summary', { params })
       .then(res => setTeachersData(res.data.data || []))
       .catch(err => console.error("Gagal mengambil data guru:", err))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [periodId]);
 
   const openTeacherModal = (teacher, rank) => {
     setSelectedTeacher({ ...teacher, rank });
@@ -30,8 +36,14 @@ export default function TeacherSummary() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-slate-800">Log Aktivitas Guru</h1>
+        {periodId && (
+          <div className="flex items-center gap-2 text-sm bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+            <CalendarDays className="w-4 h-4 text-indigo-500" />
+            <span className="font-medium text-indigo-700 text-xs">Semester terpilih</span>
+          </div>
+        )}
       </div>
 
       {/* GRID KARTU GURU */}

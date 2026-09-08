@@ -345,6 +345,7 @@ Route::middleware('tenant')->group(function () {
             });
 
             Route::prefix('activity-report')->group(function () {
+                Route::get('/academic-periods', [ReportController::class, 'getAcademicPeriods']);
                 Route::get('/executive', [ReportController::class, 'executiveSummary']);
                 Route::get('/session', [ReportController::class, 'sessionEffectiveness']);
                 Route::get('/student', [ReportController::class, 'studentLog']);
@@ -354,7 +355,7 @@ Route::middleware('tenant')->group(function () {
                 Route::get('/teacher-summary', [ReportController::class, 'teacherSummary']);
                 Route::get('/pdf', [ReportController::class, 'downloadFullReport']);
                 Route::get('/morning-session/classes-list', [MorningSessionController::class, 'getClasses']);
-                Route::get('/morning-session-details/{student_id}', [MorningSessionController::class, 'getStudentSummary']);
+                Route::get('/morning-session', [MorningSessionController::class, 'getStudentSummary']);
             });
         }); // end admin
 

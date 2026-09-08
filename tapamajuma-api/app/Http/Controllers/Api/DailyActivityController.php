@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -83,15 +84,17 @@ public function store(Request $request)
         }
 
         // 🎯 Data siap kirim ke service
+        // academic_period_id di-inject otomatis dari semester aktif
         $dataToSave = [
-            'user_id'          => $user->id,
-            'type'             => $validated['type'],
-            'confidence_level' => $validated['confidence_level'],
-            'journal'          => $validated['journal'],
-            'subject'          => $request->subject ?? 'Umum',
-            'score'            => $request->score ?? 100,
-            'reading_content'  => $request->reading_content ?? null,
-            'audio_path'       => $audioPath,
+            'user_id'            => $user->id,
+            'academic_period_id' => AcademicPeriod::current()?->id,
+            'type'               => $validated['type'],
+            'confidence_level'   => $validated['confidence_level'],
+            'journal'            => $validated['journal'],
+            'subject'            => $request->subject ?? 'Umum',
+            'score'              => $request->score ?? 100,
+            'reading_content'    => $request->reading_content ?? null,
+            'audio_path'         => $audioPath,
         ];
 
        

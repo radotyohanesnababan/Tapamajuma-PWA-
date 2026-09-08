@@ -1,19 +1,24 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 import { formatDistanceToNow, format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 
 export default function StudentLog() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   // --- STATE UTAMA ---
   const [students, setStudents] = useState({ data: [], current_page: 1, last_page: 1 }); 
   const [classes, setClasses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({ class_id: "" });
-  const [page, setPage] = useState(1); // State untuk Pagination
+  const [page, setPage] = useState(1);
   
   // --- STATE MODAL ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +34,8 @@ export default function StudentLog() {
       params: {
         search: searchQuery,
         class_id: filters.class_id,
-        page: page // Kirim halaman ke Laravel
+        page: page,
+        ...(periodId && { academic_period_id: periodId }),
       }
     }).then(res => {
       setStudents(res.data.data || { data: [] });
@@ -37,7 +43,7 @@ export default function StudentLog() {
         setClasses(res.data.classes);
       }
     }).catch(err => console.error("Gagal mengambil data:", err));
-  }, [searchQuery, filters.class_id, page]);
+  }, [searchQuery, filters.class_id, page, periodId]);
 
   // Reset ke halaman 1 jika user mengetik pencarian atau mengganti filter kelas
   useEffect(() => {
@@ -69,7 +75,12 @@ export default function StudentLog() {
   const fetchStudentActivities = (studentId, start, end) => {
     setIsLoadingActivities(true);
     api.get(`/api/admin/activity-report/student-details/${studentId}`, { 
-      params: { start_date: start, end_date: end } 
+      params: {
+        ...(periodId
+          ? { academic_period_id: periodId }
+          : { start_date: start, end_date: end }
+        )
+      }
     })
       .then(res => setActivities(res.data.data || []))
       .catch(err => console.error(err))
@@ -86,7 +97,15 @@ export default function StudentLog() {
     <div className="space-y-6">
       {/* HEADER & FILTER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold text-slate-800">Log Aktivitas Siswa</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Log Aktivitas Siswa</h1>
+          {periodId && (
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-indigo-600">
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span className="font-medium">Menampilkan data semester terpilih</span>
+            </div>
+          )}
+        </div>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <select 

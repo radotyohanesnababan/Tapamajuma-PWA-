@@ -1,6 +1,17 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { LayoutDashboard, School, LogOut, Terminal } from "lucide-react";
 import { useDeveloperAuth } from "@/context/DeveloperAuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function DeveloperLayout() {
   const { developer, logout } = useDeveloperAuth();
@@ -43,13 +54,30 @@ export default function DeveloperLayout() {
         </nav>
         <div className="p-3 border-t border-slate-800">
           <p className="text-xs text-slate-500 px-3 mb-2 truncate">{developer?.email}</p>
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-rose-400 hover:bg-rose-500/10 w-full transition-colors"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-rose-400 hover:bg-rose-500/10 w-full transition-colors"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Apakah Anda yakin ingin keluar dari konsol developer?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction onClick={logout} className="bg-rose-600 hover:bg-rose-700 text-white">
+                  Ya, Keluar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
       <main className="flex-1 p-8">

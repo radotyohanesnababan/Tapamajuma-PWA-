@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, BarChart3, BookOpen } from "lucide-react";
+import { TrendingUp, BarChart3, BookOpen, CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 
 export default function ExecutiveReport() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    api.get('/api/admin/activity-report/executive').then(res => setData(res.data));
-  }, []);
+    const params = periodId ? { academic_period_id: periodId } : {};
+    api.get('/api/admin/activity-report/executive', { params })
+      .then(res => setData(res.data));
+  }, [periodId]);
 
   if (!data) return <div>Loading Analytics...</div>;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">Ringkasan Eksekutif</h1>
+      {/* Header dengan info semester */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold text-slate-800">Ringkasan Eksekutif</h1>
+        {data.period && (
+          <div className="flex items-center gap-2 text-sm text-slate-500 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+            <CalendarDays className="w-4 h-4 text-indigo-500" />
+            <span className="font-medium text-indigo-700">{data.period.name} — {data.period.academic_year}</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+              data.period.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+            }`}>
+              {data.period.is_active ? 'Aktif' : 'Selesai'}
+            </span>
+          </div>
+        )}
+      </div>
       
       {/* 1. Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard title="Total Aktivitas" value={data.metrics.total_activities} icon={<TrendingUp />} color="bg-blue-50 text-blue-600" />
         <MetricCard title="Rata-rata Skor" value={data.metrics.avg_score} icon={<BarChart3 />} color="bg-emerald-50 text-emerald-600" />
-        <MetricCard title="Siswa Aktif (7 Hari)" value={data.metrics.active_students_7d} icon={<BookOpen />} color="bg-orange-50 text-orange-600" />
+        <MetricCard title="Siswa Aktif" value={data.metrics.active_students} icon={<BookOpen />} color="bg-orange-50 text-orange-600" />
       </div>
 
       {/* 2. Simple Bar Chart (Top Subjects) */}

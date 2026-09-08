@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Calendar } from "lucide-react"; // Zap dihapus karena tidak dipakai
+import { Users, Calendar, CalendarDays } from "lucide-react";
 import api from "@/lib/axios";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,16 +9,31 @@ import { Dialog } from "@radix-ui/react-dialog";
 import { DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function SessionReport() {
+  const [searchParams] = useSearchParams();
+  const periodId = searchParams.get('period_id');
+
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
-    api.get('/api/admin/activity-report/session').then(res => setSessions(res.data));
-  }, []);
+    const params = periodId ? { academic_period_id: periodId } : {};
+    api.get('/api/admin/activity-report/session', { params })
+      .then(res => setSessions(res.data));
+  }, [periodId]);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">Keaktifan Belajar Di Kelas</h1>
-      <p className="text-slate-500">Analisis presensi siswa di setiap sesi.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Keaktifan Belajar Di Kelas</h1>
+          <p className="text-slate-500">Analisis presensi siswa di setiap sesi.</p>
+        </div>
+        {periodId && (
+          <div className="flex items-center gap-2 text-sm bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+            <CalendarDays className="w-4 h-4 text-indigo-500" />
+            <span className="font-medium text-indigo-700 text-xs">Semester terpilih</span>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-4">
         {sessions.map((session) => (
