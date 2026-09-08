@@ -1,9 +1,9 @@
-FROM php:8.3-fpm-bullseye
+FROM php:8.3-fpm-bookworm
 
 # ============================================================
 # SYSTEM DEPENDENCIES
 # ============================================================
-RUN apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
