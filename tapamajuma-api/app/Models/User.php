@@ -59,6 +59,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = ['is_alumni'];
+
     protected $with = ['studentClass'];
 
     /**
@@ -252,6 +254,13 @@ protected function phoneNumber(): Attribute
     // {
     //     return $this->belongsTo(ClassName::class, 'class_id');
     // }
+
+    public function getIsAlumniAttribute(): bool
+    {
+        return $this->role === 'student' 
+            && !$this->activeEnrollment()->exists() 
+            && $this->enrollments()->exists();
+    }
 
 // Helper function untuk ubah 08 jadi 628
 private function formatPhoneNumber($number)

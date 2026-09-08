@@ -177,7 +177,7 @@ Route::middleware('tenant')->group(function () {
         // Aktivitas Harian
         Route::prefix('activities')->group(function () {
             Route::get('/', [DailyActivityController::class, 'index']);
-            Route::post('/', [DailyActivityController::class, 'store']);
+            Route::post('/', [DailyActivityController::class, 'store'])->middleware('student.active');
             Route::get('/today-status', [DailyActivityController::class, 'checkStatus']);
         });
 
@@ -191,7 +191,7 @@ Route::middleware('tenant')->group(function () {
 
         // Refleksi & Sosial
         Route::prefix('reflections')->group(function () {
-            Route::post('/', [ReflectionController::class, 'store']);
+            Route::post('/', [ReflectionController::class, 'store'])->middleware('student.active');
             Route::get('/peer-feed', [ReflectionController::class, 'getPeerFeed']);
             Route::post('/{id}/peer-feedback', [ReflectionController::class, 'storePeerFeedback']);
         });
@@ -200,12 +200,12 @@ Route::middleware('tenant')->group(function () {
     Route::prefix('galleries')->group(function () {
         Route::get('/subjects', [GalleryController::class, 'subjects']);
         Route::get('/', [GalleryController::class, 'index']);
-        Route::post('/', [GalleryController::class, 'store']);
+        Route::post('/', [GalleryController::class, 'store'])->middleware('student.active');
         Route::post('/{id}/share', [GalleryController::class, 'share']);
     });
 
         // CBT Siswa
-        Route::middleware('check.seb')->prefix('cbt')->group(function () {
+        Route::middleware(['check.seb', 'student.active'])->prefix('cbt')->group(function () {
             Route::post('/start', [CBTController::class, 'startExam']);
             Route::post('/update-answer', [CBTController::class, 'updateAnswer']);
             Route::post('/submit', [CBTController::class, 'submitExam']);
@@ -218,7 +218,7 @@ Route::middleware('tenant')->group(function () {
 
         // Presensi Mandiri
         Route::get('/students', [MandiriSessionController::class, 'getStudents']);
-        Route::post('/self-study/store', [MandiriSessionController::class, 'store']);
+        Route::post('/self-study/store', [MandiriSessionController::class, 'store'])->middleware('student.active');
 
         /*
         |----------------------------------------------------------------------

@@ -23,6 +23,8 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Tidak ada periode aktif.'], 422);
         }
 
+        $isGanjil = $currentPeriod->semester === 'ganjil';
+
         $enrollments = StudentEnrollment::where('academic_period_id', $currentPeriod->id)
             ->where('is_active', true)
             ->whereHas('user', fn($q) => $q->where('role', 'student'))
@@ -39,7 +41,9 @@ class EnrollmentController extends Controller
                 'nis'             => $e->user->nis,
                 'current_class'   => $e->className->name,
                 'next_class_id'   => $e->next_class_id,
-                'next_class_name' => $e->nextClass?->name ?? ($this->isGradeIX($e->className->name) ? 'Lulus' : 'Belum ditentukan'),
+                'next_class_name' => $e->nextClass?->name ?? (
+                    $isGanjil ? $e->className->name : ($this->isGradeIX($e->className->name) ? 'Lulus' : 'Belum ditentukan')
+                ),
             ]);
 
         $totalBelumDitentukan = $enrollments->filter(
@@ -85,6 +89,8 @@ class EnrollmentController extends Controller
 
         $enrollments = $query->get();
 
+        $isGanjil = $currentPeriod->semester === 'ganjil';
+
         $updated = 0;
         $lulus   = 0;
         $gagal   = [];
@@ -92,20 +98,28 @@ class EnrollmentController extends Controller
         foreach ($enrollments as $enrollment) {
             $currentName = $enrollment->className->name;
 
+            if ($isGanjil) {
+                // Rollover: tetap di kelas yang sama
+                $enrollment->update(['next_class_id' => $enrollment->class_name_id]);
+                $updated++;
+                continue;
+            }
+
+            // Mode Kenaikan Kelas (Semester Genap -> Ganjil)
             if ($this->isGradeIX($currentName)) {
                 $enrollment->update(['next_class_id' => null]);
                 $lulus++;
                 continue;
             }
 
-            $nextName = $this->getNextClassName($currentName);
+            $nextClassId = $this->getNextClassId($currentName, $allClasses);
 
-            if (!$nextName || !isset($allClasses[$nextName])) {
-                $gagal[] = $currentName . ' → ' . ($nextName ?? '?') . ' (tidak ditemukan)';
+            if (!$nextClassId) {
+                $gagal[] = $currentName . ' → (tidak ditemukan padanannya)';
                 continue;
             }
 
-            $enrollment->update(['next_class_id' => $allClasses[$nextName]->id]);
+            $enrollment->update(['next_class_id' => $nextClassId]);
             $updated++;
         }
 
@@ -130,6 +144,8 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Tidak ada periode aktif.'], 422);
         }
 
+        $isGanjil = $currentPeriod->semester === 'ganjil';
+
         $enrollments = StudentEnrollment::where('academic_period_id', $currentPeriod->id)
             ->where('is_active', true)
             ->where('class_name_id', $request->class_name_id)
@@ -147,7 +163,9 @@ class EnrollmentController extends Controller
                 'nis'             => $e->user->nis,
                 'current_class'   => $e->className->name,
                 'next_class_id'   => $e->next_class_id,
-                'next_class_name' => $e->nextClass?->name ?? ($this->isGradeIX($e->className->name) ? 'Lulus' : 'Belum ditentukan'),
+                'next_class_name' => $e->nextClass?->name ?? (
+                    $isGanjil ? $e->className->name : ($this->isGradeIX($e->className->name) ? 'Lulus' : 'Belum ditentukan')
+                ),
             ]);
 
         $belumDitentukan = $enrollments->filter(
@@ -230,27 +248,53 @@ class EnrollmentController extends Controller
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function isGradeIX(string $className): bool
+    private function parseClassComponents(string $className): ?array
     {
-        return str_starts_with(trim($className), 'IX');
+        // Mendukung VII-A, VII A, 7-A, 7A, VIII.1, IX_B, dll.
+        if (preg_match('/^(VII|VIII|IX|7|8|9)[\s\-_.]*([A-Za-z0-9]+)$/i', trim($className), $matches)) {
+            $rawGrade = strtoupper($matches[1]);
+            $suffix   = strtoupper($matches[2]);
+
+            // Normalisasi grade ke angka standar
+            $gradeNum = match ($rawGrade) {
+                'VII', '7'  => 7,
+                'VIII', '8' => 8,
+                'IX', '9'   => 9,
+                default     => null
+            };
+
+            $isRoman = in_array($rawGrade, ['VII', 'VIII', 'IX']);
+
+            return [
+                'grade_num' => $gradeNum,
+                'suffix'    => $suffix,
+                'is_roman'  => $isRoman
+            ];
+        }
+        return null;
     }
 
-    private function getNextClassName(string $currentName): ?string
+    private function isGradeIX(string $className): bool
     {
-        // Format: VII-A, VIII-B, IX-C
-        $parts = explode('-', trim($currentName), 2);
-        if (count($parts) !== 2) return null;
+        $parsed = $this->parseClassComponents($className);
+        return $parsed ? $parsed['grade_num'] === 9 : false;
+    }
 
-        [$grade, $suffix] = $parts;
+    private function getNextClassId(string $currentName, $allClasses): ?int
+    {
+        $parsed = $this->parseClassComponents($currentName);
+        if (!$parsed || $parsed['grade_num'] === 9) return null;
 
-        $nextGrade = match ($grade) {
-            'VII'  => 'VIII',
-            'VIII' => 'IX',
-            default => null,
-        };
+        $nextGradeNum = $parsed['grade_num'] + 1;
+        $suffix = $parsed['suffix'];
 
-        if (!$nextGrade) return null;
-
-        return "{$nextGrade}-{$suffix}"; // contoh: VIII-A, IX-B
+        // Cari kelas yang cocok di $allClasses
+        foreach ($allClasses as $classModel) {
+            $targetParsed = $this->parseClassComponents($classModel->name);
+            if ($targetParsed && $targetParsed['grade_num'] === $nextGradeNum && $targetParsed['suffix'] === $suffix) {
+                return $classModel->id;
+            }
+        }
+        return null;
     }
 }

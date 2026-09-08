@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'check.seb' => \App\Http\Middleware\CheckSafeExamBrowser::class,
         'tenant' => \App\Http\Middleware\ResolveTenant::class,
         'auth.developer' => \App\Http\Middleware\AuthenticateDeveloper::class, // baru
+        'student.active' => \App\Http\Middleware\EnsureActiveStudent::class,
         ]);
 
         // 2. Setting CORS (Agar domain frontend diizinkan)

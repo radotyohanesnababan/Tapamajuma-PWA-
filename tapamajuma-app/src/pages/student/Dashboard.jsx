@@ -463,7 +463,7 @@ export default function StudentDashboard() {
           <div className="space-y-3">
             <div className="flex justify-between items-center px-1">
               <h3 className="font-display font-extrabold text-slate-800 text-[13px] uppercase tracking-wider">
-                Jejak Langkahmu
+                {user?.is_alumni ? "Riwayat Pencapaian Alumni" : "Jejak Langkahmu"}
               </h3>
               <Calendar className="text-slate-400" size={15} />
             </div>
@@ -513,9 +513,15 @@ export default function StudentDashboard() {
                 <div className="text-center bg-white rounded-[1.75rem] py-12 border-2 border-dashed border-indigo-100">
                   <div className="text-5xl mb-2 float inline-block">🚀</div>
                   <p className="text-slate-400 text-xs font-semibold">
-                    Belum ada aksi hari ini.
-                    <br />
-                    Ayo buat sejarahmu!
+                    {user?.is_alumni ? (
+                      "Tidak ada rekam jejak aktivitas yang tersimpan."
+                    ) : (
+                      <>
+                        Belum ada aksi hari ini.
+                        <br />
+                        Ayo buat sejarahmu!
+                      </>
+                    )}
                   </p>
                 </div>
               )}

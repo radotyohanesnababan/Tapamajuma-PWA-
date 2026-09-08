@@ -170,6 +170,7 @@ export default function EnrollmentPromotionPage() {
   };
 
   const selectedClassName = allClasses.find((c) => c.id === selectedClassId)?.name ?? "";
+  const isGanjil = globalPreview?.period?.toLowerCase().includes("ganjil");
 
   if (loadingInit) {
     return (
@@ -201,6 +202,29 @@ export default function EnrollmentPromotionPage() {
           </div>
         </div>
       </div>
+
+      {/* Banner Transisi */}
+      {globalPreview && (
+        <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+          isGanjil 
+            ? "bg-blue-50 border-blue-200 text-blue-800" 
+            : "bg-indigo-50 border-indigo-200 text-indigo-800"
+        }`}>
+          <div className={`p-2 rounded-lg ${isGanjil ? "bg-blue-100" : "bg-indigo-100"}`}>
+            <BookOpen size={18} className={isGanjil ? "text-blue-600" : "text-indigo-600"} />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm">
+              {isGanjil ? "Persiapan Semester Genap (Rollover)" : "Persiapan Tahun Ajaran Baru (Kenaikan Kelas)"}
+            </h3>
+            <p className="text-xs opacity-80 mt-1 leading-relaxed">
+              {isGanjil 
+                ? "Siswa akan tetap berada di rombel masing-masing. Siswa kelas IX belum diluluskan." 
+                : "Terjadi kenaikan tingkat (VII ➜ VIII, VIII ➜ IX). Siswa kelas IX otomatis diluluskan."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Global Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -291,7 +315,7 @@ export default function EnrollmentPromotionPage() {
                   ) : (
                     <Zap size={14} />
                   )}
-                  Naikkan Kelas {selectedClassName}
+                  {isGanjil ? "Tetapkan Kelas Semester Genap" : `Naikkan Kelas ${selectedClassName}`}
                 </Button>
               )}
             </div>
@@ -469,13 +493,13 @@ export default function EnrollmentPromotionPage() {
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-black text-slate-900">
-              Naikkan Semua Siswa Kelas {selectedClassName}?
+              {isGanjil ? `Tetapkan Semua Siswa Kelas ${selectedClassName}?` : `Naikkan Semua Siswa Kelas ${selectedClassName}?`}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-sm text-slate-600 leading-relaxed">
               Sistem akan mengisi kelas berikutnya secara otomatis untuk semua siswa di kelas{" "}
-              <strong>{selectedClassName}</strong> berdasarkan mapping tingkat.
+              <strong>{selectedClassName}</strong> berdasarkan {isGanjil ? 'aturan rollover kelas tetap' : 'mapping tingkat'}.
             </p>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5">
               <p className="text-xs text-amber-700 font-medium leading-relaxed">
@@ -493,7 +517,7 @@ export default function EnrollmentPromotionPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl gap-2"
             >
               {promoting ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-              Ya, Naikkan Semua
+              {isGanjil ? "Ya, Tetapkan Semua" : "Ya, Naikkan Semua"}
             </Button>
           </DialogFooter>
         </DialogContent>

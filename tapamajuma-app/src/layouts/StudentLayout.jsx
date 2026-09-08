@@ -1,11 +1,13 @@
-import { Outlet, Link, useLocation } from "react-router-dom"; // Tambah useLocation
-import { Home, BookOpen, MessageCircle, LayoutGrid, CircleUser } from "lucide-react";
+import { Outlet, Link, useLocation } from "react-router-dom"; 
+import { Home, BookOpen, MessageCircle, LayoutGrid, CircleUser, GraduationCap } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import ChangelogModal from '@/components/ChangelogModal';
 
 export default function StudentLayout() {
-  const location = useLocation(); // Hook untuk tahu kita sedang di halaman mana
+  const location = useLocation(); 
+  const { user } = useAuth();
 
-  const navItems = [
+  let navItems = [
     { to: "/student", icon: <Home size={20} />, label: "Beranda" },
     { to: "/student/tantangan", icon: <BookOpen size={20} />, label: "Aksi" },
     { to: "/student/refleksi", icon: <MessageCircle size={20} />, label: "Refleksi" },
@@ -13,8 +15,18 @@ export default function StudentLayout() {
     { to: "/student/other", icon: <CircleUser size={20} />, label: "Lainnya" },
   ];
 
+  if (user?.is_alumni) {
+    navItems = navItems.filter(item => item.to !== "/student/tantangan");
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
+      {user?.is_alumni && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs font-bold text-amber-800 flex items-center justify-center gap-2">
+          <GraduationCap size={16} />
+          Status Alumni (Lulus) — Akun ini berada dalam mode baca-saja.
+        </div>
+      )}
       <main className="flex-1 pb-24 p-4 max-w-md mx-auto w-full">
         <Outlet />
       </main>
