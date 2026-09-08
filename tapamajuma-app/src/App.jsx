@@ -98,6 +98,10 @@ const DeveloperLayout = lazy(() => import("./layouts/DeveloperLayout"));
 const DeveloperDashboard = lazy(() => import("./pages/developer/Dashboard"));
 const OnboardSchool = lazy(() => import("./pages/developer/OnboardSchool"));
 const DeveloperLogin = lazy(() => import("./pages/developer/Login"));
+const SchoolManagement = lazy(() => import("./pages/developer/SchoolManagement"));
+const DistrictReport = lazy(() => import("./pages/developer/DistrictReport"));
+const GlobalAnnouncements = lazy(() => import("./pages/developer/GlobalAnnouncements"));
+const SystemMaintenance = lazy(() => import("./pages/developer/SystemMaintenance"));
 
 // -- Fallback --
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -267,6 +271,10 @@ function App() {
                 >
                   <Route index element={<DeveloperDashboard />} />
                   <Route path="onboard-school" element={<OnboardSchool />} />
+                  <Route path="schools" element={<SchoolManagement />} />
+                  <Route path="district-report" element={<DistrictReport />} />
+                  <Route path="announcements" element={<GlobalAnnouncements />} />
+                  <Route path="maintenance" element={<SystemMaintenance />} />
                 </Route>
               </Route>
 

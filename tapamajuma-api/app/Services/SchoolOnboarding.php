@@ -53,9 +53,7 @@ class SchoolOnboarding
         ]);
 
         DB::setDefaultConnection('school_temp');
-        (new \Database\Seeders\DatabaseSeeder())->run();
-
-        // Step 4b: Buat academic period aktif
+        // Step 4b: Buat academic period aktif SEBELUM seeder berjalan
         AcademicPeriod::create([
             'name'          => $data['academic_period_name'] ?? 'Semester Ganjil ' . now()->year . '/' . (now()->year + 1),
             'semester'      => $data['semester'] ?? 'ganjil',
@@ -63,6 +61,8 @@ class SchoolOnboarding
             'is_active'     => true,
             'opened_at'     => now(),
         ]);
+
+        (new \Database\Seeders\DatabaseSeeder())->run();
 
         DB::setDefaultConnection('mysql'); // kembalikan ke default
 

@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { LayoutDashboard, School, LogOut, Terminal } from "lucide-react";
+import { LayoutDashboard, School, LogOut, Terminal, FileText, Megaphone, ServerCog } from "lucide-react";
 import { useDeveloperAuth } from "@/context/DeveloperAuthContext";
 import {
   AlertDialog,
@@ -17,8 +17,12 @@ export default function DeveloperLayout() {
   const { developer, logout } = useDeveloperAuth();
 
   const navItems = [
-    { label: "Dashboard", icon: <LayoutDashboard size={18} />, to: "/developer" },
-    { label: "Onboard Sekolah", icon: <School size={18} />, to: "/developer/onboard-school" },
+    { label: "Dashboard Eksekutif", icon: <LayoutDashboard size={18} />, to: "/developer" },
+    { label: "Manajemen Sekolah",   icon: <School size={18} />,          to: "/developer/schools" },
+    { label: "Laporan Daerah",      icon: <FileText size={18} />,        to: "/developer/district-report" },
+    { label: "Broadcast Pengumuman",icon: <Megaphone size={18} />,       to: "/developer/announcements" },
+    { label: "Pemeliharaan Sistem", icon: <ServerCog size={18} />,       to: "/developer/maintenance" },
+    { label: "Onboard Sekolah",     icon: <School size={18} />,          to: "/developer/onboard-school" },
   ];
 
   return (
@@ -29,7 +33,7 @@ export default function DeveloperLayout() {
             <Terminal size={16} />
           </div>
           <div>
-            <h2 className="text-sm font-black text-slate-200">Developer</h2>
+            <h2 className="text-sm font-black text-slate-200">Portal Stakeholder</h2>
             <p className="text-[10px] text-slate-500">TAPAMAJUMA Platform</p>
           </div>
         </div>
@@ -67,7 +71,7 @@ export default function DeveloperLayout() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Apakah Anda yakin ingin keluar dari konsol developer?
+                  Apakah Anda yakin ingin keluar dari portal stakeholder?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -80,7 +84,7 @@ export default function DeveloperLayout() {
           </AlertDialog>
         </div>
       </aside>
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-auto">
         <Outlet />
       </main>
     </div>

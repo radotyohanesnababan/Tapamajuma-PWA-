@@ -116,6 +116,21 @@ public function completeProfile(Request $request)
                 'used_by' => $user->id
             ]);
         }
+
+        // C. Buat enrollment ke periode aktif (hanya untuk student yang pilih kelas)
+        if ($request->role === 'student' && $request->class_id) {
+            $activePeriod = \App\Models\AcademicPeriod::current();
+
+            if ($activePeriod) {
+                \App\Models\StudentEnrollment::create([
+                    'user_id'            => $user->id,
+                    'class_name_id'      => $request->class_id,
+                    'academic_period_id' => $activePeriod->id,
+                    'is_active'          => true,
+                    'enrolled_at'        => now(),
+                ]);
+            }
+        }
     });
 
     return response()->json([

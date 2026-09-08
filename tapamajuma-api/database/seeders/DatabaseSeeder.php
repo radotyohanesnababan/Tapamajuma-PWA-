@@ -37,62 +37,138 @@ class DatabaseSeeder extends Seeder
         // ==========================================
         // 2. SEED DAFTAR KELAS (CLASS_NAMES)
         // ==========================================
-        // Logic: VII-1 s.d VII-7, VIII-1 s.d VIII-7, IX-1 s.d IX-6
+        // Format: VII-A s.d VII-G, VIII-A s.d VIII-G, IX-A s.d IX-F
         
         $classList = [];
 
-        // Buat VII-1 sampai VII-7
-        for ($i = 1; $i <= 7; $i++) {
-            $classList[] = "VII-$i";
+        // Buat VII-A sampai VII-G
+        $alphabet7 = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        foreach ($alphabet7 as $letter) {
+            $classList[] = "VII-$letter";
         }
-        // Buat VIII-1 sampai VIII-7
-        for ($i = 1; $i <= 7; $i++) {
-            $classList[] = "VIII-$i";
+        
+        // Buat VIII-A sampai VIII-G
+        $alphabet8 = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        foreach ($alphabet8 as $letter) {
+            $classList[] = "VIII-$letter";
         }
-        // Buat IX-1 sampai IX-6
-        for ($i = 1; $i <= 6; $i++) {
-            $classList[] = "IX-$i";
+        
+        // Buat IX-A sampai IX-F
+        $alphabet9 = ['A', 'B', 'C', 'D', 'E', 'F'];
+        foreach ($alphabet9 as $letter) {
+            $classList[] = "IX-$letter";
         }
 
+        $classIds = [];
         foreach ($classList as $className) {
-            ClassName::firstOrCreate(
+            $cls = ClassName::firstOrCreate(
                 ['name' => $className]
             );
+            $classIds[] = $cls->id;
         }
 
         // ==========================================
-        // 3. SEED USERS (ADMIN & SISWA)
+        // 3. SEED USERS (ADMIN, GURU, & SISWA)
         // ==========================================
         
         // Buat Superadmin
-        User::firstOrCreate(
+        $admin = User::firstOrCreate(
             ['email' => 'admin@tapamajuma.id'],
             [
                 'name' => 'Superadmin',
                 'password' => Hash::make('password'),
-                'role' => 'superadmin', // Ganti 'teacher' jadi 'superadmin' biar sesuai
+                'role' => 'superadmin',
                 'nis' => null,
                 'level' => 'admin',
                 'class_id' => null,
-                // Admin bisa akses semua kelas (Logic sementara ambil ID 1-3)
-                'accessible_classes' => [1, 2, 3], 
+                'accessible_classes' => $classIds, 
                 'email_verified_at' => now(),
             ]
         );
 
-        // Buat Siswa Percobaan (Masuk ke Kelas ID 1 yaitu VII-1)
-        User::firstOrCreate(
+        // Buat Guru
+        $teacher = User::firstOrCreate(
+            ['email' => 'guru@tapamajuma.id'],
+            [
+                'name' => 'Guru Percobaan',
+                'password' => Hash::make('password'),
+                'role' => 'teacher',
+                'nis' => null,
+                'level' => 'guru',
+                'class_id' => null,
+                'accessible_classes' => $classIds,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Buat Siswa Percobaan (Masuk ke Kelas ID 1 yaitu VII-A)
+        $student = User::firstOrCreate(
             ['email' => 'siswa@tapamajuma.id'],
             [
                 'name' => 'Siswa Percobaan',
                 'password' => Hash::make('password'),
-                'role' => 'student', // Pastikan sesuai enum di database
+                'role' => 'student',
                 'nis' => '12345678',
                 'level' => '1',
-                'class_id' => 1, // Pasti aman karena ClassName ID 1 sudah dibuat di atas
+                'class_id' => 1,
                 'accessible_classes' => [1],
                 'email_verified_at' => now(),
             ]
         );
+
+        $activePeriod = \App\Models\AcademicPeriod::current();
+        if (!$activePeriod) {
+            $activePeriod = \App\Models\AcademicPeriod::create([
+                'name'          => 'Semester Ganjil Dummy',
+                'semester'      => 'ganjil',
+                'academic_year' => now()->year . '/' . (now()->year + 1),
+                'is_active'     => true,
+                'opened_at'     => now(),
+            ]);
+        }
+
+        if ($activePeriod) {
+            \App\Models\StudentEnrollment::firstOrCreate([
+                'user_id'            => $student->id,
+                'class_name_id'      => $student->class_id,
+                'academic_period_id' => $activePeriod->id,
+            ], [
+                'is_active'          => true,
+                'enrolled_at'        => now(),
+            ]);
+        }
+
+        // ==========================================
+        // 4. SEED BANK SOAL (QUESTION BANK)
+        // ==========================================
+        
+        $subjectMat = Subject::where('name', 'Matematika')->first();
+        $classViiA = ClassName::where('name', 'VII-A')->first();
+
+        if ($subjectMat && $classViiA && $teacher) {
+            \App\Models\QuestionBank::firstOrCreate(
+                ['question_text' => 'Berapakah 5 + 5?'],
+                [
+                    'creator_id' => $teacher->id,
+                    'subject_id' => $subjectMat->id,
+                    'class_id' => $classViiA->id,
+                    'options' => ['8', '9', '10', '11'],
+                    'correct_key' => '10',
+                    'type' => 'tka'
+                ]
+            );
+            
+            \App\Models\QuestionBank::firstOrCreate(
+                ['question_text' => 'Berapakah 10 * 2?'],
+                [
+                    'creator_id' => $teacher->id,
+                    'subject_id' => $subjectMat->id,
+                    'class_id' => $classViiA->id,
+                    'options' => ['20', '30', '12', '22'],
+                    'correct_key' => '20',
+                    'type' => 'tka'
+                ]
+            );
+        }
     }
 }
