@@ -99,6 +99,9 @@ const DeveloperDashboard = lazy(() => import("./pages/developer/Dashboard"));
 const OnboardSchool = lazy(() => import("./pages/developer/OnboardSchool"));
 const DeveloperLogin = lazy(() => import("./pages/developer/Login"));
 
+// -- Fallback --
+const NotFound = lazy(() => import("./pages/NotFound"));
+
 // ==========================================
 // KOMPONEN LOADING
 // ==========================================
@@ -267,6 +270,8 @@ function App() {
                 </Route>
               </Route>
 
+              {/* FALLBACK 404 NOT FOUND */}
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
         </Suspense>
