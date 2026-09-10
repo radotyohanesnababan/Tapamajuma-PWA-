@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { IconCertificate } from "@tabler/icons-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationModal from "@/components/notifications/NotificationModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,7 +79,9 @@ const menuItems = [
 export default function SuperadminLayout() {
   const location = useLocation();
   const { user } = useAuth();
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState(null);
+  const { notifications, unreadCount, isLoading: isNotifLoading, fetchNotifications, markAllAsRead } = useNotifications();
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -226,9 +230,19 @@ export default function SuperadminLayout() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsNotifOpen(true);
+                markAllAsRead();
+              }}
+              className="rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative"
+            >
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+              )}
             </Button>
             <div className="h-9 w-9 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs overflow-hidden">
               {user?.avatar ? (
@@ -247,6 +261,14 @@ export default function SuperadminLayout() {
         <main className="p-8">
           <Outlet />
         </main>
+
+        <NotificationModal
+          isOpen={isNotifOpen}
+          onClose={() => setIsNotifOpen(false)}
+          notifications={notifications}
+          isLoading={isNotifLoading}
+          onRefresh={fetchNotifications}
+        />
       </div>
     </div>
   );

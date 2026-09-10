@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeveloperAuth } from "@/context/DeveloperAuthContext";
 import { Terminal, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DeveloperLogin() {
-  const { login } = useDeveloperAuth();
+  const { login, developer, isLoading } = useDeveloperAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && developer) {
+      navigate("/developer", { replace: true });
+    }
+  }, [developer, isLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

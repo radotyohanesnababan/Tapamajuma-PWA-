@@ -26,9 +26,11 @@ class GlobalAnnouncementController extends Controller
             'expires_at'  => 'nullable|date|after:now',
         ]);
 
+        $developer = $request->attributes->get('developer') ?? $request->user();
+
         $announcement = GlobalAnnouncement::create([
             ...$data,
-            'created_by' => $request->user()->id,
+            'created_by' => $developer?->id,
             'is_active'  => true,
         ]);
 

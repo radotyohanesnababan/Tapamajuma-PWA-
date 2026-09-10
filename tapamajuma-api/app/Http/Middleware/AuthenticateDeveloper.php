@@ -28,8 +28,9 @@ class AuthenticateDeveloper
 
         $token->update(['last_used_at' => now()]);
 
-        // Attach developer user ke request, dipakai controller lewat $request->developer
+        // Attach developer user ke request, dipakai controller lewat $request->attributes->get('developer') atau $request->user()
         $request->attributes->set('developer', $token->developerUser);
+        $request->setUserResolver(fn () => $token->developerUser);
 
         return $next($request);
     }

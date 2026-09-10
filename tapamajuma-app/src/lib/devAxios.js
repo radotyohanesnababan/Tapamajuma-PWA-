@@ -25,10 +25,12 @@ devApi.interceptors.response.use(
     if (!error.response) {
       toast.error("Koneksi terputus atau server tidak merespon.");
     }
-    if (status === 401 && window.location.pathname !== "/developer/login") {
+    if (status === 401) {
       localStorage.removeItem("dev_token");
       localStorage.removeItem("dev_data");
-      window.location.href = "/developer/login";
+      if (window.location.pathname !== "/developer/login") {
+        window.location.href = "/developer/login";
+      }
     }
     return Promise.reject(error);
   }

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
@@ -12,8 +11,11 @@ import {
 import {
   Zap, Target, Star, Calendar, Flame, Smile,
   Trophy, Megaphone, Sparkles, Rocket, Medal, ChevronRight,
-  ShieldAlert, KeySquare, Lock, ShieldCheckIcon, Loader2
+  ShieldAlert, KeySquare, Lock, ShieldCheckIcon, Loader2, Bell
 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationModal from "@/components/notifications/NotificationModal";
+import TeacherFeedbackModal from "@/components/notifications/TeacherFeedbackModal";
 
 export default function StudentDashboard() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -23,7 +25,9 @@ export default function StudentDashboard() {
   const [activities, setActivities] = useState([]);
   const [totalActivities, setTotalActivities] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const [announcementText, setAnnouncementText] = useState("");
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [selectedFeedbackItem, setSelectedFeedbackItem] = useState(null);
+  const { notifications, unreadCount, isLoading: isNotifLoading, fetchNotifications, markAllAsRead } = useNotifications();
   const [isNisValid, setIsNisValid] = useState(true);
   const [showNisModal, setShowNisModal] = useState(false);
   const [nisInput, setNisInput] = useState("");
@@ -50,11 +54,7 @@ export default function StudentDashboard() {
       const response = await api.get("/api/dashboard");
       const { is_nis_valid, needs_password, announcements } = response.data;
 
-      if (announcements && announcements.length > 0) {
-        setAnnouncementText(announcements.map((a) => a.content).join("   •   "));
-      } else {
-        setAnnouncementText("");
-      }
+
 
       setNeedsPassword(needs_password);
       setIsNisValid(is_nis_valid);
@@ -175,7 +175,7 @@ export default function StudentDashboard() {
       `}</style>
 
       {/* ═══ ANNOUNCEMENT MODAL ═══ */}
-      {showAnnouncementModal && (
+      {/* {showAnnouncementModal && (
         <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="bg-white w-full sm:w-[90vw] sm:max-w-3xl h-[92vh] sm:h-[90vh] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-400">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
@@ -204,7 +204,7 @@ export default function StudentDashboard() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* ═══ NIS / PASSWORD MODAL ═══ */}
       {showNisModal && (
@@ -304,21 +304,6 @@ export default function StudentDashboard() {
       <div className="min-h-screen bg-[#f6f5fb] pb-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="max-w-md mx-auto p-4 space-y-5">
 
-          {/* ANNOUNCEMENT BAR */}
-          {announcementText && (
-            <div className="bg-white rounded-2xl h-11 flex items-center overflow-hidden relative shadow-[0_2px_10px_rgba(99,102,241,0.08)] border border-indigo-50">
-              <div className="h-full bg-gradient-to-b from-indigo-500 to-violet-500 text-white px-3.5 flex items-center gap-1.5 z-10 rounded-r-2xl flex-shrink-0">
-                <Megaphone size={13} />
-                <span className="text-[10px] font-extrabold uppercase tracking-wide">Info</span>
-              </div>
-              <div className="flex-1 overflow-hidden px-3">
-                <p className="whitespace-nowrap text-[11px] font-semibold text-indigo-700">
-                  {announcementText}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* GREETING */}
           <div className="flex justify-between items-center">
             <div className="space-y-1.5">
@@ -335,11 +320,30 @@ export default function StudentDashboard() {
                 {level.label.toUpperCase()} · LVL {user?.level || 1}
               </div>
             </div>
-            <div className="relative bg-white p-2.5 rounded-2xl shadow-[0_2px_10px_rgba(251,113,133,0.15)] border border-rose-50">
-              <Flame className="text-orange-500 float" size={24} fill="currentColor" fillOpacity={0.15} />
-              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#f6f5fb]">
-                {totalActivities > 99 ? "99+" : totalActivities}
-              </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNotifOpen(true);
+                  markAllAsRead();
+                }}
+                className="relative bg-white p-2.5 rounded-2xl shadow-[0_2px_10px_rgba(99,102,241,0.12)] border border-indigo-50 text-slate-600 hover:text-indigo-600 active:scale-95 transition"
+                title="Pusat Notifikasi"
+              >
+                <Bell size={22} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border-2 border-[#f6f5fb] animate-pulse">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <div className="relative bg-white p-2.5 rounded-2xl shadow-[0_2px_10px_rgba(251,113,133,0.15)] border border-rose-50">
+                <Flame className="text-orange-500 float" size={24} fill="currentColor" fillOpacity={0.15} />
+                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#f6f5fb]">
+                  {totalActivities > 99 ? "99+" : totalActivities}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -530,6 +534,26 @@ export default function StudentDashboard() {
 
         </div>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={isNotifOpen}
+        onClose={() => setIsNotifOpen(false)}
+        notifications={notifications}
+        isLoading={isNotifLoading}
+        onRefresh={fetchNotifications}
+        onSelectFeedback={(item) => {
+          setIsNotifOpen(false);
+          setSelectedFeedbackItem(item);
+        }}
+      />
+
+      {/* Modal Balasan Refleksi Guru */}
+      <TeacherFeedbackModal
+        item={selectedFeedbackItem}
+        isOpen={!!selectedFeedbackItem}
+        onClose={() => setSelectedFeedbackItem(null)}
+      />
     </>
   );
 }

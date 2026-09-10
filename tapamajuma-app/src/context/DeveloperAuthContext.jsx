@@ -11,15 +11,28 @@ export function DeveloperAuthProvider({ children }) {
     const token = localStorage.getItem("dev_token");
     const cached = localStorage.getItem("dev_data");
 
-    if (token && cached) {
-      setDeveloper(JSON.parse(cached));
-      // opsional: validasi ulang ke /me di background
+    if (token) {
+      if (cached) {
+        try {
+          setDeveloper(JSON.parse(cached));
+        } catch {
+          // Abaikan jika cache rusak
+        }
+      }
+
+      // Validasi ulang ke /me di backend
       devApi.get("/api/developer/me")
         .then((res) => {
           setDeveloper(res.data);
           localStorage.setItem("dev_data", JSON.stringify(res.data));
         })
-        .catch(() => {}) // interceptor sudah handle redirect kalau 401
+        .catch((err) => {
+          if (err.response?.status === 401) {
+            localStorage.removeItem("dev_token");
+            localStorage.removeItem("dev_data");
+            setDeveloper(null);
+          }
+        })
         .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);

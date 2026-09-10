@@ -10,6 +10,7 @@ import { HelmetProvider } from 'react-helmet-async'; // Ditambahkan untuk SEO
 // Layout dan AuthGuard harus dimuat langsung agar kerangka dasar web tidak telat muncul.
 import AuthGuard from "./components/AuthGuard";
 import DeveloperAuthGuard from "./components/DeveloperAuthGuard";
+import DeveloperGuestGuard from "./components/DeveloperGuestGuard";
 import DeveloperDomainGuard from "./components/DeveloperDomainGuard";
 import { DeveloperAuthProvider } from "./context/DeveloperAuthContext";
 import StudentLayout from "./layouts/StudentLayout";
@@ -260,7 +261,9 @@ function App() {
               {/* Prefix /developer dipakai konsisten di semua environment (lokal & prod). */}
               {/* DeveloperDomainGuard membatasi akses grup ini hanya dari dev.tapamajuma.my.id atau localhost. */}
               <Route element={<DeveloperDomainGuard><DeveloperAuthProvider><Outlet /></DeveloperAuthProvider></DeveloperDomainGuard>}>
-                <Route path="/developer/login" element={<DeveloperLogin />} />
+                <Route element={<DeveloperGuestGuard />}>
+                  <Route path="/developer/login" element={<DeveloperLogin />} />
+                </Route>
                 <Route 
                   path="/developer" 
                   element={

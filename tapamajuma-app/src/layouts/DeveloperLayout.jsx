@@ -26,8 +26,8 @@ export default function DeveloperLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+    <div className="flex min-h-screen bg-slate-950 print:bg-white print:block">
+      <aside className="fixed left-0 top-0 bottom-0 w-64 h-screen z-40 bg-slate-900 border-r border-slate-800 flex flex-col print:hidden">
         <div className="p-6 flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-violet-500/10 text-violet-400">
             <Terminal size={16} />
@@ -84,7 +84,7 @@ export default function DeveloperLayout() {
           </AlertDialog>
         </div>
       </aside>
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 ml-64 p-8 overflow-auto min-h-screen print:ml-0 print:p-0 print:overflow-visible print:min-h-0">
         <Outlet />
       </main>
     </div>

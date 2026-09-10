@@ -7,10 +7,12 @@ import {
   AlertTriangle, CheckCircle2, TrendingUp, TrendingDown,
   Clock, Eye, MessageSquare, ChevronDown, CircleDot,
   ArrowRight, Activity, BarChart3, Send, Download,
-  CalendarDays, MoreHorizontal, Star, AlertCircle
+  CalendarDays, MoreHorizontal, Star, AlertCircle, Bell
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationModal from "@/components/notifications/NotificationModal";
 
 // ── STATUS ENGINE ──
 const STATUS_MAP = {
@@ -50,6 +52,8 @@ export default function TeacherDashboard() {
   const [selectedClass, setSelectedClass] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const { notifications, unreadCount, isLoading: isNotifLoading, fetchNotifications, markAllAsRead } = useNotifications();
   const itemsPerPage = 8; // more dense → more rows
 
   useEffect(() => {
@@ -136,6 +140,20 @@ export default function TeacherDashboard() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsNotifOpen(true);
+                markAllAsRead();
+              }}
+              className="relative p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-sm transition"
+              title="Notifikasi & Pengumuman"
+            >
+              <Bell size={16} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full animate-pulse border-2 border-white" />
+              )}
+            </button>
+
             {/* Live indicator */}
             <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg">
               <span className="relative flex h-1.5 w-1.5">
@@ -392,6 +410,14 @@ export default function TeacherDashboard() {
           </div>
         )}
       </div>
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={isNotifOpen}
+        onClose={() => setIsNotifOpen(false)}
+        notifications={notifications}
+        isLoading={isNotifLoading}
+        onRefresh={fetchNotifications}
+      />
     </div>
   );
 }

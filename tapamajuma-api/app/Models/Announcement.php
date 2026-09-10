@@ -6,5 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Announcement extends Model
 {
-    protected $fillable = ['content', 'is_active', 'expires_at'];
+    protected $fillable = ['title', 'content', 'target_role', 'is_active', 'expires_at'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 }

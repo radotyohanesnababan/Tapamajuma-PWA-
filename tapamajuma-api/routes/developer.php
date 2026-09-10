@@ -33,6 +33,8 @@ Route::prefix('developer')->group(function () {
 
         // District Reports
         Route::get('/reports/district-summary', [DistrictReportController::class, 'summary']);
+        Route::post('/reports/district-ai-summary', [DistrictReportController::class, 'aiExecutiveSummary']);
+        Route::get('/reports/district-school/{id}', [DistrictReportController::class, 'schoolDetail']);
 
         // Global Announcements
         Route::apiResource('/announcements', GlobalAnnouncementController::class);

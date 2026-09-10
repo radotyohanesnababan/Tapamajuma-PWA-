@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\LiteracyCardController;
 use App\Http\Controllers\Api\NisController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicDataController;
 use App\Http\Controllers\Api\ReflectionController;
@@ -36,8 +37,6 @@ use App\Http\Controllers\Teacher\MediaBankController;
 use App\Http\Controllers\Teacher\PrintSessionController as TeacherPrintSessionController;
 use App\Http\Controllers\Teacher\QuestionBankController;
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\Auth\DeveloperAuthController;
-use App\Http\Controllers\Developer\SchoolOnboardingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -52,16 +51,6 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 Route::get('/changelog/latest', [ChangelogController::class, 'latest']);
 Route::get('/schools/public-list', [\App\Http\Controllers\Api\SchoolController::class, 'publicList']);
 
-/*
-|--------------------------------------------------------------------------
-| Developer Routes — Tanpa Tenant
-|--------------------------------------------------------------------------
-*/
-Route::prefix('developer')->middleware('auth.developer')->group(function () {
-    Route::get('/me', [DeveloperAuthController::class, 'me']);
-    Route::get('/schools', [SchoolOnboardingController::class, 'index']);
-    Route::post('/onboard-school', [SchoolOnboardingController::class, 'store']);
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -160,6 +149,7 @@ Route::middleware('tenant')->group(function () {
         // Auth & User
         Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
         Route::get('/user', fn(Request $request) => $request->user());
+        Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/auth/complete-profile', [GoogleController::class, 'completeProfile']);
         Route::post('/claim-nis', [NisController::class, 'claimNis']);
 
@@ -335,6 +325,7 @@ Route::middleware('tenant')->group(function () {
             Route::prefix('announcements')->group(function () {
                 Route::get('/', [AnnouncementController::class, 'index']);
                 Route::post('/', [AnnouncementController::class, 'store']);
+                Route::post('/forward-global', [AnnouncementController::class, 'forwardGlobal']);
                 Route::put('/{id}', [AnnouncementController::class, 'update']);
                 Route::delete('/{id}', [AnnouncementController::class, 'destroy']);
             });
