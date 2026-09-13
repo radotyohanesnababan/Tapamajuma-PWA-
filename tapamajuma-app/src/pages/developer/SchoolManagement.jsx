@@ -17,9 +17,10 @@ export default function SchoolManagement() {
   const [resetModal, setResetModal]   = useState(null); // school object
   const [resetResult, setResetResult] = useState(null); // { password, school_name }
   const [editForm, setEditForm]       = useState({});
-  const [saving, setSaving]           = useState(false);
+  const [savingEdit, setSavingEdit]     = useState(false);
+  const [savingReset, setSavingReset]   = useState(false);
   const [impersonating, setImpersonating] = useState(null);
-  const [showPwd, setShowPwd]         = useState(false);
+  const [showPwd, setShowPwd]           = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -80,7 +81,7 @@ export default function SchoolManagement() {
   };
 
   const handleSaveEdit = async () => {
-    setSaving(true);
+    setSavingEdit(true);
     try {
       const res = await devApi.put(`/api/developer/schools/${editModal.id}`, editForm);
       setSchools((prev) => prev.map((s) => s.id === editModal.id ? { ...s, ...res.data.data } : s));
@@ -89,21 +90,22 @@ export default function SchoolManagement() {
     } catch (e) {
       toast.error("Gagal menyimpan: " + (e.response?.data?.message || e.message));
     } finally {
-      setSaving(false);
+      setSavingEdit(false);
     }
   };
 
   const handleResetPassword = async () => {
-    setSaving(true);
+    setSavingReset(true);
     try {
       const res = await devApi.post(`/api/developer/schools/${resetModal.id}/reset-admin`);
+      setShowPwd(false); // ✅ Selalu sembunyikan password baru saat pertama ditampilkan
       setResetResult({ password: res.data.new_password, school_name: resetModal.name });
       setResetModal(null);
       toast.success("Password admin berhasil direset");
     } catch (e) {
       toast.error("Gagal reset password: " + (e.response?.data?.message || e.message));
     } finally {
-      setSaving(false);
+      setSavingReset(false);
     }
   };
 
@@ -191,7 +193,10 @@ export default function SchoolManagement() {
                         <Edit2 size={15} />
                       </button>
                       <button
-                        onClick={() => setResetModal(school)}
+                        onClick={() => {
+                          setResetResult(null); // ✅ Bersihkan result lama sebelum reset baru
+                          setResetModal(school);
+                        }}
                         title="Reset Password Admin"
                         className="p-2 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
                       >
@@ -235,8 +240,8 @@ export default function SchoolManagement() {
             </div>
             <div className="flex gap-2 pt-2">
               <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800 text-sm font-semibold">Batal</button>
-              <button onClick={handleSaveEdit} disabled={saving} className="flex-1 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold disabled:opacity-50">
-                {saving ? "Menyimpan…" : "Simpan"}
+              <button onClick={handleSaveEdit} disabled={savingEdit} className="flex-1 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold disabled:opacity-50">
+                {savingEdit ? "Menyimpan…" : "Simpan"}
               </button>
             </div>
           </div>
@@ -245,7 +250,12 @@ export default function SchoolManagement() {
 
       {/* Reset Password Confirm Modal */}
       {resetModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setResetModal(null); }}
+          onKeyDown={(e) => { if (e.key === "Escape") setResetModal(null); }}
+          tabIndex={-1}
+        >
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
               <AlertCircle size={22} className="text-amber-400 shrink-0" />
@@ -256,8 +266,8 @@ export default function SchoolManagement() {
             </p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setResetModal(null)} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-400 text-sm font-semibold">Batal</button>
-              <button onClick={handleResetPassword} disabled={saving} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold disabled:opacity-50">
-                {saving ? "Mereset…" : "Ya, Reset"}
+              <button onClick={handleResetPassword} disabled={savingReset} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold disabled:opacity-50">
+                {savingReset ? "Mereset…" : "Ya, Reset"}
               </button>
             </div>
           </div>

@@ -55,6 +55,8 @@ class MaintenanceController extends Controller
                     'error'  => $e->getMessage(),
                     'db_name'=> $school->db_name,
                 ];
+            } finally {
+                DB::purge($connName);
             }
         }
 
@@ -77,22 +79,26 @@ class MaintenanceController extends Controller
         $schools = School::where('is_active', true)->get();
         $results = [];
 
+        // Naikkan time limit untuk operasi batch (bisa lama jika banyak tenant)
+        set_time_limit(300);
+
         foreach ($schools as $school) {
             $connName = $this->getTenantConnection($school);
             try {
+                // Tangkap output per-sekolah dengan buffer terpisah agar tidak cross-contaminate
+                $outputBuffer = new \Symfony\Component\Console\Output\BufferedOutput();
+
                 $exitCode = Artisan::call('migrate', [
                     '--database' => $connName,
-                    '--path'     => 'database/migrations/tenant',
+                    '--path'     => database_path('migrations/tenant'), // Absolut, aman di semua env
                     '--force'    => true,
-                ]);
-
-                $output = Artisan::output();
+                ], $outputBuffer);
 
                 $results[] = [
                     'school'    => $school->name,
                     'slug'      => $school->slug,
                     'status'    => $exitCode === 0 ? 'success' : 'failed',
-                    'output'    => trim($output),
+                    'output'    => trim($outputBuffer->fetch()),
                 ];
             } catch (\Exception $e) {
                 Log::error("Migrate tenant error [{$school->slug}]: " . $e->getMessage());
@@ -102,6 +108,9 @@ class MaintenanceController extends Controller
                     'status' => 'error',
                     'error'  => $e->getMessage(),
                 ];
+            } finally {
+                // Selalu bersihkan koneksi setelah dipakai agar tidak menumpuk di pool
+                DB::purge($connName);
             }
         }
 

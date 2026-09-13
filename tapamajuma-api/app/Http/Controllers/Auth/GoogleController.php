@@ -28,9 +28,9 @@ class GoogleController extends Controller
     // 2. Tangani balasan dari Google
     public function handleGoogleCallback()
 {
+        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.smpn1siborongborong.sch.id');
     try {
         $googleUser = Socialite::driver('google')->stateless()->user();
-        $baseUrl = env('FRONTEND_URL', 'https://tapamajuma.smpn1siborongborong.sch.id'); // Ganti dengan URL frontend Anda
         
         // 1. Cari user berdasarkan email
         $user = User::where('email', $googleUser->getEmail())->first();
