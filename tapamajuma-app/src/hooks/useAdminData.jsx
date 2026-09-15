@@ -118,7 +118,11 @@ export function useAdminData() {
       }
       return true; // Return true jika sukses untuk menutup modal
     } catch (error) {
-      const msg = error.response?.data?.message || "Gagal menyimpan data.";
+      let msg = error.response?.data?.message || "Gagal menyimpan data.";
+      if (error.response?.data?.errors) {
+        const firstKey = Object.keys(error.response.data.errors)[0];
+        msg = error.response.data.errors[firstKey][0] || msg;
+      }
       toast.error("Gagal", { description: msg });
       return false;
     }

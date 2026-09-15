@@ -36,16 +36,14 @@ class ProfileController extends Controller
     $request->validate([
         'name' => $nameRules,
         'email' => $emailRules,
-        'nis' => ['nullable', 'string', 'max:20'],
         'phone_number' => ['nullable', 'string', 'max:20'],
         'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:4086',
         'password' => ['nullable', 'confirmed', 'min:8'],
     ]);
 
-    // Proses Update Data (Pakai konsep ?? agar tidak null)
+    // Proses Update Data (NIS tidak dapat diubah oleh siswa secara mandiri)
     $user->name = $request->name ?? $user->name;
     $user->email = $request->email ?? $user->email;
-    $user->nis = $request->nis ?? $user->nis;
     $user->phone_number = $request->phone_number ?? $user->phone_number;
 
     if ($request->hasFile('avatar')) {

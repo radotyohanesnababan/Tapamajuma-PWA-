@@ -215,13 +215,15 @@ const handleSave = async (e) => {
         <div className="relative">
             <IdCard className="absolute left-3 top-3 text-slate-400" size={18} />
             <Input 
-                value={formData.nis}
-                onChange={(e) => setFormData({...formData, nis: e.target.value})}
-                className="pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                placeholder="Contoh: 0012345678"
-                required // Tambahkan required di sini karena ini khusus siswa
+                value={formData.nis || ''}
+                disabled
+                className="pl-10 bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none"
+                placeholder="Belum ada NISN"
             />
         </div>
+        <p className="text-xs text-amber-600 font-medium">
+            *Jika ingin melakukan perubahan NISN, silakan hubungi admin sekolah.
+        </p>
         <Label>Nomor HP Orangtua</Label>
         <div className="relative">
             <User className="absolute left-3 top-3 text-slate-400" size={18} />
