@@ -24,8 +24,8 @@ export default function Register() {
     class_id: "" 
   });
   const handleGoogleLogin = () => {
-  // Langsung arahkan ke API Laravel kamu di Domcloud
-  window.location.href = "https://tapamajuma-api.my.id/api/auth/google/redirect";
+  const apiUrl = import.meta.env.VITE_API_URL;
+  window.location.href = `${apiUrl}/api/auth/google/redirect`;
 };
   const [isLoading, setIsLoading] = useState(false);
   const [availableClasses, setAvailableClasses] = useState([]);

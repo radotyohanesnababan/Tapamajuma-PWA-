@@ -12,7 +12,6 @@ class ResetPasswordNotification extends Notification
 
     public $token;
 
-    // Kita terima token saat class ini dipanggil
     public function __construct($token)
     {
         $this->token = $token;
@@ -25,18 +24,28 @@ class ResetPasswordNotification extends Notification
 
     public function toMail($notifiable)
     {
-        // 1. Generate URL Frontend (React)
-        // Pastikan FRONTEND_URL ada di .env (http://localhost:5173)
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        // Ambil domain frontend dari konteks tenant yang sedang aktif.
+        // Setiap sekolah punya domain sendiri (bisa subdomain tapamajuma.my.id
+        // atau custom domain seperti tapamajuma.smpn1siborongborong.sch.id).
+        // Di lokal: selalu pakai FRONTEND_URL agar bisa tes di localhost.
+        // Di production: gunakan domain sekolah dari tabel schools.
+        $school = app()->has('currentSchool') ? app('currentSchool') : null;
+
+        if (!app()->isLocal() && $school && $school->domain) {
+            // domain disimpan tanpa protokol, misal: smpn3siborongborong.tapamajuma.my.id
+            $frontendUrl = 'https://' . $school->domain;
+        } else {
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        }
+
         $url = "{$frontendUrl}/password-reset/{$this->token}?email={$notifiable->getEmailForPasswordReset()}";
 
-        // 2. Panggil View Custom tadi
         return (new MailMessage)
-            ->subject('Reset Password - TAPAMAJUMA') // Judul Email
+            ->subject('Reset Password - TAPAMAJUMA')
             ->view('emails.reset-password', [
-                'url' => $url,
-                'name' => $notifiable->name,   // Mengirim nama user
-                'email' => $notifiable->email, // Mengirim email user
+                'url'   => $url,
+                'name'  => $notifiable->name,
+                'email' => $notifiable->email,
             ]);
     }
 }

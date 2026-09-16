@@ -20,6 +20,8 @@
         "maatwebsite/excel": "^3.1",
         "minishlink/web-push": "^10.0",
         "predis/predis": "^3.4",
+        "resend/resend-laravel": "^1.4",
+        "resend/resend-php": "^1.15",
         "sentry/sentry-laravel": "^4.20",
         "simplesoftwareio/simple-qrcode": "*",
         "spatie/browsershot": "^5.4"
