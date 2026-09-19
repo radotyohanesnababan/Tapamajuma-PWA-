@@ -131,6 +131,73 @@ class EnrollmentController extends Controller
         ]);
     }
 
+    /**
+     * Pindahkan siswa ke kelas berbeda di periode yang sedang aktif (post-eksekusi).
+     * Mengupdate class_name_id pada enrollment aktif + users.class_id secara atomik.
+     * Dipakai setelah periode baru sudah diaktifkan dan enrollment sudah berjalan.
+     */
+    public function transferClass(Request $request, $enrollmentId)
+    {
+        $request->validate([
+            'class_name_id' => 'required|exists:class_names,id',
+        ]);
+
+        $enrollment = StudentEnrollment::where('id', $enrollmentId)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $currentPeriod = AcademicPeriod::current();
+
+        // Guard: hanya untuk enrollment di periode aktif
+        if (!$currentPeriod || $enrollment->academic_period_id !== $currentPeriod->id) {
+            return response()->json([
+                'message' => 'Transfer kelas hanya bisa dilakukan pada enrollment periode aktif.',
+            ], 422);
+        }
+
+        // Guard: tidak perlu transfer kalau kelas sama
+        if ($enrollment->class_name_id === (int) $request->class_name_id) {
+            return response()->json([
+                'message' => 'Siswa sudah berada di kelas tersebut.',
+            ], 422);
+        }
+
+        $targetClass = ClassName::findOrFail($request->class_name_id);
+
+        // Guard: Validasi hanya boleh transfer ke kelas pada tingkat yang sama (misal VII ke VII, VIII ke VIII)
+        $fromParsed = $this->parseClassComponents($enrollment->className->name);
+        $toParsed   = $this->parseClassComponents($targetClass->name);
+
+        if ($fromParsed && $toParsed && $fromParsed['grade_num'] !== $toParsed['grade_num']) {
+            return response()->json([
+                'message' => 'Transfer kelas hanya diperbolehkan ke rombel pada tingkat yang sama.',
+            ], 422);
+        }
+
+        $fromClass = $enrollment->className->name;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($enrollment, $request) {
+            $enrollment->update([
+                'class_name_id' => $request->class_name_id,
+            ]);
+
+            User::where('id', $enrollment->user_id)
+                ->update(['class_id' => $request->class_name_id]);
+        });
+
+        $enrollment->load(['user:id,name,nis', 'className:id,name']);
+        $toClass = $enrollment->className->name;
+
+        return response()->json([
+            'message'       => "Siswa {$enrollment->user->name} dipindahkan dari {$fromClass} ke {$toClass}.",
+            'enrollment_id' => $enrollment->id,
+            'user_id'       => $enrollment->user_id,
+            'from_class'    => $fromClass,
+            'to_class'      => $toClass,
+            'class_name_id' => $enrollment->class_name_id,
+        ]);
+    }
+
     /// ── API untuk halaman superadmin: Kenaikan Kelas ─────────────────────────────
     public function promotionPreviewByClass(Request $request)
     {
@@ -251,7 +318,7 @@ class EnrollmentController extends Controller
     private function parseClassComponents(string $className): ?array
     {
         // Mendukung VII-A, VII A, 7-A, 7A, VIII.1, IX_B, dll.
-        if (preg_match('/^(VII|VIII|IX|7|8|9)[\s\-_.]*([A-Za-z0-9]+)$/i', trim($className), $matches)) {
+        if (preg_match('/^(VIII|VII|IX|7|8|9)[\s\-_.]*([A-Za-z0-9]+)$/i', trim($className), $matches)) {
             $rawGrade = strtoupper($matches[1]);
             $suffix   = strtoupper($matches[2]);
 

@@ -86,6 +86,7 @@ const TeacherSummary = lazy(() => import("./pages/superadmin/TeacherSummary"));
 const MorningSessionStudent = lazy(() => import("./pages/superadmin/MorningSessionStudent"));
 const AcademicPeriodPage = lazy(() => import("./pages/superadmin/AcademicPeriodPage"));
 const EnrollmentPromotionPage = lazy(() => import("./pages/superadmin/EnrollmentPromotionPage"));
+const TransferKelas = lazy(() => import("./pages/superadmin/TransferKelas"));
 
 // -- Games --
 const MathGame = lazy(() => import("./components/games/MathGame"));
@@ -236,6 +237,7 @@ function App() {
                 <Route path='certificate-mgmt' element={<div className="p-4 font-bold"><CertificateManagement /></div>} />
                 <Route path="academic-periods" element={<div className="p-4"><AcademicPeriodPage /></div>} />
                 <Route path="enrollment-promotion" element={<div className="p-4"><EnrollmentPromotionPage /></div>} />
+                <Route path="transfer-kelas" element={<div className="p-4"><TransferKelas /></div>} />
                 <Route path="activity-log" element={<div className="p-4"><ActivityLog /></div>} />
                 
                 

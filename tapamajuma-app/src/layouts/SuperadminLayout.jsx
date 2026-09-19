@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Calendar,
   ArrowRight,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Outlet } from "react-router-dom";
@@ -49,6 +50,7 @@ const menuItems = [
   children: [
     { name: "Periode Akademik", path: "/superadmin/academic-periods", icon: <Calendar size={16} /> },
     { name: "Kenaikan Kelas", path: "/superadmin/enrollment-promotion", icon: <ArrowRight size={16} /> },
+    { name: "Transfer Antar Kelas", path: "/superadmin/transfer-kelas", icon: <ArrowLeftRight size={16} /> },
   ],
   },
   {

@@ -9,3 +9,6 @@ tapamajuma-app/.env.development
 /tapamajuma-logger/.env
 /node_modules
 AGENTS.md
+.agents*
+DESIGN.md
+skills-lock.json
