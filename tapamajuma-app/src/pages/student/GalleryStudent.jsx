@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,DialogDescription } from "@/components/ui/dialog";
-import { PlayCircle, FileText, Image as ImageIcon, Plus, Music, FileUp, Loader2, Mic, Square, Trash2, Rocket, Sparkles, Globe, User, Heart, Share, Save,Zap} from "lucide-react"; // Tambahkan ikon Mic & Square
+import { PlayCircle, FileText, Image as ImageIcon, Plus, Music, FileUp, Loader2, Mic, Square, Trash2, Rocket, Sparkles, Globe, User, Heart, Share, Save, Zap, Calendar, Info, ChevronRight } from "lucide-react"; // Tambahkan ikon Mic & Square
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
 import ReactPlayer from 'react-player';
@@ -18,7 +18,19 @@ export default function GalleryStudent() {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
   const [tiktokEmbedFailed, setTiktokEmbedFailed] = useState(false);
+
+  // Deteksi tingkat kelas siswa (7, 8, atau 9) untuk highlight jadwal
+  const userClassName = user?.student_class?.name || user?.current_class || user?.class_name || "";
+  const getUserGrade = (name = "") => {
+    const trimmed = name.trim().toUpperCase();
+    if (/^(VIII|8)[\s\-_.]?/i.test(trimmed)) return 8;
+    if (/^(VII|7)[\s\-_.]?/i.test(trimmed)) return 7;
+    if (/^(IX|9)[\s\-_.]?/i.test(trimmed)) return 9;
+    return null;
+  };
+  const userGrade = getUserGrade(userClassName);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -461,6 +473,10 @@ function TikTokPreview({ url }) {
             <Dialog
               open={open}
               onOpenChange={(val) => {
+                if (val && quota && quota.is_eligible === false) {
+                  toast.error(quota.message || "Hari ini bukan jadwal upload untuk kelasmu. 🗓️");
+                  return;
+                }
                 setOpen(val);
                 if (!val) {
                   setAudioUrl(null);
@@ -469,7 +485,15 @@ function TikTokPreview({ url }) {
               }}
             >
               <DialogTrigger asChild>
-                <button className="rounded-2xl h-11 w-11 flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_4px_14px_rgba(99,102,241,0.3)] transition-transform active:scale-90 border-none">
+                <button
+                  onClick={(e) => {
+                    if (quota && quota.is_eligible === false) {
+                      e.preventDefault();
+                      toast.error(quota.message || "Hari ini bukan jadwal upload untuk kelasmu. 🗓️");
+                    }
+                  }}
+                  className="rounded-2xl h-11 w-11 flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_4px_14px_rgba(99,102,241,0.3)] transition-transform active:scale-90 border-none cursor-pointer"
+                >
                   <Plus size={22} className="text-white" />
                 </button>
               </DialogTrigger>
@@ -644,25 +668,182 @@ function TikTokPreview({ url }) {
           </div>
         </div>
 
-        {/* ── QUOTA BAR ── */}
-        {quota && (
-          <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl text-[11px] font-bold shadow-[0_2px_10px_rgba(15,23,42,0.04)] ${
-            quota.remaining === 0
-              ? "bg-rose-50 text-rose-500 border border-rose-100"
-              : "bg-emerald-50 text-emerald-600 border border-emerald-100"
-          }`}>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              quota.remaining === 0 ? "bg-rose-100 text-rose-500" : "bg-emerald-100 text-emerald-500"
+        {/* ── QUOTA BAR & ATURAN UPLOAD ── */}
+        <div className="space-y-2">
+          {quota && (
+            <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-[11px] font-bold shadow-[0_2px_10px_rgba(15,23,42,0.04)] ${
+              quota.is_eligible === false || quota.remaining === 0
+                ? "bg-rose-50 text-rose-600 border border-rose-100"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-100"
             }`}>
-              <Zap size={14} />
+              <div className="flex items-center gap-2.5">
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  quota.is_eligible === false || quota.remaining === 0 ? "bg-rose-100 text-rose-500" : "bg-emerald-100 text-emerald-600"
+                }`}>
+                  <Zap size={14} />
+                </div>
+                <span>
+                  {quota.is_eligible === false
+                    ? (quota.message || "Bukan hari upload untuk kelasmu")
+                    : quota.remaining === 0
+                    ? "Kuota minggu ini sudah habis"
+                    : `Sisa kuota upload minggu ini: ${quota.remaining}/${quota.max}`}
+                </span>
+              </div>
+              <span className="text-[10px] opacity-75 font-semibold">
+                Maks. {quota.max} / minggu
+              </span>
             </div>
-            <span>
-              {quota.remaining === 0
-                ? "Kuota minggu ini sudah habis"
-                : `Sisa kuota upload minggu ini: ${quota.remaining}/${quota.max}`}
+          )}
+
+          {/* Tombol Aturan Upload */}
+          <button
+            type="button"
+            onClick={() => setRulesModalOpen(true)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white border border-slate-200/90 hover:border-indigo-300 hover:bg-indigo-50/40 text-slate-700 hover:text-indigo-600 transition-all shadow-[0_2px_8px_rgba(15,23,42,0.03)] group cursor-pointer"
+          >
+            <div className="flex items-center gap-2 text-xs font-extrabold">
+              <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                <Info size={13} />
+              </div>
+              <span>Aturan & Jadwal Upload Karya</span>
+            </div>
+            <span className="text-[11px] font-bold text-slate-400 group-hover:text-indigo-600 flex items-center gap-1 transition-colors">
+              Lihat Aturan <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
-          </div>
-        )}
+          </button>
+        </div>
+
+        {/* ── MODAL ATURAN UPLOAD ── */}
+        <Dialog open={rulesModalOpen} onOpenChange={setRulesModalOpen}>
+          <DialogContent className="max-w-md w-[92vw] sm:w-full rounded-3xl p-6 max-h-[85vh] overflow-y-auto">
+            <DialogHeader className="text-left space-y-1.5 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-100 flex-shrink-0">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-black text-slate-900 tracking-tight">
+                    Aturan & Jadwal Upload
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 font-medium">
+                    Ketentuan penerbitan karya di Galeri Siswa Tapamajuma
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2 text-xs">
+              {/* Jadwal Hari Upload */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar size={14} className="text-indigo-500" />
+                    Jadwal Hari Upload
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold">1 hari per tingkat</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { grade: 7, label: "Kelas VII", day: "Kamis" },
+                    { grade: 8, label: "Kelas VIII", day: "Jumat" },
+                    { grade: 9, label: "Kelas IX", day: "Sabtu" },
+                  ].map((item) => {
+                    const isUserGrade = userGrade === item.grade;
+                    return (
+                      <div
+                        key={item.grade}
+                        className={`p-3 rounded-2xl border flex flex-col items-center justify-center text-center relative transition-all ${
+                          isUserGrade
+                            ? "bg-indigo-50 border-indigo-300 shadow-sm ring-2 ring-indigo-200"
+                            : "bg-slate-50/80 border-slate-200/80"
+                        }`}
+                      >
+                        {isUserGrade && (
+                          <span className="absolute -top-2 bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                            Kelas Kamu
+                          </span>
+                        )}
+                        <span className="text-[11px] font-black text-slate-800">{item.label}</span>
+                        <span className="text-xs font-black text-indigo-600 mt-1">{item.day}</span>
+                        <span className="text-[9px] text-slate-400 font-medium mt-0.5">Setiap pekan</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                  * Unggah karya hanya dibuka pada hari yang sesuai dengan tingkatan kelas masing-masing.
+                </p>
+              </div>
+
+              {/* Kuota Mingguan */}
+              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-1.5">
+                <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                  <Zap size={14} className="text-amber-600" />
+                  <span>Total Kuota: Maks. 3 Karya / Minggu</span>
+                </div>
+                <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                  Setiap siswa memiliki batas maksimal <strong>3 karya</strong> per pekan. Kuota akan otomatis di-reset setiap pergantian minggu pada hari <strong>Senin (00:00 WIB)</strong>.
+                </p>
+              </div>
+
+              {/* Format File Didukung */}
+              <div className="space-y-2">
+                <span className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText size={14} className="text-violet-500" />
+                  Format Karya yang Didukung
+                </span>
+                <div className="space-y-1.5 text-[11px] text-slate-600">
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <ImageIcon size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-slate-800">Gambar / Foto:</strong> JPG, JPEG, PNG (seni rupa, komik, poster, dsb).
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <Music size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-slate-800">Audio / Rekaman Suara:</strong> MP3, WAV, M4A, WebM (baca puisi, podcast, lagu).
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <FileText size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-slate-800">Dokumen PDF:</strong> Tulisan, cerpen, esai, atau karya ilmiah (maks. 20 MB).
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <Globe size={14} className="text-indigo-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-slate-800">Tautan Eksternal:</strong> Link YouTube, Canva, Instagram, TikTok, atau Google Drive.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* XP Reward Info */}
+              <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100/80 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Rocket size={15} />
+                </div>
+                <div className="text-[11px] text-indigo-950">
+                  <strong className="block text-indigo-900 font-extrabold text-xs">Dapatkan XP Tambahan!</strong>
+                  Setiap karya yang diterbitkan memberikan poin XP untuk meningkatkan level dan memuncaki papan peringkat sekolah.
+                </div>
+              </div>
+
+              {/* Tombol Tutup */}
+              <Button
+                type="button"
+                onClick={() => setRulesModalOpen(false)}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white h-11 rounded-2xl font-black text-xs transition-all shadow-sm"
+              >
+                Saya Mengerti
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* ── NAVIGATION TABS ── */}
         <Tabs defaultValue="all" className="w-full">

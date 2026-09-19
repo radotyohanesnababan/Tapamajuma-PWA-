@@ -46,10 +46,14 @@ class GalleryController extends Controller
                 ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->count();
 
+            $eligibility = $this->checkUploadEligibility($user);
+
             $quota = [
-                'used'      => $uploaded,
-                'max'       => self::MAX_UPLOAD_PER_WEEK,
-                'remaining' => max(0, self::MAX_UPLOAD_PER_WEEK - $uploaded),
+                'used'        => $uploaded,
+                'max'         => self::MAX_UPLOAD_PER_WEEK,
+                'remaining'   => max(0, self::MAX_UPLOAD_PER_WEEK - $uploaded),
+                'is_eligible' => $eligibility === null,
+                'message'     => $eligibility['message'] ?? null,
             ];
         }
 
@@ -305,26 +309,39 @@ class GalleryController extends Controller
         9 => ['day' => Carbon::SATURDAY, 'label' => 'Sabtu'],
     ];
 
-    private function checkUploadEligibility(User $user): ?array
+    public function checkUploadEligibility(User $user): ?array
     {
         if (in_array($user->role, ['teacher', 'superadmin'])) {
             return null;
         }
 
-        // DIUBAH: pakai currentClass() dari enrollment, bukan studentClass dari class_id
-        $className = $user->currentClass()?->name ?? '';
+        // Ambil nama kelas: prioritas currentClass() dari active enrollment, fallback ke studentClass dari class_id
+        $className = $user->currentClass()?->name ?? $user->studentClass?->name ?? '';
 
-        $romanMap = [
-            'VII'  => 7,
-            'VIII' => 8,
-            'IX'   => 9,
-        ];
+        // Deteksi tingkat kelas (mendukung VII, VIII, IX, 7, 8, 9)
+        $grade = null;
+        if (preg_match('/^(VIII|VII|IX|8|7|9)[\s\-_.]*/i', trim($className), $matches)) {
+            $raw = strtoupper($matches[1]);
+            $grade = match ($raw) {
+                'VII', '7'  => 7,
+                'VIII', '8' => 8,
+                'IX', '9'   => 9,
+                default     => null
+            };
+        }
 
-        $romanPart = explode('-', trim($className))[0];
-        $grade     = $romanMap[$romanPart] ?? null;
+        if (!$grade) {
+            return [
+                'status'  => 403,
+                'message' => 'Kelas kamu belum terdaftar di sistem. Silakan lengkapi profil kelas terlebih dahulu.',
+            ];
+        }
 
-        if (!$grade || !isset(self::UPLOAD_SCHEDULE[$grade])) {
-            return null;
+        if (!isset(self::UPLOAD_SCHEDULE[$grade])) {
+            return [
+                'status'  => 403,
+                'message' => "Jadwal upload untuk kelas {$className} belum diatur.",
+            ];
         }
 
         $schedule = self::UPLOAD_SCHEDULE[$grade];
