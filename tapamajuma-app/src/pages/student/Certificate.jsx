@@ -37,10 +37,10 @@ function CertificateCard({ cert }) {
     if (!isReleased) return;
     setDownloading(true);
     try {
-      const res = await api.get(`/api/admin/certificates/cert/${cert.id}/download`);
+      const res = await api.get(`/api/certificates/${cert.id}/download`);
       window.open(res.data.url, "_blank");
-    } catch {
-      toast.error("Gagal membuka sertifikat");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Gagal membuka sertifikat");
     } finally {
       setDownloading(false);
     }

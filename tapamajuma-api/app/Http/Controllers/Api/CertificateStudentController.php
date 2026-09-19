@@ -15,7 +15,7 @@ class CertificateStudentController extends Controller
     // ============================================================
     public function index()
     {
-        $certificates = Certificate::where('user_id', Auth::user()->id)
+        $certificates = Certificate::where('user_id', Auth::id())
             ->latest()
             ->get();
 
@@ -23,11 +23,11 @@ class CertificateStudentController extends Controller
     }
 
     // ============================================================
-    // DOWNLOAD — generate signed URL dari R2
+    // DOWNLOAD — generate signed URL dari R2 / public URL
     // ============================================================
     public function download(Certificate $certificate)
     {
-        if ($certificate->user_id !== Auth::user()->id) {
+        if ((int)$certificate->user_id !== (int)Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -39,10 +39,16 @@ class CertificateStudentController extends Controller
             return response()->json(['message' => 'PDF belum digenerate'], 404);
         }
 
-        $url = Storage::disk('r2')->temporaryUrl(
-            $certificate->pdf_path,
-            now()->addMinutes(15)
-        );
+        $disk = config('filesystems.default');
+
+        if ($disk === 'r2' || $disk === 's3') {
+            $url = Storage::disk($disk)->temporaryUrl(
+                $certificate->pdf_path,
+                now()->addMinutes(15)
+            );
+        } else {
+            $url = Storage::disk('public')->url($certificate->pdf_path);
+        }
 
         return response()->json(['url' => $url]);
     }
