@@ -42,4 +42,9 @@ return [
     'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'wablas' => [
+    'domain' => env('WABLAS_DOMAIN'),
+    'token'  => env('WABLAS_TOKEN'),
+    'secret' => env('WABLAS_SECRET_KEY'),
+],
 ];
