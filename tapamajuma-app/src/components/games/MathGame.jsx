@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -105,6 +105,9 @@ export default function QuizEngine() {
   const [journal, setJournal] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const submittingRef = useRef(false);
+  const intervalRef = useRef(null);
 
   // --- 1. LOAD MAPEL (MENU AWAL) ---
   useEffect(() => {
@@ -197,44 +200,63 @@ export default function QuizEngine() {
 }, [finalScore, confidence]);
 
   // --- 5. FINAL SUBMIT (JURNAL) ---
-  const submitReflection = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!journal.trim()) return toast.error("Isi jurnal dulu ya!");
-
-    setIsSubmitting(true);
-   try {
-      await api.post("/api/activities", {
-        type: mode,
-        subject: selectedSubject.name,
-        score: finalScore,
-        confidence_level: confidence,
-        journal: journal,
-        reading_content: `Latihan Soal ${activeTheme.title} - ${selectedSubject.name}`
-      });
-
-      await refreshUser();
-
-      toast.success("Latihan selesai! Hebat!");
-      setIsRevealed(true);
-
-      let countdown = 5;
-      toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
-      const interval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-          toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
-        } else {
-          clearInterval(interval);
-          toast.dismiss("redirect-toast");
-          navigate("/");
-        }
-      }, 1000);
-    } catch (error) {
-      toast.error("Gagal menyimpan jurnal.");
-    } finally {
-      setIsSubmitting(false);
-    }
+ // bersihkan interval & toast saat komponen ditutup
+useEffect(() => {
+  return () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    toast.dismiss("redirect-toast");
   };
+}, []);
+
+const submitReflection = async (e) => {
+  if (e && e.preventDefault) e.preventDefault();
+  if (submittingRef.current || submitted) return; // cegah klik ganda
+  if (!journal.trim()) return toast.error("Isi jurnal dulu ya!");
+
+  submittingRef.current = true;
+  setIsSubmitting(true);
+
+  try {
+    await api.post("/api/activities", {
+      type: mode,
+      subject: selectedSubject.name,
+      score: finalScore,
+      confidence_level: confidence,
+      journal: journal,
+      reading_content: `Latihan Soal ${activeTheme.title} - ${selectedSubject.name}`,
+    });
+  } catch (error) {
+    submittingRef.current = false; // gagal simpan: boleh coba lagi
+    setIsSubmitting(false);
+    return toast.error("Gagal menyimpan jurnal.");
+  }
+
+  // Sampai sini data SUDAH tersimpan. Kunci tetap menyala.
+  setSubmitted(true);
+  setIsSubmitting(false);
+
+  try {
+    await refreshUser();
+  } catch (error) {
+    console.error("refreshUser gagal:", error); // tidak dianggap gagal simpan
+  }
+
+  toast.success("Latihan selesai! Hebat!");
+  setIsRevealed(true);
+
+  let countdown = 5;
+  toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
+  intervalRef.current = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      toast.loading(`Kamu akan dialihkan dalam ${countdown} detik...`, { id: "redirect-toast" });
+    } else {
+      clearInterval(intervalRef.current);
+      toast.dismiss("redirect-toast");
+      navigate("/");
+    }
+  }, 1000);
+};
 
   // ================= RENDER UI =================
 
@@ -426,16 +448,18 @@ export default function QuizEngine() {
                 />
               </div>
 
-              <Button 
-                type="button"
-                onClick={submitReflection} 
-                disabled={isSubmitting || !journal}
-                className={`w-full h-14 rounded-2xl font-bold text-lg shadow-lg transition-all ${activeTheme.colors.bgMain} hover:opacity-90 text-white`}
-              >
-                {isSubmitting ? "Menyimpan..." : (
-                  <span className="flex items-center gap-2"><Send size={18}/> Simpan Hasil</span>
-                )}
-              </Button>
+            <Button
+              type="button"
+              onClick={submitReflection}
+              disabled={isSubmitting || submitted || !journal}
+              className={`w-full h-14 rounded-2xl font-bold text-lg shadow-lg transition-all ${activeTheme.colors.bgMain} hover:opacity-90 text-white disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {isSubmitting ? "Menyimpan..." : submitted ? (
+                "Tersimpan ✓"
+              ) : (
+                <span className="flex items-center gap-2"><Send size={18} /> Simpan Hasil</span>
+              )}
+            </Button>
 
             </CardContent>
           </Card>
