@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-bookworm
+FROM php:8.3.36-fpm-bookworm
 
 # ============================================================
 # SYSTEM DEPENDENCIES
@@ -73,6 +73,12 @@ RUN echo "opcache.enable=1"                    >> /usr/local/etc/php/conf.d/opca
     echo "opcache.validate_timestamps=0"       >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.revalidate_freq=0"           >> /usr/local/etc/php/conf.d/opcache.ini
 
+# ============================================================
+# HARDENING (PHP2Shell)
+# ============================================================
+RUN echo "session.upload_progress.enabled=0" >> /usr/local/etc/php/conf.d/zz-hardening.ini && \
+    echo "session.use_only_cookies=1"          >> /usr/local/etc/php/conf.d/zz-hardening.ini
+    
 # ============================================================
 # PHP-FPM CONFIG (hemat RAM)
 # ============================================================
