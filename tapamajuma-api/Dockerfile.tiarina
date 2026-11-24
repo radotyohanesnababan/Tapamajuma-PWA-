@@ -1,0 +1,121 @@
+
+# ============================================================
+# BASE IMAGE
+# ============================================================
+FROM php:8.3-cli-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ============================================================
+# SYSTEM DEPENDENCIES + CHROMIUM
+# ============================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    unzip \
+    git \
+    zip \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libicu-dev \
+    libxml2-dev \
+    libonig-dev \
+    chromium \
+    fonts-liberation \
+    fonts-noto-core \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================
+# NODE.JS
+# ============================================================
+RUN set -eux; \
+    NODE_VERSION=20.18.0; \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+        -o /tmp/node.tar.xz; \
+    tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1; \
+    rm -f /tmp/node.tar.xz; \
+    node --version; \
+    npm --version
+
+# ============================================================
+# PHP EXTENSIONS
+# ============================================================
+RUN docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo_mysql \
+        mbstring \
+        gd \
+        opcache \
+        zip \
+        intl \
+        xml \
+        bcmath
+
+# ============================================================
+# OPCACHE
+# ============================================================
+RUN { \
+    echo "opcache.enable=1"; \
+    echo "opcache.memory_consumption=128"; \
+    echo "opcache.max_accelerated_files=10000"; \
+    echo "opcache.validate_timestamps=0"; \
+    echo "opcache.revalidate_freq=0"; \
+} > /usr/local/etc/php/conf.d/opcache.ini
+
+# ============================================================
+# PHP HARDENING
+# ============================================================
+RUN { \
+    echo "session.upload_progress.enabled=0"; \
+    echo "session.use_only_cookies=1"; \
+} > /usr/local/etc/php/conf.d/zz-hardening.ini
+
+# ============================================================
+# COMPOSER
+# ============================================================
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# ============================================================
+# APPLICATION
+# ============================================================
+WORKDIR /var/www/html
+
+COPY . .
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader
+
+# ============================================================
+# BROWSERSHOT
+# ============================================================
+ENV BROWSERSHOT_CHROMIUM_PATH=/usr/bin/chromium
+ENV BROWSERSHOT_NODE_MODULES=/var/www/html/node_modules
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# ============================================================
+# PERMISSIONS
+# ============================================================
+RUN mkdir -p storage/framework/cache \
+             storage/framework/sessions \
+             storage/framework/views \
+             storage/logs \
+             bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache public
+
+# ============================================================
+# RUNTIME
+# ============================================================
+ENV PORT=8080
+
+EXPOSE 8080
+
+USER www-data
+
+CMD ["sh", "-c", "php artisan config:cache && php artisan storage:link --force && exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]

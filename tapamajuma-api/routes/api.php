@@ -59,15 +59,6 @@ Route::get('/schools/public-list', [\App\Http\Controllers\Api\SchoolController::
 */
 Route::middleware('tenant')->group(function () {
 
-    // Test tenant (bisa dihapus setelah confirmed works)
-    Route::get('/test-tenant', function () {
-        $school = app('currentSchool');
-        return response()->json([
-            'school' => $school->name,
-            'db'     => DB::connection()->getDatabaseName(),
-        ]);
-    });
-
     /*
     |------------------------------------------------------------------------------
     | Public + Tenant (tanpa auth)

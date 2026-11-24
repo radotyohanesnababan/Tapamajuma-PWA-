@@ -27,7 +27,7 @@
     <script>
         setTimeout(function() {
             window.location.href = "{{ $destinationUrl }}";
-        }, 100); // Delay dikit 100ms biar browser sempet napas
+        }, 100); 
     </script>
 </head>
 <body>
