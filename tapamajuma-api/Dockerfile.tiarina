@@ -111,6 +111,7 @@ RUN mkdir -p storage/framework/cache \
              storage/framework/views \
              storage/logs \
              bootstrap/cache \
+    && php artisan storage:link --force \
     && chown -R www-data:www-data storage bootstrap/cache
 
 # ============================================================
@@ -122,4 +123,4 @@ EXPOSE 8080
 
 USER www-data
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan storage:link --force && exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["sh", "-c", "php artisan config:cache && exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
