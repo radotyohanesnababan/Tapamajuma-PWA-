@@ -86,10 +86,6 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN echo "=== DEBUG DIRECTORY ===" \
-    && pwd \
-    && ls -la \
-    && find /var/www/html -maxdepth 3 -name artisan -type f
 
 RUN composer install \
     --no-dev \
